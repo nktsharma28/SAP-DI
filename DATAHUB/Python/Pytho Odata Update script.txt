@@ -1,0 +1,49 @@
+import xml.etree.ElementTree as et 
+import json
+
+import requests
+import pandas as pd
+d = {'col1': ['1000080','1000054']}
+df = pd.DataFrame(data=d)
+df['col1'] = df['col1'].apply(str)
+df1=df.values.tolist()
+f2 = '{}'
+
+e = {'col1': ['1000054','1000080'],'EngagementSegment_SDK':['CLUSTER_1','CLUSTER_2'],'GreenAdvocacy_SDK':['CLUSTER_3','CLUSTER_2'],'Offering_SDK':['OFFER_2','OFFER_3']}
+df2 = pd.DataFrame(data=e)
+for i in df1:
+    a="'" + f2.format(*i) + "'"
+    print(a)
+    id=f2.format(*i)
+    print(id)
+    url="https://my348548.crm.ondemand.com/sap/c4c/odata/cust/v1/lifestyleandengagementdata/CustomerCollection?$filter=InternalID eq "+''+a
+    #payload="{\r\n\"EngagementSegment_SDK\": \"CLUSTER_4\",\r\n\"GreenAdvocacy_SDK\": \"CLUSTER_3\",\r\n\"Offering_SDK\": \"OFFER_1\"\r\n}"
+    headers = {
+    
+    'Authorization': 'Basic Q09ORklHSU1QQUNUMjpJbXBhY3QxMjM=',
+    'Content-Type': 'application/json',
+    'Cookie': 'MYSAPSSO2=AjQxMDMBABhLADkAUQBOAEoARQBUAFEAWABWAE4AIAACAAYwADQANAADABBMAFQAUQAgACAAIAAgACAABAAYMgAwADIAMQAwADMAMAA1ADEAMgAxADEABQAEAAAACAYAAlgACQACRQD%2fAP0wgfoGCSqGSIb3DQEHAqCB7DCB6QIBATELMAkGBSsOAwIaBQAwCwYJKoZIhvcNAQcBMYHJMIHGAgEBMBowDjEMMAoGA1UEAxMDTFRRAggKIBgEJhUwNDAJBgUrDgMCGgUAoF0wGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAcBgkqhkiG9w0BCQUxDxcNMjEwMzA1MTIxMTMzWjAjBgkqhkiG9w0BCQQxFgQU6UM%21EerEHi4QMJB6vwroIjq5zM4wCQYHKoZIzjgEAwQwMC4CFQCgTTBd8HQAz1UKh9gGiDR9bYOgMwIVAI%2fY2gaBcWN5LBaH02uNYos5rgJ%2f; SAP_SESSIONID_LTQ_044=DIF_XgL4Q9srYCK1CoFmF-zfBJ19qxHrr2cAFj6wP38%3d; sap-usercontext=sap-client=044'
+     }
+    response = requests.request("get", url, headers=headers)
+    root = et.fromstring(response.text)
+    a1=''
+    for child in root:
+        for i in child:
+            if i.tag=='{http://www.w3.org/2005/Atom}id'  :
+                a1=i.text
+    
+    url2=a1
+    dict=json.dumps(df2[df2['col1']==id].set_index('col1').to_dict('records'), sort_keys=False, indent=3)
+    payload = dict[1:-1]
+    print(url2)
+    headers = {
+    'x-csrf-token': 'CcrzhdtvCdG1crNT-hSpnA==',
+    'Authorization': 'Basic Q09ORklHSU1QQUNUMjpJbXBhY3QxMjM=',
+    'Content-Type': 'application/json',
+    'Cookie': 'SAP_SESSIONID_LTQ_044=c6nPECtbKeDmhzPnH8QWiHAbycGMYhHrv0EAFj6wP38%3d; sap-usercontext=sap-client=044'
+    }
+    response = requests.request("PATCH", url2, headers=headers, data=payload)
+    print(payload)            
+                
+    print(response.text)
+                

@@ -1,0 +1,6 @@
+
+
+
+CREATE TABLE ${TABLE_NAME} (Country VARCHAR(*) ,Polarity DECIMAL , Sentiments VARCHAR(*),
+Dimension VARCHAR(*)) TYPE 
+ DATASOURCE STORE ON DISK ;

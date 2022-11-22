@@ -1,0 +1,24 @@
+import csv
+import io
+def on_input(msg):
+    f = io.StringIO(msg.body)
+    df=csv.reader(f)
+    firstline = True
+    
+    for i in df:
+        if firstline: 
+            firstline = False
+            continue
+        
+        result=i[0]+","+i[2]
+        api.send("outData", result)
+        
+       
+            
+            
+         #api.send("outData",i[0]+","+i[2])
+         
+        
+        
+    
+api.set_port_callback("inData", on_input)

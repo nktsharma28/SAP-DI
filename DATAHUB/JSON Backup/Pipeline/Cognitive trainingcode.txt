@@ -1,0 +1,788 @@
+
+
+
+
+
+#import Libraries
+from __future__ import division
+import io
+import pandas as pd
+import numpy as np
+from sklearn import tree
+from sklearn.ensemble import GradientBoostingRegressor
+#import xgboost as xgb
+import statsmodels.api as sm
+import statsmodels.formula.api as smf
+from pandas import Series, DataFrame
+from scipy.optimize import minimize_scalar
+import pickle
+
+#from hana_ml.algorithms.pal import trees
+#import sapdi
+
+def on_input(msg):
+    import pandas as pd
+    import io
+    
+    # Obtain data
+    df= pd.read_csv(io.StringIO(msg.body), sep=",")
+   
+    def compnent_analytics(df):
+
+        regressor = GradientBoostingRegressor()
+        X = pd.DataFrame(df, columns=['LISTPRICE','MANUFACTURING_COST']).copy()
+        y = pd.Series(df['QUOTED_PRICE']).copy()
+        regressor.fit(X, y)
+        df['UtilityAdj'] = regressor.predict(X)
+        df['Discount'] = 1-(df['QUOTED_PRICE']/df['LISTPRICE'])
+        df['LIST_VALUE'] = df['LISTPRICE']/df['UtilityAdj']
+        df['GP_PCT_VALUE'] = (df['QUOTED_PRICE'] - df['MANUFACTURING_COST'])/df['UtilityAdj']
+        df['GP_PCT_PRICE'] = (df['QUOTED_PRICE'] - df['MANUFACTURING_COST'])/df['QUOTED_PRICE']
+
+        return df    
+
+#Clustering using Decision tree Regressor
+    def segmentation(X,Y,seg_min=0.0,seg_max=1.0,maxm_depth=2,min_split=50,min_leaves=20):
+        clf = tree.DecisionTreeRegressor(criterion='mse',max_depth=maxm_depth,min_samples_split=min_split,min_samples_leaf=min_leaves)
+        clf = clf.fit(X,Y)
+        seg_array = clf.tree_.threshold[(clf.tree_.children_left + clf.tree_.children_right)!=-2]
+        seg_array = np.append(seg_array,[seg_min,seg_max])
+        seg_array.sort()
+
+        n_segments = len(seg_array)-1
+        segments = np.zeros((n_segments,2))
+        for i in np.arange(len(seg_array)-1):
+            segments[i,0] = seg_array[i]
+            segments[i,1] = seg_array[i+1]
+
+        leaf_array = (clf.tree_.children_left + clf.tree_.children_right)==-2
+        num_leaves = sum(leaf_array)
+        i = 0
+        leaves = np.zeros((num_leaves,3),dtype = np.int32)
+        if clf.tree_.node_count>1:
+            print('\n%d' % (clf.tree_.node_count))
+            node_index = np.arange(clf.tree_.node_count)
+            for k in np.arange(len(leaf_array)):
+                if leaf_array[k] == True:
+                    leaves[i,0] = k
+                    leaves[i,1] = node_index[(clf.tree_.children_left==k) | (clf.tree_.children_right==k)]
+                    if sum(clf.tree_.children_left==k)==1:
+                        leaves[i,2] = 1
+                    i = i + 1
+
+            leaf_values = np.zeros((num_leaves,1))
+            leaf_sample_count = np.zeros((num_leaves,1),dtype=np.int32)
+            leaf_threshold = clf.tree_.threshold[leaves[:,1]]
+            for j in np.arange(num_leaves):
+                leaf_sample_count[segments[:,leaves[j,2]]==leaf_threshold[j]] = clf.tree_.n_node_samples[leaves[j,0]]
+                leaf_values[segments[:,leaves[j,2]]==leaf_threshold[j]] = clf.tree_.value[leaves[j,0]]
+        else:
+            leaf_sample_count = len(X)
+            leaf_values = (Y.mean())[0]
+            num_leaves - 0
+
+        segment_full = pd.DataFrame(segments, columns=['MIN','MAX'])
+        segment_full['COUNT'] = leaf_sample_count
+        segment_full['AVG_VAL'] = leaf_values
+        segment_full['SEG_ID'] = np.arange(1,(num_leaves+1))
+        segment_full = pd.DataFrame(segment_full,columns=['SEG_ID','MIN','MAX','COUNT','AVG_VAL'])
+
+        return segments, leaf_values, leaf_sample_count, segment_full
+
+    def DeleteOdds(X, y, Residual):
+        """
+        Delete the data points that result in the largest deviance residual
+        """
+        Index_max = np.absolute(Residual).idxmax()
+        X = X.drop(Index_max,axis=0)
+        y = y.drop(Index_max,axis=0)
+        z = pd.concat([y,X], axis = 1)    
+
+        return z
+
+
+
+    def ComLogit(Regressor, Response, Var_Include, SampleSize, alpha, data_vol, min_score):
+        """
+        Logistics Regression with only Var_Include as regressor
+        Regressor: Dataframe of all possible independent variables
+        Response: Dataframe of dependent variables
+        Var_Include: Array of strings indicates the variables to be included in model
+        SampleSize: A integer indicating the sample size
+        alpha: the confidience used to determine whether needs variable selection
+        data_vol: maximum fraction of data points need to be retained
+        min_score: minimum score of the data quality need to be attained for data deletion
+        """
+        Reg_Names = Regressor.columns.tolist()
+        y = Response.copy()
+        X = Regressor[Var_Include].copy()
+        X = sm.add_constant(X, prepend = True)
+        glm_binom = sm.GLM(y, X, family = sm.families.Binomial())
+        result = glm_binom.fit()
+        b = result.params
+        pvalue = result.pvalues
+        correlation = result.cov_params()
+        #The residual deviance. Or, use response residuals? (resid_response) 
+        #results should be the same
+        residual = result.resid_deviance
+        #Define res, a DataFrame containing the needed information
+        res = pd.DataFrame({}, index = ['const'] + Reg_Names)
+        res['param'] = b
+        res['pvalue'] = pvalue
+        correlation = pd.DataFrame(correlation, columns = ['const'] + Reg_Names)
+        res = pd.concat([res, correlation], axis = 1)
+        res = pd.DataFrame(res, index = ['const'] + Reg_Names)
+        #Delete outliers if:
+        #1. the result is insiginificant; 
+        #2. after deletion the data quality is good enough;
+        #3. the sign on the price is correct.
+        #If the sign is wrong, all the "win" data points could be deleted.
+        while True in (res.pvalue > alpha).values:
+            n_in = len(y)
+            if n_in/SampleSize > data_vol:
+                z = DeleteOdds(X, y, residual)
+                y_temp = pd.DataFrame(z.Response).copy()
+                X_temp = z[Var_Include].copy()
+                if Score(y_temp, X_temp, len(y_temp)) > min_score:
+                    y = y_temp.copy()
+                    X = X_temp.copy()
+                    X = sm.add_constant(X, prepend = True)
+                    glm_binom = sm.GLM(y, X, family = sm.families.Binomial())
+                    result = glm_binom.fit()
+                    b = result.params
+                    pvalue = result.pvalues
+                    correlation = result.cov_params()
+                    residual = result.resid_deviance
+                    res = pd.DataFrame({}, index = ['const'] + Reg_Names)
+                    res['param'] = b
+                    res['pvalue'] = pvalue
+                    correlation = pd.DataFrame(correlation, columns = ['const'] + Reg_Names)
+                    res = pd.concat([res, correlation], axis = 1)
+                    res = pd.DataFrame(res, index = ['const'] + Reg_Names)
+                else:
+                    break
+            else:
+                #Assigining negative pvalue to break the loop
+                #res['pvalue'] = - pvalue
+                break
+
+
+        #If either the intercept is insiginificant or price has a wrong sign then 
+        #delete the intercept term        
+        if res['pvalue']['const'] > alpha[0] or res['param']['GP_PCT_VALUE'] < 0:
+                y = Response
+                X = Regressor[Var_Include]
+                glm_binom = sm.GLM(y, X, family = sm.families.Binomial())
+                result = glm_binom.fit()
+                b = result.params
+                pvalue = result.pvalues
+                correlation = result.cov_params()
+                residual = result.resid_deviance
+                res = pd.DataFrame({}, index = ['const'] + Reg_Names)
+                res['param'] = b
+                res['pvalue'] = pvalue
+                correlation = pd.DataFrame(correlation, columns = ['const'] + Reg_Names)
+                res = pd.concat([res, correlation], axis = 1)
+                res = pd.DataFrame(res, index = ['const'] + Reg_Names)
+                while True in (res.pvalue > alpha).values:
+                    n_in = len(y)
+                    if n_in/SampleSize > data_vol:
+                        z = DeleteOdds(X, y, residual)
+                        y_temp = pd.DataFrame(z.Response).copy()
+                        X_temp = z[Var_Include].copy()
+                        if Score(y_temp, X_temp, len(y_temp)) > min_score:
+                            y = y_temp.copy()
+                            X = X_temp.copy()
+                            glm_binom = sm.GLM(y, X, family = sm.families.Binomial())
+                            result = glm_binom.fit()
+                            b = result.params
+                            pvalue = result.pvalues
+                            correlation = result.cov_params()
+                            residual = result.resid_deviance
+                            res = pd.DataFrame({}, index = ['const'] + Reg_Names)
+                            res['param'] = b
+                            res['pvalue'] = pvalue
+                            correlation = pd.DataFrame(correlation, columns = ['const'] + Reg_Names)
+                            res = pd.concat([res, correlation], axis = 1)
+                            res = pd.DataFrame(res, index = ['const'] + Reg_Names)
+                        else:
+                            break
+                    else:
+                        break
+
+        return res
+
+
+
+    def ComLogit_Diff(Regressor, Response, SampleSize, alpha, data_vol, min_score):
+        """
+        Logistics Regression with automated variable selection allowing 
+        price differentiation
+        Regressor: Dataframe of all possible independent variables
+        Response: Dataframe of dependent variables
+        SampleSize: A integer indicating the sample size
+        alpha: the confidience used to determine whether needs data/variable selection
+        data_vol: maximum fraction of data points need to be retained
+        """  
+
+        #First try to include all the Regressors
+        Reg_Names = Regressor.columns.tolist()
+        Var_Include = Reg_Names
+        res = ComLogit(Regressor, Response, Var_Include, SampleSize, alpha, data_vol, min_score) 
+        #if the result is siginificant and the price sign is correct
+        if not (True in (res.pvalue > alpha).values) and res['param']['GP_PCT_VALUE'] > 0 :
+            #simply use 'res' as the result
+            return res
+            #Move on to the variable selections with two regressors
+        else:
+            Var_Include_1 = ['GP_PCT_VALUE',  'LIST_VALUE']
+            res_1 = ComLogit(Regressor, Response, Var_Include_1, SampleSize, alpha, data_vol, min_score)         
+            Var_Include_2 = ['GP_PCT_VALUE', 'TMC_VALUE']
+            res_2 = ComLogit(Regressor, Response, Var_Include_2, SampleSize, alpha, data_vol, min_score)  
+            if not (True in (res_1.pvalue > alpha).values) and res_1['param']['GP_PCT_VALUE'] > 0 :
+                return res_1
+            else:
+                return res_2
+
+    def ComLogit_Unif(Regressor, Response, SampleSize, alpha, data_vol, min_score):
+        """
+        Logistics Regression without price differentiation
+        Regressor: Dataframe of all possible independent variables
+        Response: Dataframe of dependent variables
+        SampleSize: A integer indicating the sample size
+        alpha: the confidience used to determine whether needs data/variable selection
+        data_vol: maximum fraction of data points need to be retained
+        """         
+        #price being the only regressor                 
+        Var_Include = ['GP_PCT_VALUE']
+        res = ComLogit(Regressor, Response, Var_Include, SampleSize, alpha, data_vol, min_score)
+        return res
+
+
+    def Main_Regression(Regressor, Response, SampleSize, alpha0, data_vol, min_score = 3.0):
+        """
+        Main regression function that combines variable selections, outlier deletions,
+        and logistics regression to produce results that are significant and correct.
+        Regressor: Dataframe of all possible independent variables
+        Response: Dataframe of dependent variables
+        SampleSize: A integer indicating the sample size
+        alpha0: the ideal threshold for p-values
+        data_vol: maximum fraction of data points need to be retained
+        """
+        alpha = list(alpha0)
+        #First run the regression for differentiated price
+        res = ComLogit_Diff(Regressor, Response, SampleSize, alpha, data_vol, min_score)
+        if True in (res.pvalue > alpha).values or res['param']['GP_PCT_VALUE'] < 0:
+            alpha[1] = alpha[1] + 0.02
+            res = ComLogit_Diff(Regressor, Response, SampleSize, alpha, data_vol, min_score)
+            if True in (res.pvalue > alpha).values or res['param']['GP_PCT_VALUE'] < 0:
+                alpha[1] = alpha[1] + 0.02
+                res = ComLogit_Diff(Regressor, Response, SampleSize, alpha, data_vol, min_score)  
+        #If the result is still insignificant, move on to uniform pirce
+        if True in (res.pvalue > alpha).values or res['param']['GP_PCT_VALUE'] < 0:
+            #alpha = alpha0
+            alpha = list(alpha0)
+            res = ComLogit_Unif(Regressor, Response, SampleSize, alpha, data_vol, min_score)
+            if True in (res.pvalue > alpha).values or res['param']['GP_PCT_VALUE'] < 0:
+                alpha[1] = alpha[1] + 0.02
+                res = ComLogit_Unif(Regressor, Response, SampleSize, alpha, data_vol, min_score)
+                if True in (res.pvalue > alpha).values or res['param']['GP_PCT_VALUE'] < 0:
+                    alpha[1] = alpha[1] + 0.02
+                    res = ComLogit_Unif(Regressor, Response, SampleSize, alpha, data_vol, min_score)
+        #If the result is still insignificant, there is nothing we can do, return 
+        #whatever the last result is.            
+        return res
+
+
+    def WProb_(x, input_coef, b):
+        """
+        Given a price and parameters of the package compute the win probability
+        x: input price
+        input_coef: Series containing other input parameters of the package
+        b: Series containing the estimated parameters of the regression model
+        """                                                                                                                                                                
+        #fill the NaN value with 0 for computation
+        b = b.fillna(0.0)  
+        listp_value = input_coef['LIST_VALUE'] - 1
+        tmc = input_coef['TMC'] 
+        listp = input_coef['LISTPRICE']
+        value = listp / input_coef['LIST_VALUE']
+        tmc_value = 1 - tmc / value 
+        regressor=[1.0, - (x - tmc) / value, listp_value, tmc_value]
+        z = np.exp(np.dot(regressor, b)) / ( 1 + np.exp(np.dot(regressor, b)) )
+        return z
+
+
+    def Rev_(x, input_coef, b):
+        """
+        Given a price and parameters of the package compute the NEGATIVE revenue
+        x: input price
+        input_coef: Series containing other input parameters of the package
+        b: Series containing the estimated parameters of the regression model
+        """     
+        tmc = input_coef['TMC']                                                                                                                                                            
+        return - (x - tmc) * WProb_(x, input_coef, b)    
+
+
+    def OptPrice(Input, b):
+        """
+        Given the input and price sensitivity information compute optimal price
+        x: input price
+        Input: Dataframe containing all the input information
+        b: Series containing the estimated parameters of the regression model
+        """   
+        Value = Input.LISTPRICE / Input.LIST_VALUE
+        TMC = Input.TMC
+        QuotePrice = Input.GP_PCT_VALUE * Value + Input.TMC
+        #Organizing Response variables
+        Response = Input['Win']        
+        #Creating Lists for storing results
+        WP_act = list(range(len(Response)))
+        gp_pct_act = list(range(len(Response)))
+        Discount_act = list(range(len(Response)))
+        WP_opt = list(range(len(Response)))
+        gp_pct_opt = list(range(len(Response)))
+        OptPrice = list(range(len(Response)))
+        Discount_opt = list(range(len(Response)))
+
+        for i in range(len(Response)):
+            input_coef = Input.iloc[i]  
+            x_act = QuotePrice.iloc[i]
+            c = TMC.iloc[i]  
+            p_l = Input.LISTPRICE.iloc[i]    
+            WP_act[i] = WProb_(x_act, input_coef, b)
+            gp_pct_act[i] = (x_act - c) / x_act 
+            Discount_act[i] = (p_l - x_act) / p_l
+
+            res = minimize_scalar(Rev_, bounds = (c, p_l), args = (input_coef, b), method = 'bounded') 
+            x_opt = res.x
+            WP_opt[i] = WProb_(x_opt, input_coef, b)
+            gp_pct_opt[i] = (x_opt - c) / x_opt
+            OptPrice[i] = x_opt
+            Discount_opt[i] = (p_l - x_opt) / p_l
+
+
+        #Combining the outcomes
+        #Add columns discount_act and discount_opt
+
+        Output = pd.DataFrame({})
+        Output['Response'] = Response.values
+        Output['QuotePrice'] = QuotePrice.values
+        Output['WP_act'] = WP_act
+        Output['gp_pct_act'] = gp_pct_act
+        Output['Discount_act'] = Discount_act
+        Output['OptPrice'] = OptPrice
+        Output['WP_opt'] = WP_opt
+        Output['gp_pct_opt'] = gp_pct_opt
+        Output['Discount_opt'] = Discount_opt
+        return Output
+
+
+    def Business_Case(Output, re_output = False):
+        """
+        Compute the business case as a control for choosing segmentation.
+        Output: the output from OptPrice, records the optimal prices, etc
+        re_output: whether return the table for the business case result
+        Return: returns the sum of business case values and if re_ouput is specified
+        to be true, also returns the table of each business case value.
+        """    
+        Revenue_Diff = list(range(len(Output)))
+        for i in range(len(Output)):
+            p_opt = Output.OptPrice.iloc[i]
+            p_act = Output.QuotePrice.iloc[i]
+            q_opt = Output.WP_opt.iloc[i]
+            q_act = Output.WP_act.iloc[i]
+            if Output.Response.iloc[i] == 1:
+                if p_opt > p_act:
+                    Revenue_Diff[i] = q_opt/q_act * p_opt - p_act
+                else:
+                    Revenue_Diff[i] = p_opt - p_act
+            else:
+                if p_opt > p_act:
+                    Revenue_Diff[i] = 0.0
+                else:
+                    Revenue_Diff[i] = (1 - (1 - q_opt)/(1 - q_act)) * p_opt                
+        BC_Value = np.sum(Revenue_Diff)
+        Output['Business_Case'] = Revenue_Diff
+        if re_output == False:
+            return BC_Value
+        else:
+            return BC_Value, Output
+
+
+    def unique_arr(arr):
+        """
+        Helper function to return the unique values in a ndarray.
+        np.unique() can only deal wiht 1-D array.
+        """
+        arr = np.asarray(arr)
+        uniques = []
+        for i in range(len(arr)):
+            if list(arr[i]) not in uniques:
+                uniques.append(list(arr[i]))
+        return uniques
+
+
+    def Extract_Input(Input):
+        """
+        Helper function to extract from Input the columns for regression.
+        Input: a data frame contains all the columns
+        Return: Response -- response variable of the regression
+                Regressor -- Regressor for the regression
+                Samplesize -- Sample size for the regression
+        """    
+        Response = pd.DataFrame(Input.Win).copy()
+        Response.columns = ['Response']
+        Regressor = pd.DataFrame(Input, columns = ['LIST_VALUE']).copy()
+        VALUE = Input.LISTPRICE / Input.LIST_VALUE
+        TMC_VALUE = Input.TMC / VALUE
+        Regressor['TMC_VALUE'] = 1 - TMC_VALUE
+        Regressor['LIST_VALUE'] = Regressor['LIST_VALUE'] - 1
+        Regressor['GP_PCT_VALUE'] = - Input.GP_PCT_VALUE
+        Reg_Names = ['GP_PCT_VALUE', 'LIST_VALUE', 'TMC_VALUE']
+        Regressor = pd.DataFrame(Regressor, columns = Reg_Names)
+        SampleSize = len(Response)
+        return Response, Regressor, SampleSize
+
+    def Score(Response, Regressor, SampleSize):
+        """
+        Helper function to calculate the scores for the quality of the data input 
+        for regression.
+        Response: Response variable for the regression model
+        Regressor: Predictors for the regression model
+        Return: The score value for the data inputs
+        """   
+        Quotes_Score = 0
+        Win_Score = 0
+        Brands_Score = 1
+        Market_Score = 0
+        CV_GP_Score = 0
+        #Computing Quotes_Score
+        if SampleSize > 49:
+            Quotes_Score = Quotes_Score + 1
+            if SampleSize > 99:
+                Quotes_Score = Quotes_Score + 1
+        #Computing Win_Score
+        Win_Rates = sum(Response['Response']) / SampleSize
+        if Win_Rates > 0.04:
+            Win_Score = Win_Score + 1
+            if Win_Rates > 0.08:
+                Win_Score = Win_Score + 1
+        #Computing Market_Score
+        if 'LIST_VALUE' in Regressor.columns:
+            Market_Position = max(Regressor['LIST_VALUE']) - min(Regressor['LIST_VALUE'])
+            if Market_Position < 5:
+                Market_Score = Market_Score + 1
+                if Market_Position < 2:
+                    Market_Score = Market_Score + 1
+        else:
+            Market_Score = 1
+        #Computing CV_GP_Score
+        CV_GP = - Regressor['GP_PCT_VALUE'].std() / Regressor['GP_PCT_VALUE'].mean()    
+        if CV_GP < 0.5:
+            CV_GP_Score = CV_GP_Score + 1
+            if CV_GP < 0.25:
+                CV_GP_Score = CV_GP_Score + 1
+        #Computing the overall score
+        if Win_Score == 0:
+            score = 0
+        else:
+            score = Quotes_Score + Win_Score + Brands_Score + Market_Score + CV_GP_Score
+        return score
+    def Label_Seg(Input_Data, Infile_Data):                  
+        """
+        Labels each transaction in the original data to the segment it belongs.
+
+        Parameters
+        ----------
+        Input_Data: A dataframe that contains all the original transaction data.
+        Input_Seg: A dataframe that contains the segmentation information for each OD cluster pair
+        f_name: The data directory and file names to write the file
+        version: The version of data and cluster level
+
+        Return
+        -------
+        The revised input data.
+
+        """                                     
+        seg_id = list(np.zeros(len(Input_Data), dtype = 'i4'))
+        Discount_act = list(np.zeros(len(Input_Data)))
+        Discount_sd =list(np.zeros(len(Input_Data)))
+        lw = list(np.zeros(len(Input_Data)))
+        up = list(np.zeros(len(Input_Data)))
+
+
+        for i in range(len(Input_Data)):
+            brand = Input_Data.loc[i,'PRODUCT_BRAND']
+            Value = Input_Data.loc[i,'LIST_VALUE']
+
+
+
+
+            if len(Infile_Data) > 1:
+                for j in range(len(Infile_Data)):
+                    if ( (brand == Infile_Data.loc[j, 'PRODUCT_BRAND']) and
+                    (Value > Infile_Data.loc[j, 'VAL_MIN']) and (Value <= Infile_Data.loc[j, 'VAL_MAX'])   ):
+                        seg_id[i] = Infile_Data.loc[j, 'SEGMENT_ID']
+
+                        lw[i] = 0
+                        up[i]=0
+            else:
+                seg_id[i] = Infile_Data.loc[0, 'SEGMENT_ID']
+
+                lw[i] = 0
+                up[i] = 0
+        Input_Data['SEGMENT_ID'] = seg_id
+
+
+        return Input_Data      
+    def Compute_Opt_Price(Input_Data, Infile_Data):                  
+        """
+        Compute the optimal price according to the features and the corresponding parameter estimates in
+        "Input_Seg" for each transaction in "Input_Data".
+
+        Parameters
+        ----------
+        Input_Data: A dataframe that contains all the original transaction data / new request for quotes
+        Input_Seg: A dataframe that contains the segmentation AND regression information (FINAL_REG_SEG)
+        f_name: The data directory and file names to write the file
+
+
+        Outputs:
+        --------
+        Writes the labeled data to a new file.
+
+        Return
+        -------
+        The revised input data.
+
+        """    
+        opt_price = list(np.zeros(len(Input_Data)))
+        x_opt = list(np.zeros(len(Input_Data))) 
+        WP_act = list(np.zeros(len(Input_Data)))
+        WP_opt = list(np.zeros(len(Input_Data)))
+
+
+
+        for i in np.arange(len(Input_Data)):
+            if i % 1000 == 0:
+                print ('Processing quotes.')
+
+            seg_id = Input_Data.loc[i, 'SEGMENT_ID']
+            k = Input_Data.loc[i, 'TMC']
+            l = Input_Data.loc[i, 'LISTPRICE']
+            param = Infile_Data.loc[seg_id, ['VAL_const', 'VAL_GP_PCT_VALUE', 'VAL_LIST_VALUE','VAL_TMC_VALUE']]
+            param = param.fillna(0.0)
+            input_coef = Input_Data.iloc[i]
+
+            res1 = minimize_scalar( Rev_, bounds = (k,l), args = (input_coef, param), method = 'bounded' )
+
+
+            opt_price[i] = res1.x
+            x_opt[i] = opt_price[i]
+            x_act = Input_Data.loc[i, 'QUOTED_PRICE']
+            WP_act[i] = WProb_(x_act, input_coef, param)
+            WP_opt[i] = WProb_(x_opt[i], input_coef, param)
+
+
+
+        Input_Data['OPT_PRICE'] = opt_price
+        Input_Data['WIN_ACT'] = WP_act
+        Input_Data['WIN_OPT'] = WP_opt
+
+        return Input_Data
+
+    agg_df_final = compnent_analytics(df)
+    agg_df_final['PRODUCT_BRAND'] = agg_df_final['MODEL']
+    max_depth = 2
+    min_split = 50
+    min_leaf = 20
+
+    brand_details = []
+    group_brand = agg_df_final.groupby('PRODUCT_BRAND')
+    j = 1
+    for brand, grp in group_brand:
+        brand_detail = pd.DataFrame({'PRODUCT_BRAND':[brand],'COUNT':[len(grp)],'AVG_VAL':[grp['GP_PCT_PRICE'].mean()],'LEAD_BRAND_ID':[j]},columns=['LEAD_BRAND_ID','PRODUCT_BRAND','COUNT','AVG_VAL'])
+        brand_details.append(brand_detail)
+        j = j+1
+    
+    brand_segment = pd.concat(brand_details, ignore_index=True)
+    brand_segment = pd.DataFrame(brand_segment,columns=['LEAD_BRAND_ID','PRODUCT_BRAND','COUNT','AVG_VAL']).copy()
+    lead_seg_sub = []
+
+    for i in np.arange(len(brand_segment)):
+        lead_seg_id = brand_segment.loc[i,'LEAD_BRAND_ID']
+        leading_brand = brand_segment.loc[i,'PRODUCT_BRAND']
+        val_seg_input = pd.DataFrame(agg_df_final[agg_df_final.PRODUCT_BRAND==leading_brand].copy(), columns=['LIST_VALUE','GP_PCT_VALUE'])
+        val_seg_input.columns = ['PREDICTOR','RESPONSE']
+        val_segments, val_leaf_values, val_leaf_sample_count, val_seg_out_temp = segmentation(val_seg_input[['PREDICTOR']],val_seg_input[['RESPONSE']], 0.0, 10000.0, max_depth, min_split, min_leaf)
+        val_seg_out_temp.columns = ['VAL_SEG_ID','VAL_MIN','VAL_MAX','VAL_COUNT','VAL_AVG_VAL']           
+        val_seg_out_temp['LEAD_BRAND_ID'] = lead_seg_id
+        lead_seg_sub.append(val_seg_out_temp)
+
+    val_seg_out = pd.concat(lead_seg_sub, ignore_index=True)
+    val_seg_out = pd.DataFrame(val_seg_out, columns=['LEAD_BRAND_ID','VAL_SEG_ID','VAL_MIN','VAL_MAX','VAL_COUNT','VAL_AVG_VAL'])
+    full_io_table_out = pd.merge(brand_segment,val_seg_out,left_on='LEAD_BRAND_ID',right_on='LEAD_BRAND_ID',how='inner')
+    Input_Data = agg_df_final
+    Input_Seg = full_io_table_out
+    Input_Data.index=np.arange(len(Input_Data))
+    #selecting cluster having more than 100 data points 
+    Input_Seg=Input_Seg[Input_Seg['COUNT']> 100]
+    Input_Seg.index=np.arange(len(Input_Seg))
+    #Ideal threshold for p-values
+    alpha0 = [0.15, 0.01, 0.15, 0.15]
+    #Threshold for minimum percentage of data to keep when deleting outliers
+    data_vol = 0.98
+    #@huz_0617: Adding another control variable -- min_score to guarantee that
+    #the quality of the segmented data are good enough
+    min_score = 3.0
+    #Minimum number of data to be retained in the segments
+    min_data = 50.0
+    #Add another control variales: average discounts level as determining whether 
+    #to further segment or not.
+    #Compare both the unsegmented and segmented average discounts level, say PWR_Discount and HW_Discount with the
+    #actual average discounts level/confidence interval: [Avg_Discount - beta*sigma, Avg_Discount + beta*sigma]. 
+    #If both discounts lie in the interval, then compare business case. If one lie in, the other one lie out, choose
+    #the one lie in. If both lie out of the interval, choose the one closer to the interval.  
+    #Controling the interval of the acceptable price range
+    beta = 1.0
+    #beta = 0.5 #Cannot result in further segmentation
+
+    Input_Data['TMC']= Input_Data['MANUFACTURING_COST']
+    Input_Data['Win']= np.where(Input_Data['STATUS'] == 'Y',1,0)
+
+    LEAD_Col_Names = np.asarray(['BC_Value', 'const', 'GP_PCT_VALUE', 'LIST_VALUE', 'TMC_VALUE'])
+    LEAD_Col_Names = LEAD_Col_Names.astype(np.object)
+    LEAD_Col_Names = ['LEAD_'] + LEAD_Col_Names
+    LEAD_Col_Names = np.append(['PRODUCT_BRAND'], LEAD_Col_Names)
+    LEAD_out = pd.DataFrame(columns = LEAD_Col_Names )
+    VAL_Col_Names = np.asarray(['MIN', 'BC_Value', 'Discount_act', 'Discount_opt', 'const', 'GP_PCT_VALUE', 'LIST_VALUE', 'TMC_VALUE'])
+    VAL_Col_Names = VAL_Col_Names.astype(np.object)
+    VAL_Col_Names = ['VAL_'] + VAL_Col_Names
+    VAL_Col_Names = np.append(['PRODUCT_BRAND'], VAL_Col_Names)
+    VAL_out = DataFrame(columns = VAL_Col_Names)
+    for brand in Input_Seg['PRODUCT_BRAND'].unique():
+        #The segmented part of the segmentation information
+        LEAD_Seg = Input_Seg[Input_Seg['PRODUCT_BRAND'] == brand]
+        #The data that satisfies the segmentation
+        LEAD_Seg_Data = pd.DataFrame(Input_Data[Input_Data['PRODUCT_BRAND'] == brand]).copy()
+        LEAD_Seg_Data.index = range(len(LEAD_Seg_Data))
+        Response, Regressor, SampleSize = Extract_Input(LEAD_Seg_Data)
+        LEAD_Score = Score(Response, Regressor, SampleSize)
+        reg_res =  Main_Regression(Regressor, Response, SampleSize, alpha0, data_vol)
+        LEAD_param = reg_res.param
+        Output = OptPrice(LEAD_Seg_Data, LEAD_param)
+
+        LEAD_BC_Value = Business_Case(Output) 
+        temp = np.concatenate([[brand, LEAD_BC_Value], LEAD_param])
+        temp = temp.reshape((1, len(temp)))
+        temp = pd.DataFrame(temp, columns = LEAD_Col_Names)
+        LEAD_out = pd.concat([LEAD_out, temp])
+        for val_min, val_max in unique_arr(LEAD_Seg[['VAL_MIN', 'VAL_MAX']]):
+            #The segmented part of the segmentatoin information
+            VAL_Seg = LEAD_Seg[LEAD_Seg['VAL_MIN'] == val_min]
+            #The data that satisfies the segmentation
+            VAL_Seg_Data = pd.DataFrame(LEAD_Seg_Data[(LEAD_Seg_Data.LIST_VALUE >= val_min) & (LEAD_Seg_Data.LIST_VALUE <= val_max)]).copy()
+            VAL_Seg_Data.index = range(len(VAL_Seg_Data))
+            Response, Regressor, SampleSize = Extract_Input(VAL_Seg_Data)
+            VAL_Score = Score(Response, Regressor, SampleSize)
+            #The default business case value and parameter estimates are set
+            #to the case without further segmentation unless the following 
+            #if statements are satisfied.
+            VAL_param = LEAD_param
+            Output_NoSeg = OptPrice(VAL_Seg_Data, LEAD_param)
+
+            VAL_BC_Value = Business_Case(Output_NoSeg)
+            Discount_NoSeg_Avg = Output_NoSeg['Discount_opt'].mean()
+            Discount_act_Avg = Output_NoSeg['Discount_act'].mean()
+            Discount_act_sd = Output_NoSeg['Discount_act'].std()
+            Discount_opt_Avg = Discount_NoSeg_Avg
+            #If there is enough sample for further segmentation
+            if SampleSize >= min_data and Score(Response, Regressor, SampleSize) >= min_score:
+                try:
+                    reg_res = Main_Regression(Regressor, Response, SampleSize, alpha0, data_vol)
+                except:
+                    bad_data = VAL_Seg_Data
+                #If the segmented model returns the right prediction
+                if reg_res['param']['GP_PCT_VALUE'] > 0:
+                    Output_Seg = OptPrice(VAL_Seg_Data, reg_res.param)
+
+                    BC_Value_Seg = Business_Case(Output_Seg)
+                    Discount_Seg_Avg = Output_Seg['Discount_opt'].mean()
+                    #If both the average discounts of segment and unsegmented model lie in the acceptable region
+                    if ((Discount_NoSeg_Avg >= Discount_act_Avg - beta*Discount_act_sd) and 
+                    (Discount_NoSeg_Avg <= Discount_act_Avg + beta*Discount_act_sd) and
+                    (Discount_Seg_Avg >= Discount_act_Avg - beta*Discount_act_sd) and
+                    (Discount_Seg_Avg <= Discount_act_Avg + beta*Discount_act_sd)):
+                        #If the segmented model has a higher business case value
+                        if BC_Value_Seg > VAL_BC_Value:
+                            VAL_BC_Value = BC_Value_Seg
+                            VAL_param = reg_res.param
+                            Discount_opt_Avg = Discount_Seg_Avg
+                            FIN_Score = VAL_Score
+                            Level = 'VAL'
+                        #else:
+                            
+                    #Else if the segment model produces a closer average discount to the actual discount level        
+                        elif np.absolute(Discount_Seg_Avg - Discount_act_Avg) < np.absolute(Discount_NoSeg_Avg - Discount_act_Avg):
+                                
+                                VAL_BC_Value = BC_Value_Seg
+                                VAL_param = reg_res.param
+                                Discount_opt_Avg = Discount_Seg_Avg
+                                FIN_Score = VAL_Score
+                                Level = 'VAL'
+                    else:
+                        print ('\n Discount level is far from actual level!')
+                else:
+                    print ('\n Wrong prediction in the segmented model!')
+            else:
+                print ('\n Not enough data or bad data in the segmented model!')
+            temp = np.concatenate([[brand, val_min, VAL_BC_Value, Discount_act_Avg, Discount_opt_Avg], VAL_param])
+            temp = temp.reshape((1, len(temp)))
+            temp = pd.DataFrame(temp, columns = VAL_Col_Names)
+            VAL_out = pd.concat([VAL_out, temp]) 
+
+    #Full output: Output_Seg
+
+    Input_Seg['VAL_MIN']=Input_Seg['VAL_MIN'].astype(np.float)
+    VAL_out['VAL_MIN']= VAL_out['VAL_MIN'].astype(np.float)
+    Output_Seg = pd.merge(Input_Seg, LEAD_out, on = 'PRODUCT_BRAND').reset_index()
+    Output_Seg = pd.merge(Output_Seg, VAL_out, on = ['PRODUCT_BRAND', 'VAL_MIN']).reset_index()
+    Output_Seg['SEGMENT_ID'] = np.arange(len(Output_Seg))
+    cols=Output_Seg.columns.drop('PRODUCT_BRAND')
+    Output_Seg[cols]=Output_Seg[cols].apply(pd.to_numeric, errors='coerce')
+    Input_Data1 = Label_Seg(Input_Data, Output_Seg)
+    Input_Data2 = Compute_Opt_Price(Input_Data, Output_Seg)
+    discount_data = pd.DataFrame(Input_Data2,columns=['PRODUCT_BRAND','Discount']).copy()
+    discount_data['Discount_mean']=discount_data['Discount']
+    discount_data['Discount_std']=discount_data['Discount']
+    discount_agg_model = discount_data.groupby('PRODUCT_BRAND').agg({'Discount_mean':np.mean,'Discount_std':np.std}).reset_index()
+    del discount_data['Discount_mean']
+    del discount_data['Discount_std']
+    final_data = pd.merge(Input_Data2,discount_agg_model,on='PRODUCT_BRAND',how='left')
+    final_data['key1'] = 0
+    final_data['key2'] = 1
+    final_data['low']= 1-final_data['Discount_mean']- 2*final_data['Discount_std']
+    final_data['min_level'] = (final_data[['key2','low']]).min(axis=1)
+    final_data['max_min_level']=final_data[['min_level','key1']].max(axis=1)
+    final_data['low_bound'] = final_data['max_min_level']*final_data['LISTPRICE']
+    final_data['up']= 1-final_data['Discount_mean']+2*final_data['Discount_std']
+    final_data['min_level_up'] = (final_data[['key2','up']]).min(axis=1)
+    final_data['max_min_level_up']=final_data[['min_level_up','key1']].max(axis=1)
+    final_data['up_bound'] = final_data['max_min_level_up']*final_data['LISTPRICE']
+    final_data['low_bound'] =np.where(final_data['low_bound']<final_data['TMC'],final_data['TMC'],final_data['low_bound'])
+    final_data['up_bound'] =np.where(final_data['up_bound']<final_data['OPT_PRICE'],final_data['LISTPRICE'],final_data['up_bound'])
+    
+    api.send("output",'success')
+
+#final_data write-back to Hana Output Table "TA_IMC_CPQ_TRAINING_OPTIMAL_PRICE"
+#Output_Seg write-back to Hana Output Table "TA_IMC_CPQ_TRAINING_SEGMENTS"
+
+
+
+
+
+       
+
+
+api.set_port_callback("input2", on_input)

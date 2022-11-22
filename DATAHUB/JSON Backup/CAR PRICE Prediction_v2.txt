@@ -1,0 +1,90 @@
+import json
+import pandas as pd
+import numpy as np
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error
+
+
+
+with open('/vrep/vflow/automobileEDA.csv','rt')as f:
+    df = pd.read_csv(f)
+    
+    
+dummy_variable_1 = pd.get_dummies(df[["Company","Car_Type","Engine_Size","Price"]])
+#dummy_variable_1.head()
+dummy_variable_1.rename(columns={}, inplace=True)
+dummy_variable_1.head()
+
+X = dummy_variable_1[['Engine_Size','Company_BMW','Company_Hyundai','Company_Maruti','Car_Type_Hatchback','Car_Type_SUV','Car_Type_Sedan']]
+Y = df['Price']
+lm = LinearRegression()
+lm.fit(X,Y)
+y_pred = lm.predict(X)
+y_pred[0:5]
+--------------------------------------------------------------
+import pickle
+pickle.dump(lm, open("lm.pickle.dat", "wb"))
+--------------------------------------------------------------
+
+import pickle
+lm_loaded = pickle.load(open("lm.pickle.dat", "rb"))
+--------------------------------------------------------------
+
+#x_new = dummy_variable_1[[1200,1,0,0,0,1,0]]
+#x_new = [1200,1,0,0,0,1,0]
+#x_new
+a=0
+b=0 #hatchback
+c=0  #SUV
+d=0  #Sedan
+e=0  #BMW
+f=0  #Hyundai
+g=0  #Maruti
+h=0  #Base
+i=0  #Second
+j=0  #First
+d1=''
+a=input('Enter Engine cc')
+k=int(a)
+b1=input('Enter Hatchback/SUV/Sedan ')
+c1=input('Enter Company-Maruti/Hyundai/BMW')
+#d1=input('Enter Model- Base/Second Top/Top')
+if b1=='Hatchback':
+    e=1
+else:
+    e=0
+if b1=='SUV':
+    f=1
+else:
+    f=0
+if b1=='Sedan':
+    g=1
+else:
+    g=0
+if c1=='Maruti':
+    d=1
+else:
+    d=0
+if c1=='Hyundai':   
+    c=1
+else:
+    c=0
+if c1=='BMW':  
+    b=1
+else:
+    b=0
+if d1=='Base': 
+    h=1
+else:
+    h=0
+if d1=='Second Top': 
+    i=1
+else:
+    i=0
+if d1=='Top': 
+    j=1
+else:
+    j=0
+print(k,b,c,d,e,f,g)
+Predictions=lm_loaded.predict([[k,b,c,d,e,f,g]])
+print('Estimated Price of',c1,b1, int(Predictions),'INR')

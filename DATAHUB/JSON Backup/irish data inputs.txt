@@ -1,0 +1,31 @@
+{
+    "sepal_length":	5.1,
+    "sepal_width":	3.5,
+    "petal_length":	1.4,
+    "petal_width":	0.2
+}
+
+
+{
+    "Engine_Size(Enter in cc)":	1300,
+    "Car_Segment(Enter Hatchback/SUV/Sedan)":	"Hatchback",
+    "Car_Company(Enter Maruti/Hyundai/BMW)":	"Maruti"
+    
+}
+{
+    "ENTER QUOTE_ID": 552,
+    "ENTER CUSTOMER_NAME":"US Auto Supplier 316",	
+    "ENTER INDUSTRY":	"E",
+    "ENTER CREATION_DATE":"2015-01-10",
+    "ENTER COUNTRY":"USA",
+    "ENTER PRODUCT_NAME":"Compressor 25",
+    "ENTER MODEL": "MODEL:ZR250VSDA8",
+    "ENTER SUPPLY_VOLTAGE_A": "MOVOL:530V-3PH",
+    "ENTER COM_QUANTITY": "2",
+    "ENTER STATUS": "N",
+    "ENTER LISTPRICE":	4201.575,
+    "ENTER MANUFACTURING_COST":1518.986,
+    "ENTER QUOTED_PRICE": 1679.483
+}
+
+https://vsystem-sdi.apps.sinv-sap-di.os.fyre.ibm.com/app/pipeline-modeler/openapi/service/594dcd3d-6f59-40a3-857b-a811c1a9ff5f/v1/uploadjson/

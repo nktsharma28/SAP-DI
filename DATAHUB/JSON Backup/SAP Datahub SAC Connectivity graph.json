@@ -1,0 +1,107 @@
+{
+	"properties": {},
+	"description": "",
+	"processes": {
+		"pythonrequest11": {
+			"component": "Python Request",
+			"metadata": {
+				"label": "Python request",
+				"x": 90,
+				"y": 51,
+				"height": 80,
+				"width": 120,
+				"extensible": true,
+				"config": {
+					"script": "import io\r\nimport csv\r\nimport pandas as pd\r\n\r\n\r\ndata = open('/vrep/vflow/Tweet_Sentiments_D2.csv')\r\nreader = csv.reader(data)\r\nfor i in reader:\r\n    \r\n    api.send(\"Output\",i)\r\n        "
+				},
+				"additionalinports": [
+					{
+						"name": "inData",
+						"type": "message"
+					}
+				]
+			},
+			"name": "pythonrequest1"
+		},
+		"decodetable1": {
+			"component": "com.sap.table.decode",
+			"metadata": {
+				"label": "Decode Table",
+				"x": 292,
+				"y": 51,
+				"height": 80,
+				"width": 120,
+				"config": {
+					"format": "CSV"
+				}
+			}
+		},
+		"terminal1": {
+			"component": "com.sap.util.terminal",
+			"metadata": {
+				"label": "Terminal",
+				"x": 484,
+				"y": 51,
+				"height": 80,
+				"width": 120,
+				"ui": "dynpath",
+				"config": {}
+			}
+		},
+		"tostringconverter1": {
+			"component": "com.sap.util.toStringConverter",
+			"metadata": {
+				"label": "ToString Converter",
+				"x": 443,
+				"y": 109.5,
+				"height": 50,
+				"width": 50,
+				"config": {}
+			}
+		}
+	},
+	"groups": [],
+	"connections": [
+		{
+			"metadata": {
+				"points": "214,91 287,91"
+			},
+			"src": {
+				"port": "Output",
+				"process": "pythonrequest11"
+			},
+			"tgt": {
+				"port": "input",
+				"process": "decodetable1"
+			}
+		},
+		{
+			"metadata": {
+				"points": "397,91 427,91 427,125.5 457,125.5"
+			},
+			"src": {
+				"port": "output",
+				"process": "decodetable1"
+			},
+			"tgt": {
+				"port": "ininterface",
+				"process": "tostringconverter1"
+			}
+		},
+		{
+			"metadata": {
+				"points": "478,134.5 547,134.5 547,112.75 429,112.75 429,91 498,91"
+			},
+			"src": {
+				"port": "outstring",
+				"process": "tostringconverter1"
+			},
+			"tgt": {
+				"port": "in1",
+				"process": "terminal1"
+			}
+		}
+	],
+	"inports": {},
+	"outports": {}
+}

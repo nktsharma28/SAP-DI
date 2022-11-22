@@ -1,0 +1,457 @@
+{
+	"properties": {},
+	"iconsrc": "icon.png",
+	"description": "Copy of Sentiment Analysis Simple Example",
+	"processes": {
+		"pysentimentanalyser1": {
+			"component": "com.sap.ml.nlp.sentimentAnalyser",
+			"metadata": {
+				"label": "Sentiment Analyser",
+				"x": 180,
+				"y": 12,
+				"height": 80,
+				"width": 120,
+				"extensible": true,
+				"config": {
+					"script": "try:\n    from textblob import TextBlob\nexcept:\n    raise ValueError(\"textblob library is not installed. Run 'pip install textblob' for installing it.\\n\")\n\n\ndef force_unicode(m):\n    try:\n        return unicode(m)\n    except UnicodeDecodeError:\n        ascii = str(m).encode('string_escape')\n        return unicode(ascii)\n\n\ndef on_input(message):\n    body = message.body\n    attributes = message.attributes\n    blob = TextBlob(force_unicode(body))\n    attributes[u'polarity'] = u\"%.3f\" % blob.polarity\n    attributes[u'subjectivity'] = u\"%.3f\" % blob.subjectivity\n    new_message = api.Message(body=body, attributes=attributes)\n    api.send(\"out\", new_message)\n\n\napi.set_port_callback(\"in\", on_input)\n"
+				}
+			}
+		},
+		"oldtweetstream1": {
+			"component": "com.sap.social.tweetStream",
+			"metadata": {
+				"label": "[OLD] Tweet Stream",
+				"x": -35,
+				"y": -44,
+				"height": 80,
+				"width": 120,
+				"extensible": true,
+				"config": {
+					"accessToken": "790938298520698880-Xyf4XRgi3Eoev7eoFGscfxQ5F9zment",
+					"accessTokenSecret": "844LGNkm9jeg7jREamIJtI0AP4x4PrDco2qcFiBcUCV5Z",
+					"consumerKey": "t1gYjWU8uT3LLLCwNz2DCQR89",
+					"consumerSecret": "na4DaLGzutdVA7MJhGYsq4rKqCjLDpEdmOXR2tEydOW3qMPK25",
+					"filterWords": "india"
+				},
+				"additionaloutports": [
+					{
+						"name": "output",
+						"type": "message"
+					}
+				]
+			}
+		},
+		"python3operator1": {
+			"component": "com.sap.system.python3Operator",
+			"metadata": {
+				"label": "Python3 Operator",
+				"x": 471,
+				"y": -24,
+				"height": 80,
+				"width": 120,
+				"extensible": true,
+				"config": {
+					"script": "#import tweepy\r\nimport csv\r\nimport datetime\r\n#import pandas as pd\r\n####input your credentials here\r\n\r\n\r\ndef Header():\r\n    h1=\"Country\"\r\n    h2=\"Polarity\"\r\n    h3=\"Sentiments\"\r\n    h4=\"Dimension\"\r\n    api.send(\"Output\",h1+\",\"+h2+\",\",h3+\",\"+h4)\r\n    \r\n    \r\n    \r\ndef on_input(msg):\r\n    x = datetime.datetime.now()\r\n    date_time = x.strftime(\"%m/%d/%Y, %H:%M:%S\")\r\n    e=msg.body\r\n    f=\"covid\" \r\n    j=\"corona\"\r\n    k=\"covid-19\"\r\n    i=\"virus\"\r\n    if f in e or j in e or k in e or i in e:\r\n         #api.send(\"Output\", msg.attributes[\"polarity\"] +\", \"+ msg.body)\r\n        b=\"\"\r\n        a=float(msg.attributes[\"polarity\"])\r\n        if a > 0.000:\r\n            b=\"Positive\"\r\n        elif a == 0.000:\r\n            b=\"Neutral\"\r\n        else:\r\n            b=\"Negative\"\r\n        \r\n            \r\n        api.send(\"Output\",\"India,\"+msg.attributes[\"polarity\"]+\",\"+b +\",\"+\"Covid-19 \\n\")\r\n        \r\n        \r\n    #api.se\r\n    \r\n    else:\r\n         #api.send(\"Output\", msg.attributes[\"polarity\"] +\", \"+ msg.body)\r\n        api.send(\"Output\", \"\")\r\n\r\n    \r\napi.set_port_callback(\"Input\", on_input)\r\n\r\n"
+				},
+				"additionalinports": [
+					{
+						"name": "Input",
+						"type": "message"
+					}
+				],
+				"additionaloutports": [
+					{
+						"name": "Output",
+						"type": "message"
+					}
+				]
+			}
+		},
+		"12multiplexer3": {
+			"component": "com.sap.system.multiplexer.1-2",
+			"metadata": {
+				"label": "1:2 Multiplexer",
+				"x": 619,
+				"y": -24,
+				"height": 80,
+				"width": 120,
+				"extensible": true,
+				"config": {}
+			}
+		},
+		"python3operator11": {
+			"component": "com.sap.system.python3Operator",
+			"metadata": {
+				"label": "Python3 Operator",
+				"x": 497,
+				"y": -125,
+				"height": 80,
+				"width": 120,
+				"extensible": true,
+				"config": {
+					"script": "#import tweepy\r\nimport csv\r\n#import pandas as pd\r\n####input your credentials here\r\n\r\ndef on_input(msg):\r\n    e=msg.body\r\n    f=\"economy\" \r\n    g=\"jobs\"\r\n    h=\"employment\"\r\n    i=\"government\"\r\n    if f in e or g in e or h in e or i in e:\r\n        \r\n         #api.send(\"Output\", msg.attributes[\"polarity\"] +\", \"+ msg.body)\r\n        b=\"\"\r\n        a=float(msg.attributes[\"polarity\"])\r\n        if a > 0.000:\r\n            b=\"Positive\"\r\n        elif a == 0.000:\r\n            b=\"Neutral\"\r\n        else:\r\n            b=\"Negative\"\r\n            \r\n        api.send(\"Output\",\"India,\"+msg.attributes[\"polarity\"]+\",\"+b +\",\"+\"Economy \\n\")\r\n        \r\n    \r\n        \r\n    #api.send(\"Output\", msg.attributes[\"polarity\"] +\"-\"+ msg.body)\r\n        \r\n    \r\n    else:\r\n         #api.send(\"Output\", msg.attributes[\"polarity\"] +\", \"+ msg.body)\r\n        api.send(\"Output\", \"\")\r\n    \r\n    \r\n    \r\n    \r\napi.set_port_callback(\"Input\", on_input)"
+				},
+				"additionalinports": [
+					{
+						"name": "Input",
+						"type": "message"
+					}
+				],
+				"additionaloutports": [
+					{
+						"name": "Output",
+						"type": "message"
+					}
+				]
+			},
+			"name": "python3operator1"
+		},
+		"12multiplexer31": {
+			"component": "com.sap.system.multiplexer.1-2",
+			"metadata": {
+				"label": "1:2 Multiplexer",
+				"x": 645,
+				"y": -125,
+				"height": 80,
+				"width": 120,
+				"extensible": true,
+				"config": {}
+			},
+			"name": "12multiplexer3"
+		},
+		"terminal2": {
+			"component": "com.sap.util.terminal",
+			"metadata": {
+				"label": "Terminal",
+				"x": 935,
+				"y": -134,
+				"height": 80,
+				"width": 120,
+				"ui": "dynpath",
+				"config": {}
+			}
+		},
+		"tostringconverter3": {
+			"component": "com.sap.util.toStringConverter",
+			"metadata": {
+				"label": "ToString Converter",
+				"x": 784,
+				"y": 98,
+				"height": 50,
+				"width": 50,
+				"config": {}
+			}
+		},
+		"javascriptoperator11": {
+			"component": "com.sap.system.jsengine",
+			"metadata": {
+				"label": "JavaScript Operator",
+				"x": 883.9999990463257,
+				"y": 109,
+				"height": 80,
+				"width": 120,
+				"extensible": true,
+				"config": {
+					"script": "var counter = 0;\nvar message = \"\";\n\n$.setPortCallback(\"input\",onInput);\n\nfunction onInput(ctx,s) {\n    counter++;\n    message = message + s;\n   \n    \n    if(counter==30) {\n        $.output(message);\n        counter = 0;\n        message = \"\";\n    }\n}"
+				}
+			},
+			"name": "javascriptoperator1"
+		},
+		"13multiplexer1": {
+			"component": "com.sap.system.multiplexer.1-3",
+			"metadata": {
+				"label": "1:3 Multiplexer",
+				"x": 309,
+				"y": -119,
+				"height": 80,
+				"width": 120,
+				"extensible": true,
+				"config": {}
+			}
+		},
+		"python3operator12": {
+			"component": "com.sap.system.python3Operator",
+			"metadata": {
+				"label": "Python3 Operator",
+				"x": 485,
+				"y": 123,
+				"height": 80,
+				"width": 120,
+				"extensible": true,
+				"config": {
+					"script": "#import tweepy\r\nimport csv\r\nimport datetime\r\n#import pandas as pd\r\n####input your credentials here\r\n\r\n\r\ndef Header():\r\n    h1=\"Country\"\r\n    h2=\"Polarity\"\r\n    h3=\"Sentiments\"\r\n    h4=\"Dimension\"\r\n    api.send(\"Output\",h1+\",\"+h2+\",\",h3+\",\"+h4)\r\n    \r\n    \r\n    \r\ndef on_input(msg):\r\n    x = datetime.datetime.now()\r\n    date_time = x.strftime(\"%m/%d/%Y, %H:%M:%S\")\r\n    e=msg.body\r\n    f=\"lockdown\" \r\n    j=\"restrictions\"\r\n    k=\"Quarantine\"\r\n    i=\"lock down\"\r\n    if f in e or j in e or k in e or i in e:\r\n         #api.send(\"Output\", msg.attributes[\"polarity\"] +\", \"+ msg.body)\r\n        b=\"\"\r\n        a=float(msg.attributes[\"polarity\"])\r\n        \r\n        if a > 0.000:\r\n            b=\"Positive\"\r\n        elif a == 0.000:\r\n            b=\"Neutral\"\r\n        else:\r\n            b=\"Negative\"\r\n            \r\n        api.send(\"Output\",\"India,\"+msg.attributes[\"polarity\"]+\",\"+b +\",\"+\"Lockdown \\n\")\r\n        \r\n        \r\n    #api.se\r\n    \r\n    else:\r\n         #api.send(\"Output\", msg.attributes[\"polarity\"] +\", \"+ msg.body)\r\n        api.send(\"Output\", \"\")\r\n\r\n    \r\napi.set_port_callback(\"Input\", on_input)\r\n\r\n"
+				},
+				"additionalinports": [
+					{
+						"name": "Input",
+						"type": "message"
+					}
+				],
+				"additionaloutports": [
+					{
+						"name": "Output",
+						"type": "message"
+					}
+				]
+			},
+			"name": "python3operator1"
+		},
+		"writefile1": {
+			"component": "com.sap.storage.write",
+			"metadata": {
+				"label": "Write File",
+				"x": 1124,
+				"y": 129,
+				"height": 80,
+				"width": 120,
+				"config": {
+					"service": "GCS",
+					"gcsConnection": {
+						"configurationType": "Configuration Manager",
+						"connectionID": "GCS_CLOUD"
+					},
+					"gcsBucket": "bucket-1989",
+					"path": "Tweet_Sentiments_D1.csv"
+				}
+			}
+		},
+		"tostringconverter1": {
+			"component": "com.sap.util.toStringConverter",
+			"metadata": {
+				"label": "ToString Converter",
+				"x": 790,
+				"y": -129.5,
+				"height": 50,
+				"width": 50,
+				"config": {}
+			}
+		},
+		"writefile11": {
+			"component": "com.sap.storage.write",
+			"metadata": {
+				"label": "Write File",
+				"x": 935,
+				"y": -15,
+				"height": 80,
+				"width": 120,
+				"config": {
+					"service": "GCS",
+					"gcsConnection": {
+						"configurationType": "Configuration Manager",
+						"connectionID": "GCS_CLOUD"
+					},
+					"gcsBucket": "bucket-1989",
+					"path": "Tweet_Sentiments_D2.csv"
+				}
+			},
+			"name": "writefile1"
+		},
+		"writefile111": {
+			"component": "com.sap.storage.write",
+			"metadata": {
+				"label": "Write File",
+				"x": 678,
+				"y": 189,
+				"height": 80,
+				"width": 120,
+				"config": {
+					"service": "GCS",
+					"gcsConnection": {
+						"configurationType": "Configuration Manager",
+						"connectionID": "GCS_CLOUD"
+					},
+					"gcsBucket": "bucket-1989",
+					"path": "Tweet_Sentiments_D3.csv"
+				}
+			},
+			"name": "writefile11"
+		}
+	},
+	"groups": [],
+	"connections": [
+		{
+			"metadata": {
+				"points": "89,-22 132,-22 132,52 175,52"
+			},
+			"src": {
+				"port": "outTweet",
+				"process": "oldtweetstream1"
+			},
+			"tgt": {
+				"port": "in",
+				"process": "pysentimentanalyser1"
+			}
+		},
+		{
+			"metadata": {
+				"points": "595,16 614,16"
+			},
+			"src": {
+				"port": "Output",
+				"process": "python3operator1"
+			},
+			"tgt": {
+				"port": "in1",
+				"process": "12multiplexer3"
+			}
+		},
+		{
+			"metadata": {
+				"points": "621,-85 640,-85"
+			},
+			"src": {
+				"port": "Output",
+				"process": "python3operator11"
+			},
+			"tgt": {
+				"port": "in1",
+				"process": "12multiplexer31"
+			}
+		},
+		{
+			"metadata": {
+				"points": "743,25 761,25 761,114 779,114"
+			},
+			"src": {
+				"port": "out2",
+				"process": "12multiplexer3"
+			},
+			"tgt": {
+				"port": "ininterface",
+				"process": "tostringconverter3"
+			}
+		},
+		{
+			"metadata": {
+				"points": "838,123 858.5,123 858.5,149 878.9999990463257,149"
+			},
+			"src": {
+				"port": "outstring",
+				"process": "tostringconverter3"
+			},
+			"tgt": {
+				"port": "input",
+				"process": "javascriptoperator11"
+			}
+		},
+		{
+			"metadata": {
+				"points": "304,52 354,52 354,-13.5 254,-13.5 254,-79 304,-79"
+			},
+			"src": {
+				"port": "out",
+				"process": "pysentimentanalyser1"
+			},
+			"tgt": {
+				"port": "in1",
+				"process": "13multiplexer1"
+			}
+		},
+		{
+			"metadata": {
+				"points": "433,-97 462.5,-97 462.5,-85 492,-85"
+			},
+			"src": {
+				"port": "out1",
+				"process": "13multiplexer1"
+			},
+			"tgt": {
+				"port": "Input",
+				"process": "python3operator11"
+			}
+		},
+		{
+			"metadata": {
+				"points": "433,-79 449.5,-79 449.5,16 466,16"
+			},
+			"src": {
+				"port": "out2",
+				"process": "13multiplexer1"
+			},
+			"tgt": {
+				"port": "Input",
+				"process": "python3operator1"
+			}
+		},
+		{
+			"metadata": {
+				"points": "433,-61 456.5,-61 456.5,163 480,163"
+			},
+			"src": {
+				"port": "out3",
+				"process": "13multiplexer1"
+			},
+			"tgt": {
+				"port": "Input",
+				"process": "python3operator12"
+			}
+		},
+		{
+			"metadata": {
+				"points": "1007.9999990463257,149 1063.5,149 1063.5,169 1119,169"
+			},
+			"src": {
+				"port": "output",
+				"process": "javascriptoperator11"
+			},
+			"tgt": {
+				"port": "inFile",
+				"process": "writefile1"
+			}
+		},
+		{
+			"metadata": {
+				"points": "750,-94 777,-94 777,-113.5 804,-113.5"
+			},
+			"src": {
+				"port": "out1",
+				"process": "12multiplexer31"
+			},
+			"tgt": {
+				"port": "ininterface",
+				"process": "tostringconverter1"
+			}
+		},
+		{
+			"metadata": {
+				"points": "825,-104.5 887,-104.5 887,-94 949,-94"
+			},
+			"src": {
+				"port": "outstring",
+				"process": "tostringconverter1"
+			},
+			"tgt": {
+				"port": "in1",
+				"process": "terminal2"
+			}
+		},
+		{
+			"metadata": {
+				"points": "769,-76 849.5,-76 849.5,25 930,25"
+			},
+			"src": {
+				"port": "out2",
+				"process": "12multiplexer31"
+			},
+			"tgt": {
+				"port": "inFile",
+				"process": "writefile11"
+			}
+		},
+		{
+			"metadata": {
+				"points": "609,163 641,163 641,229 673,229"
+			},
+			"src": {
+				"port": "Output",
+				"process": "python3operator12"
+			},
+			"tgt": {
+				"port": "inFile",
+				"process": "writefile111"
+			}
+		}
+	],
+	"inports": {},
+	"outports": {}
+}

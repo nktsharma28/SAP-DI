@@ -1,0 +1,54 @@
+conda install -c conda-forge fbprophet
+conda install -c conda-forge/label/cf201901 fbprophet
+
+
+The following packages will be downloaded:
+
+    package                    |            build
+    ---------------------------|-----------------
+    arviz-0.9.0                |             py_0         1.3 MB  conda-forge
+    c-ares-1.16.1              |       h516909a_3         107 KB  conda-forge
+    cftime-1.2.1               |   py37h03ebfcd_0         279 KB  conda-forge
+    convertdate-2.2.2          |     pyh9f0ad1d_0          33 KB  conda-forge
+    curl-7.71.1                |       he644dc0_5         139 KB  conda-forge
+    cycler-0.10.0              |             py_2           9 KB  conda-forge
+    cython-0.29.21             |   py37h3340039_0         2.1 MB  conda-forge
+    ephem-3.7.7.1              |   py37h516909a_0         755 KB  conda-forge
+    fbprophet-0.7.1            |   py37h3340039_0         683 KB  conda-forge
+    freetype-2.10.2            |       he06d7ca_0         905 KB  conda-forge
+    gxx_impl_linux-64-7.3.0    |       hdf63c60_1        15.0 MB  defaults
+    gxx_linux-64-7.3.0         |       h553295d_9          26 KB  defaults
+    hdf4-4.2.13                |    hf30be14_1003         964 KB  conda-forge
+    hdf5-1.10.6                |nompi_h3c11f04_101         3.0 MB  conda-forge
+    holidays-0.10.3            |     pyh9f0ad1d_0          61 KB  conda-forge
+    icu-58.2                   |    hf484d3e_1000        22.6 MB  conda-forge
+    jpeg-9d                    |       h516909a_0         266 KB  conda-forge
+    kiwisolver-1.2.0           |   py37h99015e2_0          87 KB  conda-forge
+    korean_lunar_calendar-0.2.1|     pyh9f0ad1d_0          10 KB  conda-forge
+    krb5-1.17.1                |       h173b8e3_0         1.3 MB  defaults
+    libblas-3.8.0              |      17_openblas          11 KB  conda-forge
+    libcblas-3.8.0             |      17_openblas          11 KB  conda-forge
+    libcurl-7.71.1             |       hcdd3856_5         312 KB  conda-forge
+    libev-4.33                 |       h516909a_1         104 KB  conda-forge
+    libgfortran-ng-7.5.0       |      hdf63c60_16         1.3 MB  conda-forge
+    liblapack-3.8.0            |      17_openblas          11 KB  conda-forge
+    libnetcdf-4.7.4            |nompi_h84807e1_105         1.3 MB  conda-forge
+    libnghttp2-1.41.0          |       h8cfc5f6_2         774 KB  conda-forge
+    libopenblas-0.3.10         |pthreads_hb3c22a3_4         7.8 MB  conda-forge
+    libpng-1.6.37              |       hed695b0_2         359 KB  conda-forge
+    libssh2-1.9.0              |       hab1572f_5         225 KB  conda-forge
+    lunarcalendar-0.0.9        |             py_0          20 KB  conda-forge
+    lz4-c-1.8.3                |    he1b5a44_1001         187 KB  conda-forge
+    matplotlib-base-3.1.3      |   py37hef1b27d_0         5.0 MB  defaults
+    netcdf4-1.5.4              |nompi_py37hcbfd489_102         469 KB  conda-forge
+    numpy-1.19.1               |   py37h7ea13bd_2         5.2 MB  conda-forge
+    openssl-1.1.1g             |       h516909a_1         2.1 MB  conda-forge
+    pandas-1.1.2               |   py37h3340039_0        10.5 MB  conda-forge
+    pymeeus-0.3.7              |     pyh9f0ad1d_0         515 KB  conda-forge
+    pystan-2.19.1.1            |   py37h9fdb41a_2        17.3 MB  conda-forge
+    pytz-2020.1                |     pyh9f0ad1d_0         227 KB  conda-forge
+    scipy-1.5.2                |   py37hb14ef9d_0        18.5 MB  conda-forge
+    tqdm-4.49.0                |     pyh9f0ad1d_0          54 KB  conda-forge
+    xarray-0.16.0              |             py_0         514 KB  conda-forge
+    ------------------------------------------------------------
+

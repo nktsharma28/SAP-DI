@@ -1,0 +1,244 @@
+{
+	"properties": {},
+	"description": "TEST_CPQ_SOAP_INTEGRATION",
+	"processes": {
+		"python3operator1": {
+			"component": "com.sap.system.python3Operator",
+			"metadata": {
+				"label": "Python3 Operator",
+				"x": 221.99999904632568,
+				"y": 125,
+				"height": 80,
+				"width": 120,
+				"extensible": true,
+				"config": {
+					"script": "'''\nAdds the SFSF Session ID to the list of parameters.\n\nThe Session ID is retrieved from the SFSF Compound Employee API\nusing the login service.\n\nCreated on 05.08.2019\n@author: D026823\n'''\n\nimport xml.etree.ElementTree as et \nimport json\nimport xmltodict\nfrom xml.dom import minidom\nimport re\nimport pandas as pd\nimport io\n\ntry:\n    import requests\nexcept ImportError:\n    print('library could not be loaded')\n\nerror_occurred = False\n\ndef extract_url_from_parameters(parameter_string):\n    api.send(\"finalparams\", 'line20')\n    parameter_list = parameter_string.split(',') # list so far with parameters Web Services Host, Initial Load Indicator ('yes' or 'no'), Last Timestamp, and Number of Records per Chunk\n    url = parameter_list[0]\n    return url\n\ndef get_session_id(url):\n    #url='https://api012.successfactors.eu:443/sfapi/v1/soap?wsdl'\n    global error_occurred\n    session_id = ''\n    tag_error_open = '<errorCode>'\n    tag_error_close = '</errorCode>'    \n    tag_error_message_open = '<errorMessage>'\n    tag_error_message_close = '</errorMessage>'\n    tag_sessionid_open = '<sessionId>'\n    tag_sessionid_close = '</sessionId>'\n    api.send(\"finalparams\", 'line35')\n    headers = {'content-type': 'text/xml'}\n    \"\"\"\n    body = '''<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:urn=\"urn:cpq-sales.calliduscloud.com/wsAPI/CPQAPI.asmx\">\n              <soapenv:Header/>\n              <soapenv:Body>\n                  <urn:login>\n                      <urn:credential>\n                          <urn:companyId>SAP</urn:companyId>\n                          <urn:username>**************</urn:username>\n                          <urn:password>**************</urn:password>\n                          <!--Optional:-->\n                          <urn:developerKey>?</urn:developerKey>\n                      </urn:credential>\n                  <!--Zero or more repetitions:-->\n                      <urn:param>\n                          <urn:name>?</urn:name>\n                          <urn:value>?</urn:value>\n                      </urn:param>\n                  </urn:login>\n              </soapenv:Body>\n              </soapenv:Envelope>'''\n    \n    body=    '''<soap:Envelope xmlns:soap=\"http://www.w3.org/2003/05/soap-envelope\" xmlns:web=\"http://webcominc.com/\">\n                   <soap:Header/>\n                   <soap:Body>\n                      <web:GetQuoteItemsAttributes>\n                         <!--Optional:-->\n                         <web:username>akimtee#IBMACHINES_PARTNER</web:username>\n                         <!--Optional:-->\n                        <web:password>Cognitive@123</web:password>\n                         <!--Optional:-->\n                        <web:cartCompositeNumber>1905</web:cartCompositeNumber>\n                         <web:revNum>0</web:revNum>\n                         <!--Optional:-->\n                        <web:attributeNames>\n                           <!--Zero or more repetitions:-->\n                            <web:string></web:string>\n                         </web:attributeNames>\n                         <web:getAllAttributes>true</web:getAllAttributes>\n                      </web:GetQuoteItemsAttributes>\n                   </soap:Body>\n                </soap:Envelope> '''   \n    \"\"\"            \n    body =     ''' <soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:web=\"http://webcominc.com/\">\n                    <soapenv:Header/>\n                    <soapenv:Body>\n                        <web:SearchQuotes>\n                            <!--Optional:-->\n                            <web:Username>akimtee#IBMACHINES_PARTNER</web:Username>\n                            <!--Optional:-->\n                            <web:Password>Cognitive@123</web:Password>\n                            <!--Optional:-->\n                            <web:SearchCriteriaXML><![CDATA[<Root><SearchCriteria>DATE_MODIFIED > '10/10/2020 13:50:20'</SearchCriteria></Root>]]></web:SearchCriteriaXML>\n                        </web:SearchQuotes>\n                    </soapenv:Body>\n            </soapenv:Envelope>'''    \n    api.send(\"finalparams\", 'line56')\n    api.send(\"finalparams\", body)\n    api.send(\"finalparams\", 'line95')\n    response = requests.post(url,data=body,headers=headers)\n    api.send(\"finalparams\", 'line98')\n    root = et.fromstring(response.text)\n\n    a=''\n    b=''\n   \n    for child in root:\n         api.send(\"finalparams\", child.tag)\n     \n         for i in child:\n             api.send(\"finalparams\", i.tag)\n        \n             for j in i:\n                 \n                 api.send(\"finalparams\", j.tag)\n                 \n                 api.send(\"finalparams\", j.text)\n                 root2 = et.fromstring(j.text)\n                 for k in root2:\n                 \n                     for Quotes in k:\n                         \n                         for columns in Quotes:\n                            \n                             for child1 in columns:\n                                 if child1.get('Column')=='QuotationNumber'  :\n                                       a=child1.text\n                                       api.send(\"Output1\",a)\n                         \n                                     \n                         \"\"\"\n                                 if child1.get('Column')=='QuotationNumber':\n                                     \n                                     b=child1.text\n                           \n                                \n                                 #api.send(\"finalparams\",a+\",\"+b)\n                                 #c=(a+\",\"+b)\n                                 \n                                 def Convert(string):\n                                      li = list(string.split(\",\")) \n                                      return li \n                                 #d=Convert(c)\n                                 \n                                 #api.send(\"finalparams\",d)\n                                 d = {'QuoteId':[a], 'QuotationNumber':[b]} \n                                 df = pd.DataFrame(d)\n                                 df.drop_duplicates(subset =\"QuoteId\", \n                                 keep = False, inplace = True)   \n                                 data=df.values.tolist()\n                                 api.send(\"finalparams\",data) \n                          \"\"\"\n    \n    api.send(\"finalparams\", 'line120')\n\n    if str(response.content).find(tag_error_open) != -1: # error tag was found in the response\n        api.send(\"finalparams\", 'line60')\n        error_idx1 = str(response.content).find(tag_error_open) + len(tag_error_open)    \n        error_idx2 = str(response.content).find(tag_error_close)\n        error_type = str(response.content)[error_idx1:error_idx2]\n        api.logger.error(\"\\n\" + error_type)\n        error_message_idx1 = str(response.content).find(tag_error_message_open) + len(tag_error_message_open)\n        error_message_idx2 = str(response.content).find(tag_error_message_close)\n        error_message = str(response.content)[error_message_idx1:error_message_idx2]\n        api.logger.error(\"\\n\" + error_message)\n        api.send(\"info\", (error_type + ', ' + error_message))\n        error_occurred = True\n    else:\n        api.send(\"finalparams\", 'line72')\n        sessionid_idx1 = str(response.content).find(tag_sessionid_open) + len(tag_sessionid_open)\n        sessionid_idx2 = str(response.content).find(tag_sessionid_close)\n        session_id = str(response.content)[sessionid_idx1:sessionid_idx2]\n        api.send(\"finalparams\",session_id )\n        #api.send(\"Output\",session_id )\n        \"\"\"\n        xtree = et.parse(session_id)\n        xroot = xtree.getroot() \n        df_cols = [\"QuotationNumber\"]\n        rows = []\n\n        for node in xroot: \n            s_name = node.attrib.get(\"QuotationNumber\")\n            rows.append({\"QuotationNumber\": s_name})\n            #api.send(\"finalparams\",s_name )\n        out_df = pd.DataFrame(rows, columns = df_cols)   \n        \"\"\"\n    return session_id\n    \ndef trigger_sf_data_extraction(parameter_string):\n    global error_occurred\n    sf_host_url = extract_url_from_parameters(parameter_string)\n    api.send(\"finalparams\", 'line79')\n    session_id = get_session_id(sf_host_url)\n    final_parameters = parameter_string + ',' + session_id\n    if error_occurred:\n        api.send(\"terminate\", 'stop')\n        api.send(\"finalparams\", 'line84- if block')\n    else:\n        \n       \n      \n        api.send(\"finalparams\", final_parameters)\n        api.send(\"finalparams\", 'line87 - else block')\n\napi.set_port_callback(\"inparams\", trigger_sf_data_extraction)"
+				},
+				"additionalinports": [
+					{
+						"name": "inparams",
+						"type": "string"
+					}
+				],
+				"additionaloutports": [
+					{
+						"name": "finalparams",
+						"type": "message"
+					},
+					{
+						"name": "Output",
+						"type": "string"
+					},
+					{
+						"name": "Output1",
+						"type": "string"
+					}
+				]
+			}
+		},
+		"python3operator21": {
+			"component": "com.sap.system.python3Operator",
+			"metadata": {
+				"label": "Set Run Parameters",
+				"x": 17,
+				"y": 117,
+				"height": 80,
+				"width": 120,
+				"extensible": true,
+				"config": {
+					"script": "'''\nCollect parameters for the run such as Service URL, Load type, timestamps, etc.\n\nThe following settings are configured in the configuration panel of this operator:\n- Web Service endpoint <-- webServiceEndpoint\n- Load type (\"initial\" or \"delta\") <-- loadTypeInitialOrDelta\n- Last modified timestamp (only for the Initial Load) <-- initialLoadLastModifiedDate\n- The number of records per SFSF service call <-- numberRecordsPerChunk.\nThe last modified timestamp for delta loads is determined by the timestamp\nof the last successful extraction run (either initial or delta) and is queried\nas the most recent run timestamp from the Vora table RUN_DETAILS.\nIn case a Delta Load is executed without a last run timestamp, the pipeline terminates.\nIt will also terminate if a second Load is attemted at the same calendar day.\nThe reason for this setup is the append mode for files in S3, which contain the calendar\ndate in their names.\n\nCreated on 05.08.2019\n@author: D026823\n'''\n\ntry:\n    import json\n    import datetime\nexcept ImportError:\n    api.logger.error(\"Python libraries could not be loaded: json, datetime\")\n\ndef initiate_run():\n    # Get Web Service endpoint\n    ws_host = str(api.config.webServiceEndpoint)\n    \n    # Get type of Load\n    load_type = str(api.config.loadTypeInitialOrDelta).lower()\n    \n    # Determine the last_modified timestamp (Initial Load timestamp is configured and\n    # the Delta Load timestamp gets queried from Vora table \"RUN_DETAILS\")\n    # The pipeline terminates if a Delta Load is attempted without the availability a previos run's timestamp in Vora table \"RUN_DETAILS\")\n    last_timestamp = ''\n    \n    \"\"\"\n    if (load_type == 'initial'):\n        last_timestamp = str(api.config.initialLoadLastModifiedDate)\n    elif (json.loads(sql_resultset)[0]['LAST_TIMESTAMP'] == None) and (load_type != 'initial'):\n        api.logger.error(\"\\nNo previous timestamp is existing. Please conduct an Initial Load before! Terminating Pipeline in a controlled way\")\n        api.send(\"terminate\", 'stop')\n    else:\n        last_timestamp = json.loads(sql_resultset)[0]['LAST_TIMESTAMP']\n    \"\"\"\n\n\n    # Get number of records per SFSF service call (query and queryMore)\n    number_records_per_chunk = str(api.config.numberRecordsPerChunk)\n    \n    parameters_out = ws_host + ',' + load_type + ',' + last_timestamp + ',' + number_records_per_chunk\n    api.send(\"runparameters\", parameters_out)\n    \n#api.set_port_callback(\"timestamp\", initiate_run)\ninitiate_run()\n",
+					"webServiceEndpoint": "https://cpq-sales.calliduscloud.com/wsAPI/CPQAPI.asmx?WSDL",
+					"loadTypeInitialOrDelta": "initial",
+					"initialLoadLastModifiedDate": "2000-01-01T01:00:00Z",
+					"numberRecordsPerChunk": "200"
+				},
+				"additionalinports": [
+					{
+						"name": "timestamp",
+						"type": "string"
+					}
+				],
+				"additionaloutports": [
+					{
+						"name": "runparameters",
+						"type": "string"
+					},
+					{
+						"name": "terminate",
+						"type": "string"
+					}
+				]
+			},
+			"name": "python3operator2"
+		},
+		"terminal2": {
+			"component": "com.sap.util.terminal",
+			"metadata": {
+				"label": "Terminal",
+				"x": 683.9999961853027,
+				"y": 57,
+				"height": 80,
+				"width": 120,
+				"ui": "dynpath",
+				"config": {}
+			}
+		},
+		"tostringconverter1": {
+			"component": "com.sap.util.toStringConverter",
+			"metadata": {
+				"label": "ToString Converter",
+				"x": 533.499997138977,
+				"y": 12,
+				"height": 50,
+				"width": 50,
+				"config": {}
+			}
+		},
+		"wiretap1": {
+			"component": "com.sap.util.wiretap",
+			"metadata": {
+				"label": "Wiretap",
+				"x": 499,
+				"y": 102,
+				"height": 80,
+				"width": 120,
+				"ui": "dynpath",
+				"config": {}
+			}
+		},
+		"python3operator2": {
+			"component": "com.sap.system.python3Operator",
+			"metadata": {
+				"label": "Python3 Operator",
+				"x": 498.99999713897705,
+				"y": 222,
+				"height": 80,
+				"width": 120,
+				"extensible": true,
+				"config": {
+					"script": "def on_input(msg1):\r\n    import pandas as pd\r\n    import xml.etree.ElementTree as et \r\n    import requests  \r\n    api.send(\"output\",msg1)\r\n   \r\n\r\n    #count=0\r\n    loop=msg1\r\n    for q in loop:\r\n        #count=count+1\r\n        api.send(\"output\",msg1)\r\n        url = 'https://cpq-sales.calliduscloud.com/wsAPI/CPQAPI.asmx?WSDL'\r\n        headers = {'content-type': 'text/xml'}\r\n        body =  ''' <soap:Envelope xmlns:soap=\"http://www.w3.org/2003/05/soap-envelope\" xmlns:web=\"http://webcominc.com/\">\r\n                    <soap:Header/>\r\n                    <soap:Body>\r\n                        <web:GetQuoteItemsAttributes>\r\n                            <!--Optional:-->\r\n                            <web:username>akimtee#IBMACHINES_PARTNER</web:username>\r\n                            <!--Optional:-->\r\n                            <web:password>Cognitive@123</web:password>\r\n                            <!--Optional:-->\r\n                            <web:cartCompositeNumber>{quote}</web:cartCompositeNumber>\r\n                            <web:revNum>0</web:revNum>\r\n                            <!--Optional:-->\r\n                            <web:attributeNames>\r\n                                <!--Zero or more repetitions:-->\r\n                                <web:string>?</web:string>\r\n                            </web:attributeNames>\r\n                            <web:getAllAttributes>true</web:getAllAttributes>\r\n                        </web:GetQuoteItemsAttributes>\r\n                    </soap:Body>\r\n                    </soap:Envelope>'''\r\n        response = requests.post(url,data=body.format(quote=q),headers=headers)\r\n        root = et.fromstring(response.text)\r\n    #print(response.text)\r\n        count=0\r\n        a1=''\r\n        a2=''\r\n        a3=''\r\n        DateCreated=''\r\n        CartCompositeNumber=''\r\n        OwnerId=''\r\n        OrderStatusName=''\r\n        ProductId=''\r\n        Price=''\r\n        Qty=''\r\n        for child in root:\r\n            #print(child.tag)\r\n            for i in child:\r\n                #print(i.tag)\r\n                for j in i:\r\n                    #print(j.tag)\r\n                    root2=et.fromstring(j.text)\r\n                    for k in root2:\r\n                        #print(k.tag)\r\n                        if k.tag=='DateCreated':\r\n                            \r\n                            DateCreated=k.text\r\n                        if k.tag=='CartCompositeNumber':\r\n                            CartCompositeNumber=k.text\r\n                        if k.tag=='OwnerId':\r\n                            OwnerId=k.text\r\n                        if k.tag=='OrderStatusName':\r\n                            OrderStatusName=k.text\r\n                        \r\n                        \r\n                        for Quotes in k:\r\n                            #print(Quotes.tag)\r\n                            if Quotes.tag=='ProductId':\r\n                                \r\n                                ProductId=Quotes.text\r\n                            if Quotes.tag=='Price':\r\n                          \r\n                                Price=Quotes.text\r\n                            if Quotes.tag=='Qty':\r\n                                Qty=Quotes.text\r\n                                \r\n                            for child1 in Quotes[:2]:\r\n                                #print(child1.text)\r\n                                if child1.tag=='AttributeName':\r\n                                    a=0\r\n                                    #print(child1.text)\r\n                                if child1.tag=='AttributeDisplayValue':\r\n                                    count=count+1\r\n                                    if count==1:\r\n                                        a1=child1.text\r\n                                    elif count==3:\r\n                                        a2=child1.text\r\n                                    elif count==8:\r\n                                        a3=child1.text\r\n                                    else:\r\n                                        a=0\r\n                    api.send(\"output\",(DateCreated+\",\"+CartCompositeNumber+\",\"+OwnerId+\",\"+OrderStatusName+\",\"+ProductId+\",\"+Price+\",\"+Qty+\",\"+a1+\",\"+a2+\",\"+a3))\r\n\r\n    #api.send(\"output\",count)\r\n                            \r\napi.set_port_callback(\"input1\", on_input)"
+				},
+				"additionalinports": [
+					{
+						"name": "input1",
+						"type": "string"
+					}
+				],
+				"additionaloutports": [
+					{
+						"name": "output",
+						"type": "message"
+					}
+				]
+			}
+		},
+		"wiretap2": {
+			"component": "com.sap.util.wiretap",
+			"metadata": {
+				"label": "Wiretap",
+				"x": 683.9999961853027,
+				"y": 177,
+				"height": 80,
+				"width": 120,
+				"ui": "dynpath",
+				"config": {}
+			}
+		}
+	},
+	"groups": [
+		{
+			"name": "group1",
+			"nodes": [
+				"python3operator1"
+			],
+			"metadata": {
+				"description": "Group"
+			},
+			"tags": {
+				"xmldict": ""
+			}
+		}
+	],
+	"connections": [
+		{
+			"metadata": {
+				"points": "141,148 168.99999952316284,148 168.99999952316284,165 216.99999904632568,165"
+			},
+			"src": {
+				"port": "runparameters",
+				"process": "python3operator21"
+			},
+			"tgt": {
+				"port": "inparams",
+				"process": "python3operator1"
+			}
+		},
+		{
+			"metadata": {
+				"points": "345.9999990463257,147 373.9999985694885,147 373.9999985694885,154 449.9999976158142,154 449.9999976158142,28 528.499997138977,28"
+			},
+			"src": {
+				"port": "finalparams",
+				"process": "python3operator1"
+			},
+			"tgt": {
+				"port": "ininterface",
+				"process": "tostringconverter1"
+			}
+		},
+		{
+			"metadata": {
+				"points": "587.499997138977,37 650.9999966621399,37 650.9999966621399,97 678.9999961853027,97"
+			},
+			"src": {
+				"port": "outstring",
+				"process": "tostringconverter1"
+			},
+			"tgt": {
+				"port": "in1",
+				"process": "terminal2"
+			}
+		},
+		{
+			"metadata": {
+				"points": "345.9999990463257,165 465.9999976158142,165 465.9999976158142,142 493.99999713897705,142"
+			},
+			"src": {
+				"port": "Output",
+				"process": "python3operator1"
+			},
+			"tgt": {
+				"port": "in",
+				"process": "wiretap1"
+			}
+		},
+		{
+			"metadata": {
+				"points": "622.999997138977,262 650.9999966621399,262 650.9999966621399,217 678.9999961853027,217"
+			},
+			"src": {
+				"port": "output",
+				"process": "python3operator2"
+			},
+			"tgt": {
+				"port": "in",
+				"process": "wiretap2"
+			}
+		},
+		{
+			"metadata": {
+				"points": "345.9999990463257,183 373.9999985694885,183 373.9999985694885,176 449.9999976158142,176 449.9999976158142,262 493.99999713897705,262"
+			},
+			"src": {
+				"port": "Output1",
+				"process": "python3operator1"
+			},
+			"tgt": {
+				"port": "input1",
+				"process": "python3operator2"
+			}
+		}
+	],
+	"inports": {},
+	"outports": {}
+}

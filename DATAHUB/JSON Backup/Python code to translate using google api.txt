@@ -1,0 +1,16 @@
+import requests
+
+url = "https://google-translate1.p.rapidapi.com/language/translate/v2"
+
+payload = "source=en&q=my name is ankit &target=es"
+headers = {
+    'x-rapidapi-host': "google-translate1.p.rapidapi.com",
+    'x-rapidapi-key': "aa96fa19f7msh47e994f7c845189p1a54ffjsned9e55ba719f",
+    'accept-encoding': "application/gzip",
+    'content-type': "application/x-www-form-urlencoded"
+    }
+
+response = requests.request("POST", url, data=payload, headers=headers)
+
+print(response.text)
+api.send("Output",response.text)

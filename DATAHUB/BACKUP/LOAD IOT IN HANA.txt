@@ -1,0 +1,121 @@
+{
+	"properties": {},
+	"description": "",
+	"processes": {
+		"readfile1": {
+			"component": "com.sap.file.read",
+			"metadata": {
+				"label": "Read File",
+				"x": 83,
+				"y": 68,
+				"height": 80,
+				"width": 120,
+				"config": {
+					"mode": "Once",
+					"connection": {
+						"configurationType": "System Management Files (\"/files/\")",
+						"vrepRoot": "/"
+					},
+					"path": "/vrep/vflow/motorforceiot.csv"
+				}
+			}
+		},
+		"saphanaclient1": {
+			"component": "com.sap.hana.client2",
+			"metadata": {
+				"label": "SAP HANA Client",
+				"x": 434,
+				"y": 73,
+				"height": 80,
+				"width": 120,
+				"config": {
+					"connection": {
+						"configurationType": "Configuration Manager",
+						"connectionID": "HANADB"
+					},
+					"tableName": "SEP_MI.MOTORFORCE_IOT",
+					"tableColumns": [
+						{
+							"name": "Time",
+							"type": "NVARCHAR",
+							"size": 100
+						},
+						{
+							"name": "MotorForce",
+							"type": "NVARCHAR",
+							"size": 100
+						}
+					],
+					"initTable": "Drop (Cascade)",
+					"csvHeader": "Ignore"
+				}
+			}
+		},
+		"fromfile1": {
+			"component": "com.sap.file.fromFile",
+			"metadata": {
+				"label": "From File",
+				"x": 261,
+				"y": 83,
+				"height": 50,
+				"width": 50,
+				"config": {}
+			}
+		},
+		"graphterminator1": {
+			"component": "com.sap.util.graphTerminator",
+			"metadata": {
+				"label": "Graph Terminator",
+				"x": 603,
+				"y": 132,
+				"height": 80,
+				"width": 120,
+				"config": {}
+			}
+		}
+	},
+	"groups": [],
+	"connections": [
+		{
+			"metadata": {
+				"points": "188,99 231.5,99 231.5,108 275,108"
+			},
+			"src": {
+				"port": "file",
+				"process": "readfile1"
+			},
+			"tgt": {
+				"port": "file",
+				"process": "fromfile1"
+			}
+		},
+		{
+			"metadata": {
+				"points": "296,119.5 448,119.5"
+			},
+			"src": {
+				"port": "message",
+				"process": "fromfile1"
+			},
+			"tgt": {
+				"port": "data",
+				"process": "saphanaclient1"
+			}
+		},
+		{
+			"metadata": {
+				"points": "558,113 578,113 578,172 598,172"
+			},
+			"src": {
+				"port": "result",
+				"process": "saphanaclient1"
+			},
+			"tgt": {
+				"port": "stop",
+				"process": "graphterminator1"
+			}
+		}
+	],
+	"inports": {},
+	"outports": {}
+}

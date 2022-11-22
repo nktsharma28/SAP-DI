@@ -1,0 +1,87 @@
+{
+	"description": "",
+	"processes": {
+		"odataqueryconsumer11": {
+			"component": "com.sap.dh.sdi.odata.query.consumer",
+			"metadata": {
+				"label": "SalesQuoteCollection",
+				"x": 142,
+				"y": 27,
+				"height": 80,
+				"width": 120,
+				"extensible": false,
+				"config": {
+					"odataConnection": {
+						"configurationType": "Configuration Manager",
+						"connectionID": "C4C"
+					},
+					"native_sql_statement": "/SalesQuoteCollection"
+				}
+			},
+			"name": "odataqueryconsumer1"
+		},
+		"flowagenttableproducer1": {
+			"component": "com.sap.dh.ds.database.producer",
+			"metadata": {
+				"label": "Load Data in Table",
+				"x": 418,
+				"y": 27,
+				"height": 80,
+				"width": 120,
+				"extensible": false,
+				"config": {
+					"service": "HANA",
+					"cdcApplierType": "Track Change History",
+					"hanaConnection": {
+						"configurationType": "Configuration Manager",
+						"connectionID": "HANADB"
+					},
+					"hanaAdaptedDataset": "SEP_MI.SALES"
+				}
+			}
+		},
+		"graphterminator1": {
+			"component": "com.sap.util.graphTerminator",
+			"metadata": {
+				"label": "Graph Terminator",
+				"x": 669,
+				"y": 27,
+				"height": 80,
+				"width": 120,
+				"config": {}
+			}
+		}
+	},
+	"groups": [],
+	"connections": [
+		{
+			"metadata": {
+				"points": "266,58 339.5,58 339.5,67 413,67"
+			},
+			"src": {
+				"port": "outConfig",
+				"process": "odataqueryconsumer11"
+			},
+			"tgt": {
+				"port": "inConfig",
+				"process": "flowagenttableproducer1"
+			}
+		},
+		{
+			"metadata": {
+				"points": "542,67 664,67"
+			},
+			"src": {
+				"port": "outMessage",
+				"process": "flowagenttableproducer1"
+			},
+			"tgt": {
+				"port": "stop",
+				"process": "graphterminator1"
+			}
+		}
+	],
+	"inports": {},
+	"outports": {},
+	"properties": {}
+}

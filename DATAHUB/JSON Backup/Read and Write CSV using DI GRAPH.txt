@@ -1,0 +1,26 @@
+import io
+import csv
+
+def on_input(msg):
+    result = ""
+    inter_row = {}
+
+    f = io.StringIO(msg.body.decode("utf-8"))
+    data = csv.DictReader(f, delimiter=",")
+
+    with io.StringIO() as f:
+        writer = csv.DictWriter(f, fieldnames=data.fieldnames)
+        writer.writeheader()
+
+        for row in data:
+
+            
+
+            writer.writerow(row)
+            
+
+        result = f.getvalue()
+
+    api.send("outData", api.Message(attributes=msg.attributes, body=result))
+
+api.set_port_callback("inData", on_input)

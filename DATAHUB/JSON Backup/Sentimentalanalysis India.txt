@@ -1,0 +1,92 @@
+#import tweepy
+import csv
+#import pandas as pd
+####input your credentials here
+
+def on_input(msg):
+    e=msg.body
+    f="covid" 
+    g="corona"
+    h="virus"
+    if f in e or g in e or h in e:
+         #api.send("Output", msg.attributes["polarity"] +", "+ msg.body)
+        b=""
+        a=float(msg.attributes["polarity"])
+        if a > 0.000 and a< 0.100:
+            b="good"
+        elif a > 0.100 and a<0.200:
+            b="very good"
+        
+        elif a > 0.200 and a<0.300:
+            b="excellent"
+        
+        elif a>0.300:
+            b="outstanding"
+        
+        elif a < 0.000 and a>-0.100:
+            b="bad"
+        
+        elif a<=-0.100 and a>=-0.200:
+            b="very bad"
+        
+        elif a<=-0.300 and a>-0.300:
+            b="worst"
+        
+        else:
+            b="neutral"
+        
+    
+        
+    #api.send("Output", msg.attributes["polarity"] +"-"+ msg.body)
+        api.send("Output", "India,"+msg.attributes["polarity"]+","+b +","+f+"-"+g)
+    
+    else:
+         #api.send("Output", msg.attributes["polarity"] +", "+ msg.body)
+        api.send("Output", " ")
+
+
+def on_input1(msg):
+    e=msg.body
+    f="economy" 
+    g="jobs"
+    h="employment"
+    if f in e or g in e or h in e:
+         #api.send("Output", msg.attributes["polarity"] +", "+ msg.body)
+        b=""
+        a=float(msg.attributes["polarity"])
+        if a > 0.000 and a< 0.100:
+            b="good"
+        elif a > 0.100 and a<0.200:
+            b="very good"
+        
+        elif a > 0.200 and a<0.300:
+            b="excellent"
+        
+        elif a>0.300:
+            b="outstanding"
+        
+        elif a < 0.000 and a>-0.100:
+            b="bad"
+        
+        elif a<=-0.100 and a>=-0.200:
+            b="very bad"
+        
+        elif a<=-0.300 and a>-0.300:
+            b="worst"
+        
+        else:
+            b="neutral"
+        
+    
+        
+    #api.send("Output", msg.attributes["polarity"] +"-"+ msg.body)
+        api.send("Output", "India,"+msg.attributes["polarity"]+","+b +","+f+"-"+g)
+    
+    else:
+         #api.send("Output", msg.attributes["polarity"] +", "+ msg.body)
+        api.send("Output", " ")
+    
+    
+    
+    
+api.set_port_callback("Input", on_input)

@@ -1,0 +1,223 @@
+{
+	"properties": {},
+	"description": "",
+	"processes": {
+		"python3operator1": {
+			"component": "com.sap.system.python3Operator",
+			"metadata": {
+				"label": "Python3 Operator",
+				"x": 563,
+				"y": 189,
+				"height": 80,
+				"width": 120,
+				"extensible": true,
+				"config": {
+					"script": "import io\r\nfrom datetime import datetime\r\nfrom io import StringIO\r\nimport pandas as pd\r\nimport ibm_boto3\r\nfrom ibm_botocore.client import Config, ClientError\r\n#import hana_ml.dataframe as dataframe\r\n#from notebook_hana_connector.notebook_hana_connector import NotebookConnectionContext\r\nfrom hdbcli import dbapi\r\n\r\ndef on_input(msg):\r\n    \r\n    \r\n    # Obtain data\r\n    import pandas as pd\r\n    import io\r\n    df1= pd.read_csv(io.StringIO(msg.body), sep=\",\")\r\n    df1['ID'] = df1.iloc[:,0]\r\n    \r\n    df = pd.DataFrame()\r\n    \r\n  \r\n    \r\n    df1['ID']=df1['ID'].max()\r\n    df1['C']=df1['ID'].iloc[0]\r\n    COS_ENDPOINT = \"https://s3.us-east.cloud-object-storage.appdomain.cloud\" # Current list avaiable at https://control.cloud-object-storage.cloud.ibm.com/v2/endpoints\r\n    COS_API_KEY_ID = \"2LSOWFwFvJsNv60aLMUxKhY9ourky1_2hvddpN8IIb2v\" # eg \"W00YixxxxxxxxxxMB-odB-2ySfTrFBIQQWanc--P3byk\"\r\n    COS_RESOURCE_CRN = \"crn:v1:bluemix:public:cloud-object-storage:global:a/16dcf0d2ff1a4af484d3d8b7d5489749:e796db70-e0d6-4ed2-a9b1-4ee538352cc9::\" # eg \"crn:v1:bluemix:public:cloud-object-storage:global:a/3bf0d9003xxxxxxxxxx1c3e97696b71c:d6f04d83-6c4f-4a62-a165-696756d63903::\"\r\n    COS_AUTH_ENDPOINT = \"https://iam.cloud.ibm.com/identity/token\"\r\n    BUCKET_NAME = \"covid19-cos-master-prod-usa\"\r\n    \r\n    FILES = [\r\n    {\r\n    'filename': 'usa_claims.csv',\r\n    'output_table': 'USA_CLAIMS'\r\n    }\r\n    ]\r\n    \r\n    # Create COS resource\r\n    cos = ibm_boto3.resource(\"s3\",\r\n    \r\n     ibm_api_key_id=COS_API_KEY_ID,\r\n     ibm_service_instance_id=COS_RESOURCE_CRN,\r\n     ibm_auth_endpoint=COS_AUTH_ENDPOINT,\r\n     config=Config(signature_version=\"oauth\"),\r\n     endpoint_url=COS_ENDPOINT\r\n    )\r\n    \r\n    for f in FILES:\r\n        file = cos.Object(BUCKET_NAME, f['filename']).get()\r\n         \r\n    \r\n    \r\n        content = file['Body'].read().decode('utf-8')\r\n        string_io = StringIO(content)\r\n        df = pd.read_csv(string_io)\r\n        df['ID'] = df1['ID'].max()\r\n        column_list = df.columns.tolist()\r\n        #data=df.values.tolist()\r\n        #api.send(\"output\",data)\r\n    \r\n    for index, row in df.iterrows():\r\n        \r\n        \r\n        values_list = list(map(lambda c: str(row[c]) if c=='ID' else f\"'{row[c]}'\" , column_list))\r\n      \r\n        values = f'''{', '.join(values_list)}'''\r\n        api.send(\"output\",values+'\\n')\r\n    \r\n   \r\n\r\n    \r\n\r\napi.set_port_callback(\"input1\", on_input)"
+				},
+				"additionalinports": [
+					{
+						"name": "input1",
+						"type": "message"
+					}
+				],
+				"additionaloutports": [
+					{
+						"name": "output",
+						"type": "message"
+					}
+				]
+			}
+		},
+		"hanatableconsumer1": {
+			"component": "com.sap.dh.ds.hanaodbc.table.consumer",
+			"metadata": {
+				"label": "HANA Table Consumer",
+				"x": 101,
+				"y": 115,
+				"height": 80,
+				"width": 120,
+				"extensible": false,
+				"config": {
+					"partitionType": "None",
+					"hanaConnection": {
+						"configurationType": "Configuration Manager",
+						"connectionID": "HANADB"
+					},
+					"adapted_dataset": {
+						"remoteObjectReference": {
+							"connection": {
+								"id": "HANADB",
+								"type": "HANA_DB"
+							},
+							"name": "USA_CLAIMS2",
+							"remoteObjectType": "TABLE",
+							"qualifiedName": "/SEP_COVIDEXT/USA_CLAIMS2",
+							"nativeQualifiedName": "\"SEP_COVIDEXT\".\"USA_CLAIMS2\"",
+							"owner": "SEP_COVIDEXT"
+						},
+						"schema": {
+							"genericType": "TABLE",
+							"tableBasedRepresentation": {
+								"attributes": [
+									{
+										"name": "STATE",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 50,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "WEEK_ENDING",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 50,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "INITIAL_CLAIMS",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 50,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "REFLACTING_WEEK_ENDED",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 50,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "CONTINUED_CLAIMS",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 50,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "COVERED_EMPLOYMENT",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 50,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "UNEMPLOYMENT_RATE",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 50,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "ID",
+										"templateType": "int8",
+										"datatype": "INTEGER",
+										"length": 1,
+										"nativeDatatype": "TINYINT"
+									}
+								]
+							}
+						},
+						"capabilities": {
+							"isProfileable": true
+						},
+						"capabilityProperties": [
+							{
+								"name": "isProfileable",
+								"value": "true"
+							}
+						]
+					}
+				}
+			}
+		},
+		"flowagentcsvproducer1": {
+			"component": "com.sap.dh.ds.csv.producer",
+			"metadata": {
+				"label": "Flowagent CSV Producer",
+				"x": 303,
+				"y": 115,
+				"height": 80,
+				"width": 120,
+				"extensible": false,
+				"config": {
+					"additionalProperties_csv": {
+						"columnDelimiter": ",",
+						"csvHeaderIncluded": true,
+						"textDelimiterStyle": "Minimal",
+						"csvHeaderIncludedBehavior": "First batch"
+					}
+				}
+			}
+		},
+		"wiretap1": {
+			"component": "com.sap.util.wiretap",
+			"metadata": {
+				"label": "Wiretap",
+				"x": 738,
+				"y": 201,
+				"height": 80,
+				"width": 120,
+				"ui": "dynpath",
+				"config": {}
+			}
+		}
+	},
+	"groups": [
+		{
+			"name": "group1",
+			"nodes": [
+				"python3operator1"
+			],
+			"metadata": {
+				"description": "Group"
+			},
+			"tags": {
+				"ibm-boto3-hdbcli": ""
+			}
+		}
+	],
+	"connections": [
+		{
+			"metadata": {
+				"points": "225,146 261.5,146 261.5,155 298,155"
+			},
+			"src": {
+				"port": "outConfig",
+				"process": "hanatableconsumer1"
+			},
+			"tgt": {
+				"port": "inConfig",
+				"process": "flowagentcsvproducer1"
+			}
+		},
+		{
+			"metadata": {
+				"points": "408,155 492.5,155 492.5,229 577,229"
+			},
+			"src": {
+				"port": "outMessage",
+				"process": "flowagentcsvproducer1"
+			},
+			"tgt": {
+				"port": "input1",
+				"process": "python3operator1"
+			}
+		},
+		{
+			"metadata": {
+				"points": "687,229 710,229 710,241 733,241"
+			},
+			"src": {
+				"port": "output",
+				"process": "python3operator1"
+			},
+			"tgt": {
+				"port": "in",
+				"process": "wiretap1"
+			}
+		}
+	],
+	"inports": {},
+	"outports": {}
+}

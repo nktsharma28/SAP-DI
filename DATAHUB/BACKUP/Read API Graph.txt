@@ -1,0 +1,98 @@
+{
+	"properties": {},
+	"description": "",
+	"processes": {
+		"python3operator1": {
+			"component": "com.sap.system.python3Operator",
+			"metadata": {
+				"label": "Python3 Operator",
+				"x": 359,
+				"y": 102,
+				"height": 80,
+				"width": 120,
+				"extensible": true,
+				"config": {
+					"script": "import requests\nimport pandas as pd\nimport io\n\n\nresponse = requests.get('https://www.gstatic.com/covid19/mobility/Global_Mobility_Report.csv')\n\n\nurlData = requests.get('https://www.gstatic.com/covid19/mobility/Global_Mobility_Report.csv').content\ndf= pd.read_csv(io.StringIO(urlData.decode('utf-8')))\ndata =  df.values.tolist()\napi.send(\"output\",data)\napi.send(\"output1\",response.text)"
+				},
+				"additionaloutports": [
+					{
+						"name": "output",
+						"type": "message"
+					},
+					{
+						"name": "output1",
+						"type": "string"
+					}
+				]
+			}
+		},
+		"wiretap1": {
+			"component": "com.sap.util.wiretap",
+			"metadata": {
+				"label": "Wiretap",
+				"x": 644,
+				"y": 163,
+				"height": 80,
+				"width": 120,
+				"ui": "dynpath",
+				"config": {}
+			}
+		},
+		"wiretap2": {
+			"component": "com.sap.util.wiretap",
+			"metadata": {
+				"label": "Wiretap",
+				"x": 579,
+				"y": 53,
+				"height": 80,
+				"width": 120,
+				"ui": "dynpath",
+				"config": {}
+			}
+		}
+	},
+	"groups": [
+		{
+			"name": "group1",
+			"nodes": [
+				"python3operator1"
+			],
+			"metadata": {
+				"description": "Group"
+			},
+			"tags": {
+				"requests": ""
+			}
+		}
+	],
+	"connections": [
+		{
+			"metadata": {
+				"points": "483,151 561,151 561,203 639,203"
+			},
+			"src": {
+				"port": "output1",
+				"process": "python3operator1"
+			},
+			"tgt": {
+				"port": "in",
+				"process": "wiretap1"
+			}
+		},
+		{
+			"metadata": {
+				"points": "483,133 528.5,133 528.5,93 574,93"
+			},
+			"src": {
+				"port": "output",
+				"process": "python3operator1"
+			},
+			"tgt": {
+				"port": "in",
+				"process": "wiretap2"
+			}
+		}
+	],
+	"inports": {},
+	"outports": {}
+}

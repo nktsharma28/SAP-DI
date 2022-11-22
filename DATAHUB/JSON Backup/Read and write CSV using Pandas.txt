@@ -1,0 +1,5 @@
+import pandas as pd
+
+url="http://api.weatherstack.com/current?access_key=3aa0f109df510c8dae88d2ca62fe54c1&query=Pune"
+df=pd.read_json(url)
+df.to_csv('/vrep/vflow/pandas.csv')

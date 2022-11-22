@@ -1,0 +1,16 @@
+import io
+import csv
+import pandas as pd
+
+
+data = open('/vrep/vflow/Censor.csv')
+reader = csv.reader(data,delimiter=',')
+for i in reader:
+    if 'Private' in i[1]:
+        api.send("Output",i)
+    else:
+        api.send("Output","")
+    
+    
+  
+   

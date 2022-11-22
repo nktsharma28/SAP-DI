@@ -1,0 +1,342 @@
+{
+	"properties": {},
+	"iconsrc": "",
+	"groupResources": {},
+	"description": "Copy of ML_PIPELINE_DEMAND_SENSING_JUPYTER_SEASONALITY",
+	"processes": {
+		"python3operator1111": {
+			"component": "com.sap.system.python3Operator",
+			"metadata": {
+				"label": "DemandSensing_Training",
+				"x": 742.9999961853027,
+				"y": 85,
+				"height": 80,
+				"width": 120,
+				"extensible": true,
+				"config": {
+					"script": "#import Libraries\nimport datetime\nimport time\nimport itertools\nimport pandas as pd\nimport numpy as np\nimport io\n#import pickle\n#import json\nfrom sklearn.preprocessing import minmax_scale\n#from dask.distributed import Client\nfrom datetime import date\nfrom fbprophet import Prophet\nfrom datetime import date\n\ndef on_input(msg1):\n    \n    # Set forecast target and choose date column name\n    TARGET = 'FillMean'\n    DATE_COLUMN = 'week_ending_date'\n    api.send(\"output2\",'line 20')\n    \n    # JSON file to save best parameters\n    #OPTIM_FILE = 'optimized_parameter.json'\n    \n    # Establish training/test windows\n    TRAIN_START = pd.to_datetime('2019-01-01').date()\n    TRAIN_END = pd.to_datetime('2019-12-31').date()\n    FUTURE_PERIOD = 52\n    CAP_PERCENTILE = 95\n    MAX_MODEL_ITER = 50\n    \n    \n    # Choose model features and forecast groupby level\n    ADDITIONAL_REGRESSORS = []\n    GROUPBY_LEVEL = ['retailer','state','brand','ppg']\n    \n    # To speed up running, set to true and designate what number of samples to run on\n    SAMPLE = True\n    SAMPLE_SIZE = 10\n    \n    def load_holiday_calendar():\n        \"\"\" Builds a holiday calendar.\"\"\"\n        # New year's day\n        newyear = pd.DataFrame({\n        'holiday': 'newyear',\n        'ds': pd.to_datetime(['2019-01-01','2020-01-01']),\n        })\n        # Martin Luther King Jr. Day\n        MLK_day = pd.DataFrame({\n        'holiday': 'MLK_day',\n        'ds': pd.to_datetime(['2019-01-21','2020-01-20']),\n        })\n        # March Madness\n        march_madness = pd.DataFrame({\n        'holiday': 'march_madness',\n        'ds': pd.to_datetime(['2018-03-24','2018-03-31','2019-03-30','2019-04-06','2020-03-28','2020-04-04', '2021-03-27','2021-04-03']),\n        })\n        # Superbowl\n        superbowls = pd.DataFrame({\n        'holiday': 'superbowl',\n        'ds': pd.to_datetime(['2018-01-27','2018-02-03', '2019-01-26','2019-02-02', '2020-01-25','2020-02-01','2021-01-30','2021-02-06']),\n        })\n        # Lent\n        lent = pd.DataFrame({\n        'holiday': 'lent',\n        'ds': pd.to_datetime(['2018-02-17', '2018-02-24','2018-03-03','2018-03-10','2018-03-17','2018-03-24',\n                            '2019-03-09', '2019-03-16','2019-03-23','2019-03-30','2019-04-06','2019-04-13',\n                            '2020-02-29', '2020-03-07', '2020-03-14','2020-03-21','2020-03-28','2020-04-04',\n                            '2021-02-20', '2021-02-27', '2021-03-06','2021-03-13','2021-03-20','2021-03-27']),\n        })\n        # Easter (Wednesday – Easter Friday)\n        easter = pd.DataFrame({\n        'holiday': 'easter',\n        'ds': pd.to_datetime(['2018-03-31', '2019-04-20', '2020-04-11','2021-04-03']),\n        })\n        # Memorial day\n        memorial_day = pd.DataFrame({\n        'holiday': 'memorial_day',\n        'ds': pd.to_datetime(['2019-05-27', '2020-05-25']),\n        })\n        # Independence day\n        indep_day = pd.DataFrame({\n        'holiday': 'indep_day',\n        'ds': pd.to_datetime(['2019-07-04', '2020-07-03']),\n        })\n        # Labor day\n        labor_day = pd.DataFrame({\n        'holiday': 'indep_day',\n        'ds': pd.to_datetime(['2019-09-02', '2020-09-07']),\n        })\n        # Halloween\n        halloween = pd.DataFrame({\n        'holiday': 'halloween',\n        'ds': pd.to_datetime(['2018-10-27', '2019-10-26', '2020-10-31','2021-10-30']),\n        })\n        # Veteran's day\n        veteran_day = pd.DataFrame({\n        'holiday': 'veteran_day',\n        'ds': pd.to_datetime(['2019-11-11', '2020-11-11']),\n        })\n        # Thanksgiving\n        thanksgiving = pd.DataFrame({\n        'holiday': 'thanksgiving',\n        'ds': pd.to_datetime(['2019-11-28', '2020-11-26']),\n        })\n        # Christmas\n        Christmas = pd.DataFrame({\n        'holiday': 'thanksgiving',\n        'ds': pd.to_datetime(['2019-12-25', '2020-12-25']),\n        })\n    \n        holidays_df = pd.concat((newyear, MLK_day, march_madness, superbowls, lent, easter, memorial_day, indep_day, labor_day, halloween, veteran_day, thanksgiving, Christmas))\n        return holidays_df\n\n    def mean_absolute_percentage_error(y_true, y_pred): \n        y_true, y_pred = np.array(y_true), np.array(y_pred)\n        return np.mean(np.abs((y_true - y_pred) / y_true)) * 100\n        \n    def get_end_date_from_week(year,week,day):\n        \"\"\"Calculates first day and last day of week, given a year and week.\"\"\"\n        first_day = datetime.datetime.strptime(f'{year}-W{int(week )- 1}-1', '%Y-W%W-%w').date()\n        last_day = first_day + datetime.timedelta(days=day)\n        return last_day\n        \n    def get_week_number_from_end_date(date_obj):\n        \"\"\"Calculates week number in year given a date.\"\"\"\n        week_number = date_obj.isocalendar()[1]\n        return week_number\n\n    def custom_fillna(series):\n        if series.dtype is pd.np.dtype(float):\n            return series.fillna(0)\n        elif series.dtype is pd.np.dtype('int32'):\n            return series.fillna(0)\n        elif series.dtype is pd.np.dtype('int64'):\n            return series.fillna(0)\n        elif series.dtype is pd.np.dtype(str):\n            return series.fillna(0)    \n        elif series.dtype is pd.np.dtype(object):\n            return series.fillna('')  \n        else:\n            return series\n    \n    df =  pd.read_json(io.StringIO(msg1))\n    df = df.apply(custom_fillna)\n    api.send(\"output2\",'line 135')\n        #Data Processing : Create a subset sample of the data based on the highest quantity ppgs \n    # Get only relevant columns\n    if ADDITIONAL_REGRESSORS:\n        df = df[[DATE_COLUMN] + GROUPBY_LEVEL + ADDITIONAL_REGRESSORS + [TARGET]]\n    else:\n        df = df[[DATE_COLUMN] + GROUPBY_LEVEL + [TARGET]]\n        \n    \n    # Make sure week ending date is set to date and rename column to prophet\n    df[DATE_COLUMN] = pd.to_datetime(df[DATE_COLUMN]).dt.date   \n    \n    if SAMPLE:\n        df_sum = df.groupby(GROUPBY_LEVEL)[[TARGET]].sum().reset_index().rename(columns={TARGET:'total_qty'})\n        top_n = df_sum.nlargest(columns='total_qty', n=SAMPLE_SIZE)\n        top_n = top_n.drop(['total_qty'], axis=1)\n        df = pd.merge(top_n, df, how='inner', on=GROUPBY_LEVEL)\n        #print('Chose top {} samples.'.format(SAMPLE_SIZE))\n        \n    df.rename(columns={DATE_COLUMN: 'ds', TARGET:'y'}, inplace=True)\n    week_day = df['ds'].iloc[0].weekday()\n    custom_holidays = load_holiday_calendar()\n    \n    custom_holidays['week_no'] = custom_holidays['ds'].apply(lambda x: get_week_number_from_end_date(x))\n    custom_holidays['year']= custom_holidays['ds'].apply(lambda x: int(x.strftime('%Y')))\n    #custom_holidays.drop(columns=['ds_str'], inplace=True)\n    custom_holidays['week_ending_date'] = custom_holidays.apply(lambda x: get_end_date_from_week(x['year'], x['week_no'], week_day),1)\n    #custom_holidays['week_ending_date'] = custom_holidays.apply(lambda x: get_end_date_from_week(x['year'], x['week_no'], week_day))\n    custom_holidays.rename(columns={'ds':'date', 'week_ending_date':'ds'},inplace=True)\n    custom_holidays = custom_holidays[['ds', 'holiday']]\n    \n    grouped = df.groupby(['retailer', 'state', 'brand', 'ppg'])\n    seasonality=[]\n    for g in grouped.groups:\n        data = []\n        data.append(g[0])\n        data.append(g[1])\n        data.append(g[2])\n        data.append(g[3])    \n        \n        df_group = grouped.get_group(g)\n        df_group = df_group.sort_values('ds')\n        train_df = df_group.loc[df_group['ds'] <= TRAIN_END]\n        # Initialize model\n        m = Prophet(holidays=custom_holidays,yearly_seasonality=True)\n        # Add holiday and additional regressors\n        m.add_country_holidays(country_name='US')\n        m.fit(train_df)\n        future= m.make_future_dataframe(periods=FUTURE_PERIOD, include_history = False, freq = '7D')\n        \n        forecast=m.predict(future)\n        \n        #print(forecast)\n        forecast['ds'] = forecast['ds'].apply(lambda x: x.strftime('%Y-%m-%d'))\n        season_df=forecast[['ds','yearly']]\n        season_df['retailer']=g[0]\n        season_df['state']=g[1]\n        season_df['brand']=g[2]\n        season_df['ppg']=g[3]\n        seasonality.append(season_df)\n    \n    api.send(\"output2\",'line 196')\n        \n    final_season_df=pd.concat(seasonality)\n    final_season_df['yearly_scaled'] = final_season_df.groupby(['retailer','state','brand','ppg']).yearly.transform(lambda x: minmax_scale(x.astype(float)))\n    \n    final_season_df=final_season_df.rename(columns={'ds':'week_ending_date'})\n    final_season_df = final_season_df[['week_ending_date','retailer','state','brand','ppg','yearly_scaled']]\n    #final_season_df = final_session_df.apply(custom_fillna)\n    final_season_df = final_season_df.apply(custom_fillna)\n    \n    data=final_season_df.values.tolist()\n    \n    f2 = '{},{},{},{},{},{}' \n    for j in data:\n        api.send(\"output1\",f2.format(*j)+'\\n') \n        api.send(\"output2\",f2.format(*j)+'\\n')\n\n    #api.send(\"output2\",data)\n    #api.send(\"output1\",data)\n\n    \n \n        \n            \n            \n    \n   \n   \napi.set_port_callback(\"input1\", on_input)"
+				},
+				"additionalinports": [
+					{
+						"name": "input2",
+						"type": "string"
+					},
+					{
+						"name": "input1",
+						"type": "string"
+					}
+				],
+				"additionaloutports": [
+					{
+						"name": "output2",
+						"type": "message"
+					},
+					{
+						"name": "output1",
+						"type": "message"
+					},
+					{
+						"name": "output3",
+						"type": "message"
+					}
+				]
+			},
+			"name": "python3operator111"
+		},
+		"constantgenerator11": {
+			"component": "com.sap.util.constantGenerator",
+			"metadata": {
+				"label": "Constant Generator",
+				"x": 17,
+				"y": 12,
+				"height": 80,
+				"width": 120,
+				"extensible": true,
+				"config": {
+					"content": " SELECT  \"week_ending_date\", \"retailer\", \"state\", \"business\", \"category\", \"brand\", \"ppg\", \"week_of_year\", \"pos_qty_ty\", \"pos_dollar_ty\", \"FillMean\"  FROM   \"SEP_COVIDEXT\".\"TA_SCM_COIVD_FULL_SAMPLE_TRAIN_SLICE\" ",
+					"counter": 0
+				}
+			},
+			"name": "constantgenerator1"
+		},
+		"saphanaclient11": {
+			"component": "com.sap.hana.client2",
+			"metadata": {
+				"label": "FULL_SAMPLE",
+				"x": 201.99999904632568,
+				"y": 12,
+				"height": 80,
+				"width": 120,
+				"config": {
+					"connection": {
+						"configurationType": "Configuration Manager",
+						"connectionID": "HANADB"
+					},
+					"tableName": "\"SEP_COVIDEXT\".\"Z_SEP.AnalyticalModels.SCM.DemandForecasting.CovidExternal::TA_SCM_COVID_FULL_SAMPLE_TRAIN\"",
+					"csvHeader": "Ignore",
+					"tableColumns": [
+						{
+							"name": "\"week_ending_date\"",
+							"type": "DATE"
+						},
+						{
+							"name": "\"retailer\"",
+							"type": "NVARCHAR",
+							"size": 100
+						},
+						{
+							"name": "\"state\"",
+							"type": "NVARCHAR",
+							"size": 50
+						},
+						{
+							"name": "\"business\"",
+							"type": "NVARCHAR",
+							"size": 100
+						},
+						{
+							"name": "\"category\"",
+							"type": "NVARCHAR",
+							"size": 50
+						},
+						{
+							"name": "\"brand\"",
+							"type": "NVARCHAR",
+							"size": 100
+						},
+						{
+							"name": "\"ppg\"",
+							"type": "NVARCHAR",
+							"size": 100
+						},
+						{
+							"name": "\"week_of_year\"",
+							"type": "INTEGER"
+						},
+						{
+							"name": "\"pos_qty_ty\"",
+							"type": "DOUBLE"
+						},
+						{
+							"name": "\"pos_dollar_ty\"",
+							"type": "DOUBLE"
+						},
+						{
+							"name": "\"FillMean\"",
+							"type": "DOUBLE"
+						}
+					],
+					"networkBatchSize": 5000
+				}
+			},
+			"name": "saphanaclient1"
+		},
+		"tostringconverter1": {
+			"component": "com.sap.util.toStringConverter",
+			"metadata": {
+				"label": "ToString Converter",
+				"x": 555.9999980926514,
+				"y": 42,
+				"height": 50,
+				"width": 50,
+				"config": {}
+			}
+		},
+		"wiretap2": {
+			"component": "com.sap.util.wiretap",
+			"metadata": {
+				"label": "Wiretap",
+				"x": 370.9999990463257,
+				"y": 12,
+				"height": 80,
+				"width": 120,
+				"ui": "dynpath",
+				"config": {
+					"maxSize": 10000
+				}
+			}
+		},
+		"terminal1": {
+			"component": "com.sap.util.terminal",
+			"metadata": {
+				"label": "Terminal",
+				"x": 1192.9999933242798,
+				"y": 72,
+				"height": 80,
+				"width": 120,
+				"ui": "dynpath",
+				"config": {}
+			}
+		},
+		"tostringconverter2": {
+			"component": "com.sap.util.toStringConverter",
+			"metadata": {
+				"label": "ToString Converter",
+				"x": 1042.499994277954,
+				"y": 27,
+				"height": 50,
+				"width": 50,
+				"config": {}
+			}
+		},
+		"saphanaclient1": {
+			"component": "com.sap.hana.client2",
+			"metadata": {
+				"label": "SAP HANA Client",
+				"x": 998,
+				"y": 177,
+				"height": 80,
+				"width": 120,
+				"config": {
+					"connection": {
+						"configurationType": "Configuration Manager",
+						"connectionID": "HANADB"
+					},
+					"tableName": "\"SEP_COVIDEXT\".\"Z_SEP.AnalyticalModels.SCM.DemandForecasting.CovidExternal::TA_SCM_SEASONALITY_STATIC_DATA\"",
+					"tableColumns": [
+						{
+							"name": "\"week_ending_date\"",
+							"type": "DATE"
+						},
+						{
+							"name": "\"retailer\"",
+							"type": "NVARCHAR",
+							"size": 100
+						},
+						{
+							"name": "\"state\"",
+							"type": "NVARCHAR",
+							"size": 50
+						},
+						{
+							"name": "\"brand\"",
+							"type": "NVARCHAR",
+							"size": 100
+						},
+						{
+							"name": "\"ppg\"",
+							"type": "NVARCHAR",
+							"size": 100
+						},
+						{
+							"name": "\"yearly_scaled\"",
+							"type": "DOUBLE"
+						}
+					],
+					"initTable": "Truncate",
+					"networkBatchSize": 5000
+				}
+			}
+		}
+	},
+	"groups": [
+		{
+			"name": "group1",
+			"nodes": [
+				"python3operator1111"
+			],
+			"metadata": {
+				"description": "Group"
+			},
+			"tags": {
+				"CP": ""
+			},
+			"multiplicity": ""
+		}
+	],
+	"connections": [
+		{
+			"metadata": {
+				"points": "141,52 168.99999952316284,52 168.99999952316284,43 196.99999904632568,43"
+			},
+			"src": {
+				"port": "out",
+				"process": "constantgenerator11"
+			},
+			"tgt": {
+				"port": "sql",
+				"process": "saphanaclient11"
+			}
+		},
+		{
+			"metadata": {
+				"points": "325.9999990463257,52 365.9999990463257,52"
+			},
+			"src": {
+				"port": "result",
+				"process": "saphanaclient11"
+			},
+			"tgt": {
+				"port": "in",
+				"process": "wiretap2"
+			}
+		},
+		{
+			"metadata": {
+				"points": "494.9999990463257,52 522.9999985694885,52 522.9999985694885,58 550.9999980926514,58"
+			},
+			"src": {
+				"port": "out",
+				"process": "wiretap2"
+			},
+			"tgt": {
+				"port": "ininterface",
+				"process": "tostringconverter1"
+			}
+		},
+		{
+			"metadata": {
+				"points": "866.9999961853027,107 952.25,107 952.25,61 1037.499994277954,61"
+			},
+			"src": {
+				"port": "output2",
+				"process": "python3operator1111"
+			},
+			"tgt": {
+				"port": "inmessage",
+				"process": "tostringconverter2"
+			}
+		},
+		{
+			"metadata": {
+				"points": "1096.499994277954,52 1159.999993801117,52 1159.999993801117,112 1187.9999933242798,112"
+			},
+			"src": {
+				"port": "outstring",
+				"process": "tostringconverter2"
+			},
+			"tgt": {
+				"port": "in1",
+				"process": "terminal1"
+			}
+		},
+		{
+			"metadata": {
+				"points": "609.9999980926514,67 674,67 674,134 737.9999961853027,134"
+			},
+			"src": {
+				"port": "outstring",
+				"process": "tostringconverter1"
+			},
+			"tgt": {
+				"port": "input1",
+				"process": "python3operator1111"
+			}
+		},
+		{
+			"metadata": {
+				"points": "866.9999961853027,125 930,125 930,226 993,226"
+			},
+			"src": {
+				"port": "output1",
+				"process": "python3operator1111"
+			},
+			"tgt": {
+				"port": "data",
+				"process": "saphanaclient1"
+			}
+		}
+	],
+	"inports": {},
+	"outports": {}
+}

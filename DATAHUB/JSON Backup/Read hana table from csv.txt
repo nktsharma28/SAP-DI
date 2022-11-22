@@ -1,0 +1,4 @@
+# Load Seasonality data
+conn = NotebookConnectionContext(connectionId = 'EVHANADB')
+df_season_add = conn.table('Z_SEP.AnalyticalModels.SCM.DemandForecasting.CovidExternal::TA_SCM_SEASONALITY_STATIC_DATA', schema ='SEP_COVIDEXT') # Seasonality Data
+df_season = df_season_add.collect()

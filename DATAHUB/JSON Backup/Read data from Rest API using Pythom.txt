@@ -1,0 +1,29 @@
+import requests
+import pandas as pd
+import json 
+url=("http://api.weatherstack.com/current?access_key=3aa0f109df510c8dae88d2ca62fe54c1&query=Pune")
+
+
+r=requests.get(url)
+r.json()
+
+# Python program to write JSON 
+# to a file 
+
+# Data to be written 
+
+
+# Serializing json 
+json_object = r.json()
+
+# Writing to sample.json 
+with open("/vrep/vflow/IOT.json", "w") as outfile: 
+	#outfile.write(r.json()) 
+	 json.dump( r.json(), outfile)
+
+
+#pd.DataFrame(r.json().head())
+
+#api.send("Output",r.json())
+
+#https://weatherstack.com/quickstart

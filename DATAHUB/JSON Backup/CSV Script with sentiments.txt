@@ -1,0 +1,41 @@
+#import tweepy
+import csv
+import datetime
+#import pandas as pd
+####input your credentials here
+
+
+
+    
+    
+def on_input(msg):
+    x = datetime.datetime.now()
+    date_time = x.strftime("%m/%d/%Y, %H:%M:%S")
+    e=msg.body
+    f="covid" 
+    j="corona"
+    k="covid-19"
+    i="virus"
+    if f in e or j in e or k in e or i in e:
+         #api.send("Output", msg.attributes["polarity"] +", "+ msg.body)
+        b=""
+        a=float(msg.attributes["polarity"])
+        if a > 0.000:
+            b="Positive"
+        elif a == 0.000:
+            b="Neutral"
+        else:
+            b="Negative"
+        
+            
+        api.send("Output","India,"+msg.attributes["polarity"]+","+b +","+"Covid-19 \n")
+        
+        
+    #api.se
+    
+    else:
+         #api.send("Output", msg.attributes["polarity"] +", "+ msg.body)
+        api.send("Output", "")
+
+    
+api.set_port_callback("Input", on_input)

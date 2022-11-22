@@ -1,0 +1,301 @@
+{
+	"properties": {},
+	"iconsrc": "icon.png",
+	"description": "Copy of Sentiment Analysis Simple Example",
+	"processes": {
+		"ob2": {
+			"component": "com.sap.util.terminal",
+			"metadata": {
+				"label": "Terminal",
+				"x": 1103.9999990463257,
+				"y": -106,
+				"height": 80,
+				"width": 120,
+				"ui": "dynpath",
+				"config": {}
+			}
+		},
+		"pysentimentanalyser1": {
+			"component": "com.sap.ml.nlp.sentimentAnalyser",
+			"metadata": {
+				"label": "Sentiment Analyser",
+				"x": 180,
+				"y": 12,
+				"height": 80,
+				"width": 120,
+				"extensible": true,
+				"config": {}
+			}
+		},
+		"tostringconverter1": {
+			"component": "com.sap.util.toStringConverter",
+			"metadata": {
+				"label": "ToString Converter",
+				"x": 900.9999990463257,
+				"y": -125,
+				"height": 80,
+				"width": 120,
+				"config": {}
+			}
+		},
+		"oldtweetstream1": {
+			"component": "com.sap.social.tweetStream",
+			"metadata": {
+				"label": "[OLD] Tweet Stream",
+				"x": -35,
+				"y": -44,
+				"height": 80,
+				"width": 120,
+				"extensible": true,
+				"config": {
+					"accessToken": "790938298520698880-Xyf4XRgi3Eoev7eoFGscfxQ5F9zment",
+					"accessTokenSecret": "844LGNkm9jeg7jREamIJtI0AP4x4PrDco2qcFiBcUCV5Z",
+					"consumerKey": "t1gYjWU8uT3LLLCwNz2DCQR89",
+					"consumerSecret": "na4DaLGzutdVA7MJhGYsq4rKqCjLDpEdmOXR2tEydOW3qMPK25",
+					"filterWords": "modi"
+				}
+			}
+		},
+		"headerremover1": {
+			"component": "com.sap.util.headerRemover",
+			"metadata": {
+				"label": "Header Remover",
+				"x": 503,
+				"y": -151,
+				"height": 80,
+				"width": 120,
+				"config": {
+					"pattern": ".*",
+					"excludePattern": "(^polarity$|^id_str$|^created_at$)"
+				}
+			}
+		},
+		"12multiplexer1": {
+			"component": "com.sap.system.multiplexer.1-2",
+			"metadata": {
+				"label": "1:2 Multiplexer",
+				"x": 684,
+				"y": -151,
+				"height": 80,
+				"width": 120,
+				"extensible": true,
+				"config": {}
+			}
+		},
+		"writefile1": {
+			"component": "com.sap.storage.write",
+			"metadata": {
+				"label": "Write File",
+				"x": 902,
+				"y": -247,
+				"height": 80,
+				"width": 120,
+				"config": {
+					"service": "GCS",
+					"gcsConnection": {
+						"configurationType": "Configuration Manager",
+						"connectionID": "GCS_CLOUD"
+					},
+					"gcsBucket": "bucket-1989",
+					"path": "bucket-1989/tweet2.csv"
+				}
+			}
+		},
+		"12multiplexer2": {
+			"component": "com.sap.system.multiplexer.1-2",
+			"metadata": {
+				"label": "1:2 Multiplexer",
+				"x": 336,
+				"y": -120,
+				"height": 80,
+				"width": 120,
+				"extensible": true,
+				"config": {}
+			}
+		},
+		"python3operator1": {
+			"component": "com.sap.system.python3Operator",
+			"metadata": {
+				"label": "Python3 Operator",
+				"x": 447,
+				"y": -30,
+				"height": 80,
+				"width": 120,
+				"extensible": true,
+				"config": {
+					"script": "def on_input(msg):\n    #api.send(\"Output\", msg.attributes[\"polarity\"])\n    api.send(\"Output\", msg)\n\napi.set_port_callback(\"Input\", on_input)"
+				},
+				"additionalinports": [
+					{
+						"name": "Input",
+						"type": "message"
+					}
+				],
+				"additionaloutports": [
+					{
+						"name": "Output",
+						"type": "string"
+					}
+				]
+			}
+		},
+		"terminal1": {
+			"component": "com.sap.util.terminal",
+			"metadata": {
+				"label": "Terminal",
+				"x": 767,
+				"y": -2,
+				"height": 80,
+				"width": 120,
+				"ui": "dynpath",
+				"config": {}
+			}
+		},
+		"tostringconverter2": {
+			"component": "com.sap.util.toStringConverter",
+			"metadata": {
+				"label": "ToString Converter",
+				"x": 649.5,
+				"y": 14.5,
+				"height": 50,
+				"width": 50,
+				"config": {}
+			}
+		}
+	},
+	"groups": [],
+	"connections": [
+		{
+			"metadata": {
+				"points": "89,-13 132,-13 132,52 175,52"
+			},
+			"src": {
+				"port": "outTweet",
+				"process": "oldtweetstream1"
+			},
+			"tgt": {
+				"port": "in",
+				"process": "pysentimentanalyser1"
+			}
+		},
+		{
+			"metadata": {
+				"points": "808,-120 852.5,-120 852.5,-207 897,-207"
+			},
+			"src": {
+				"port": "out1",
+				"process": "12multiplexer1"
+			},
+			"tgt": {
+				"port": "inFile",
+				"process": "writefile1"
+			}
+		},
+		{
+			"metadata": {
+				"points": "1024.9999990463257,-85 1062,-85 1062,-66 1098.9999990463257,-66"
+			},
+			"src": {
+				"port": "outstring",
+				"process": "tostringconverter1"
+			},
+			"tgt": {
+				"port": "in1",
+				"process": "ob2"
+			}
+		},
+		{
+			"metadata": {
+				"points": "627,-120 653,-120 653,-111 679,-111"
+			},
+			"src": {
+				"port": "out",
+				"process": "headerremover1"
+			},
+			"tgt": {
+				"port": "in1",
+				"process": "12multiplexer1"
+			}
+		},
+		{
+			"metadata": {
+				"points": "808,-102 852,-102 852,-94 895.9999990463257,-94"
+			},
+			"src": {
+				"port": "out2",
+				"process": "12multiplexer1"
+			},
+			"tgt": {
+				"port": "ininterface",
+				"process": "tostringconverter1"
+			}
+		},
+		{
+			"metadata": {
+				"points": "304,52 317.5,52 317.5,-80 331,-80"
+			},
+			"src": {
+				"port": "out",
+				"process": "pysentimentanalyser1"
+			},
+			"tgt": {
+				"port": "in1",
+				"process": "12multiplexer2"
+			}
+		},
+		{
+			"metadata": {
+				"points": "460,-89 479,-89 479,-111 498,-111"
+			},
+			"src": {
+				"port": "out1",
+				"process": "12multiplexer2"
+			},
+			"tgt": {
+				"port": "in",
+				"process": "headerremover1"
+			}
+		},
+		{
+			"metadata": {
+				"points": "460,-71 510,-71 510,-30.5 392,-30.5 392,10 442,10"
+			},
+			"src": {
+				"port": "out2",
+				"process": "12multiplexer2"
+			},
+			"tgt": {
+				"port": "Input",
+				"process": "python3operator1"
+			}
+		},
+		{
+			"metadata": {
+				"points": "684.5,38.75 781,38.75"
+			},
+			"src": {
+				"port": "outstring",
+				"process": "tostringconverter2"
+			},
+			"tgt": {
+				"port": "in1",
+				"process": "terminal1"
+			}
+		},
+		{
+			"metadata": {
+				"points": "571,10 607.75,10 607.75,30.5 644.5,30.5"
+			},
+			"src": {
+				"port": "Output",
+				"process": "python3operator1"
+			},
+			"tgt": {
+				"port": "ininterface",
+				"process": "tostringconverter2"
+			}
+		}
+	],
+	"inports": {},
+	"outports": {}
+}

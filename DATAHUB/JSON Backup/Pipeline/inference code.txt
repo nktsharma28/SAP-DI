@@ -1,0 +1,403 @@
+#import Libraries
+
+import numpy as np
+import pandas as pd
+#import xgboost as xgb
+from sklearn import tree
+from sklearn.ensemble import GradientBoostingRegressor
+from scipy.optimize import minimize_scalar
+import io
+import pickle
+
+
+
+def on_input(msg1, msg2):
+    
+    
+   
+    
+
+    
+    
+    #model_ready = True
+    #api.logger.info("Model Received & Ready")
+    #api.send("logging", "Model Ready!")
+
+    # Obtain data
+    # input table from Z_SEP.AnalyticalModels.LTO.IMC.CongnitivePricing::TA_IMC_CPQ_INFER_INPUT
+    
+    df_raw = pd.read_csv(io.StringIO(msg1.body), sep=",")
+    df = pd.DataFrame()
+    df['QUOTE_ID'] = df_raw.iloc[:,0]
+    df['CUSTOMER_NAME'] = df_raw.iloc[:,1]
+    df['INDUSTRY'] = df_raw.iloc[:,2]
+    df['CREATION_DATE'] = df_raw.iloc[:,3]
+    df['COUNTRY'] = df_raw.iloc[:,4]
+    df['PRODUCT_NAME'] = df_raw.iloc[:,5]
+    df['MODEL'] = df_raw.iloc[:,6]
+    df['SUPPLY_VOLTAGE_A'] = df_raw.iloc[:,7]
+    df['COM_QUANTITY'] = df_raw.iloc[:,8]
+    df['STATUS'] = df_raw.iloc[:,9]
+    df['LISTPRICE'] = df_raw.iloc[:,10].astype(float)
+    df['MANUFACTURING_COST'] = df_raw.iloc[:,11].astype(float)
+    df['QUOTED_PRICE'] = df_raw.iloc[:,12].astype(float) 
+    api.send("output1",'before model')
+    
+   # input table from Z_SEP.AnalyticalModels.LTO.IMC.CongnitivePricing::TA_IMC_CPQ_INFER_INPUTTA_IMC_CPQ_TRAINING_SEGMENTS
+    Output_Seg_raw = pd.read_csv(io.StringIO(msg2.body), sep=",")
+    Output_Seg = pd.DataFrame()
+    Output_Seg['SEGMENT_ID'] = Output_Seg_raw.iloc[:,0].astype(int)
+    Output_Seg['LEAD_BRAND_ID'] = Output_Seg_raw.iloc[:,1].astype(int)
+    Output_Seg['LEADING_PRODUCT'] = Output_Seg_raw.iloc[:,2]
+    Output_Seg['COUNT'] = Output_Seg_raw.iloc[:,3].astype(float)
+    Output_Seg['VAL_SEG_ID'] = Output_Seg_raw.iloc[:,4].astype(int)
+    Output_Seg['VAL_MIN'] = Output_Seg_raw.iloc[:,5].astype(float)
+    Output_Seg['VAL_MAX'] = Output_Seg_raw.iloc[:,6].astype(float)
+    Output_Seg['VAL_COUNT'] = Output_Seg_raw.iloc[:,7].astype(float)
+    Output_Seg['LEAD_CONST'] = Output_Seg_raw.iloc[:,8].astype(float)
+    Output_Seg['LEAD_GP_PCT_VALUE'] = Output_Seg_raw.iloc[:,9].astype(float)
+    Output_Seg['LEAD_LIST_VALUE'] = Output_Seg_raw.iloc[:,10].astype(float)
+    Output_Seg['LEAD_TMC_VALUE'] = Output_Seg_raw.iloc[:,11].astype(float)
+    Output_Seg['VAL_CONST'] = Output_Seg_raw.iloc[:,12].astype(float)
+    Output_Seg['VAL_GP_PCT_VALUE'] = Output_Seg_raw.iloc[:,13].astype(float) 
+    Output_Seg['VAL_LIST_VALUE'] = Output_Seg_raw.iloc[:,14].astype(float) 
+    Output_Seg['VAL_TMC_VALUE'] = Output_Seg_raw.iloc[:,15].astype(float)  
+
+    def WProb_(x, input_coef, b):
+        """
+        Given a price and parameters of the package compute the win probability
+        x: input price
+        input_coef: Series containing other input parameters of the package
+        b: Series containing the estimated parameters of the regression model
+        """                                                                                                                                                                
+        #fill the NaN value with 0 for computation
+        b = b.fillna(0.0)  
+        listp_value = input_coef['LIST_VALUE'] - 1
+        tmc = input_coef['TMC'] 
+        listp = input_coef['LISTPRICE']
+        value = listp / input_coef['LIST_VALUE']
+        tmc_value = 1 - tmc / value 
+        regressor=[1.0, - (x - tmc) / value, listp_value, tmc_value]
+        z = np.exp(np.dot(regressor, b)) / ( 1 + np.exp(np.dot(regressor, b)) )
+        return z
+
+
+    def Rev_(x, input_coef, b):
+        """
+        Given a price and parameters of the package compute the NEGATIVE revenue
+        x: input price
+        input_coef: Series containing other input parameters of the package
+        b: Series containing the estimated parameters of the regression model
+        """     
+        tmc = input_coef['TMC']                                                                                                                                                            
+        return - (x - tmc) * WProb_(x, input_coef, b)    
+
+
+    def OptPrice(Input, b):
+        """
+        Given the input and price sensitivity information compute optimal price
+        x: input price
+        Input: Dataframe containing all the input information
+        b: Series containing the estimated parameters of the regression model
+        """   
+        Value = Input.LISTPRICE / Input.LIST_VALUE
+        TMC = Input.TMC
+        QuotePrice = Input.GP_PCT_VALUE * Value + Input.TMC
+        #Organizing Response variables
+        Response = Input['Win']        
+        #Creating Lists for storing results
+        WP_act = list(range(len(Response)))
+        gp_pct_act = list(range(len(Response)))
+        Discount_act = list(range(len(Response)))
+        WP_opt = list(range(len(Response)))
+        gp_pct_opt = list(range(len(Response)))
+        OptPrice = list(range(len(Response)))
+        Discount_opt = list(range(len(Response)))
+
+        for i in range(len(Response)):
+            input_coef = Input.iloc[i]  
+            x_act = QuotePrice.iloc[i]
+            c = TMC.iloc[i]  
+            p_l = Input.LISTPRICE.iloc[i]    
+            WP_act[i] = WProb_(x_act, input_coef, b)
+            gp_pct_act[i] = (x_act - c) / x_act 
+            Discount_act[i] = (p_l - x_act) / p_l
+
+            res = minimize_scalar(Rev_, bounds = (c, p_l), args = (input_coef, b), method = 'bounded') 
+            x_opt = res.x
+            WP_opt[i] = WProb_(x_opt, input_coef, b)
+            gp_pct_opt[i] = (x_opt - c) / x_opt
+            OptPrice[i] = x_opt
+            Discount_opt[i] = (p_l - x_opt) / p_l
+
+
+        #Combining the outcomes
+        #Add columns discount_act and discount_opt
+
+        Output = pd.DataFrame({})
+        Output['Response'] = Response.values
+        Output['QuotePrice'] = QuotePrice.values
+        Output['WP_act'] = WP_act
+        Output['gp_pct_act'] = gp_pct_act
+        Output['Discount_act'] = Discount_act
+        Output['OptPrice'] = OptPrice
+        Output['WP_opt'] = WP_opt
+        Output['gp_pct_opt'] = gp_pct_opt
+        Output['Discount_opt'] = Discount_opt
+        return Output
+        api.send("output1",'before model')
+
+
+    def Business_Case(Output, re_output = False):
+        """
+        Compute the business case as a control for choosing segmentation.
+        Output: the output from OptPrice, records the optimal prices, etc
+        re_output: whether return the table for the business case result
+        Return: returns the sum of business case values and if re_ouput is specified
+        to be true, also returns the table of each business case value.
+        """    
+        Revenue_Diff = list(range(len(Output)))
+        for i in range(len(Output)):
+            p_opt = Output.OptPrice.iloc[i]
+            p_act = Output.QuotePrice.iloc[i]
+            q_opt = Output.WP_opt.iloc[i]
+            q_act = Output.WP_act.iloc[i]
+            if Output.Response.iloc[i] == 1:
+                if p_opt > p_act:
+                    Revenue_Diff[i] = q_opt/q_act * p_opt - p_act
+                else:
+                    Revenue_Diff[i] = p_opt - p_act
+            else:
+                if p_opt > p_act:
+                    Revenue_Diff[i] = 0.0
+                else:
+                    Revenue_Diff[i] = (1 - (1 - q_opt)/(1 - q_act)) * p_opt                
+        BC_Value = np.sum(Revenue_Diff)
+        Output['Business_Case'] = Revenue_Diff
+        if re_output == False:
+            return BC_Value
+        else:
+            return BC_Value, Output
+
+
+    def unique_arr(arr):
+        """
+        Helper function to return the unique values in a ndarray.
+        np.unique() can only deal wiht 1-D array.
+        """
+        arr = np.asarray(arr)
+        uniques = []
+        for i in range(len(arr)):
+            if list(arr[i]) not in uniques:
+                uniques.append(list(arr[i]))
+        return uniques
+    def Label_Seg(Input_Data, Infile_Data):                  
+        """
+        Labels each transaction in the original data to the segment it belongs.
+
+        Parameters
+        ----------
+        Input_Data: A dataframe that contains all the original transaction data.
+        Input_Seg: A dataframe that contains the segmentation information for each OD cluster pair
+        f_name: The data directory and file names to write the file
+        version: The version of data and cluster level
+
+        Return
+        -------
+        The revised input data.
+
+        """                                     
+        seg_id = list(np.zeros(len(Input_Data), dtype = 'i4'))
+        Discount_act = list(np.zeros(len(Input_Data)))
+        Discount_sd =list(np.zeros(len(Input_Data)))
+        lw = list(np.zeros(len(Input_Data)))
+        up = list(np.zeros(len(Input_Data)))
+
+
+        for i in range(len(Input_Data)):
+            brand = Input_Data.loc[i,'PRODUCT_BRAND']
+            Value = Input_Data.loc[i,'LIST_VALUE']
+
+
+
+
+            if len(Infile_Data) > 1:
+                for j in range(len(Infile_Data)):
+                    if ( (brand == Infile_Data.loc[j, 'PRODUCT_BRAND']) and
+                    (Value > Infile_Data.loc[j, 'VAL_MIN']) and (Value <= Infile_Data.loc[j, 'VAL_MAX'])   ):
+                        seg_id[i] = Infile_Data.loc[j, 'SEGMENT_ID']
+
+                        lw[i] = 0
+                        up[i]=0
+            else:
+                seg_id[i] = Infile_Data.loc[0, 'SEGMENT_ID']
+
+                lw[i] = 0
+                up[i] = 0
+        Input_Data['SEGMENT_ID'] = seg_id
+
+
+        return Input_Data      
+    def Compute_Opt_Price(Input_Data, Infile_Data):                  
+        """
+        Compute the optimal price according to the features and the corresponding parameter estimates in
+        "Input_Seg" for each transaction in "Input_Data".
+
+        Parameters
+        ----------
+        Input_Data: A dataframe that contains all the original transaction data / new request for quotes
+        Input_Seg: A dataframe that contains the segmentation AND regression information (FINAL_REG_SEG)
+        f_name: The data directory and file names to write the file
+
+
+        Outputs:
+        --------
+        Writes the labeled data to a new file.
+
+        Return
+        -------
+        The revised input data.
+
+        """    
+        opt_price = list(np.zeros(len(Input_Data)))
+        x_opt = list(np.zeros(len(Input_Data))) 
+        WP_act = list(np.zeros(len(Input_Data)))
+        WP_opt = list(np.zeros(len(Input_Data)))
+
+
+
+        for i in np.arange(len(Input_Data)):
+            if i % 1000 == 0:
+                print ('Processing quotes.')
+
+            seg_id = Input_Data.loc[i, 'SEGMENT_ID']
+            k = Input_Data.loc[i, 'TMC']
+            l = Input_Data.loc[i, 'LISTPRICE']
+            param = Infile_Data.loc[seg_id, ['VAL_const', 'VAL_GP_PCT_VALUE', 'VAL_LIST_VALUE','VAL_TMC_VALUE']]
+            param = param.fillna(0.0)
+            input_coef = Input_Data.iloc[i]
+
+            res1 = minimize_scalar( Rev_, bounds = (k,l), args = (input_coef, param), method = 'bounded' )
+
+
+            opt_price[i] = res1.x
+            x_opt[i] = opt_price[i]
+            x_act = Input_Data.loc[i, 'QUOTED_PRICE']
+            WP_act[i] = WProb_(x_act, input_coef, param)
+            WP_opt[i] = WProb_(x_opt[i], input_coef, param)
+
+
+
+        Input_Data['OPT_PRICE'] = opt_price
+        Input_Data['WIN_ACT'] = WP_act
+        Input_Data['WIN_OPT'] = WP_opt
+
+        return Input_Data
+        
+
+
+
+    #Input Data -- 
+    #test_data = pd.read_csv("C:/CogPrice/test_data.csv")
+
+
+    # Developed model saved it in my local-- need some place to save it in DI
+    #loaded_model = pickle.load(open("xgb.pickle.dat", "rb"))
+    def on_model(model_cp):
+        
+            
+        global loaded_model
+        global model_ready
+        import pickle
+        loaded_model = pickle.loads(model_cp)
+        api.send("output1",'model')
+        test_data = df
+        X = pd.DataFrame(test_data, columns=['LISTPRICE','MANUFACTURING_COST'])
+        test_data['UtilityAdj'] = loaded_model.predict(X)
+        test_data['LIST_VALUE'] = test_data['LISTPRICE']/test_data['UtilityAdj']
+        test_data['GP_PCT_VALUE'] = (test_data['QUOTED_PRICE'] - test_data['MANUFACTURING_COST'])/test_data['UtilityAdj']
+        test_data['GP_PCT_PRICE'] = (test_data['QUOTED_PRICE'] - test_data['MANUFACTURING_COST'])/test_data['QUOTED_PRICE']
+        test_data['Discount'] = 1-(test_data['QUOTED_PRICE']/test_data['LISTPRICE'])
+        test_data['PRODUCT_BRAND'] = test_data['MODEL']
+        test_data['TMC']= test_data['MANUFACTURING_COST']
+        test_data['Win']= np.where(test_data['STATUS'] == 'Y',1,0)
+        test_data1 = Label_Seg(test_data, Output_Seg)
+        final_Output = Compute_Opt_Price(test_data1, Output_Seg)
+        discount_data = pd.DataFrame(final_Output,columns=['PRODUCT_BRAND','Discount']).copy()
+
+        discount_data['Discount_mean']=discount_data['Discount']
+        discount_data['Discount_std']=discount_data['Discount']
+        discount_agg_model = discount_data.groupby('PRODUCT_BRAND').agg({'Discount_mean':np.mean,'Discount_std':np.std}).reset_index()
+        del discount_data['Discount_mean']
+        del discount_data['Discount_std']
+        final_data = pd.merge(final_Output,discount_agg_model,on='PRODUCT_BRAND',how='left')
+        final_data['key1'] = 0
+        final_data['key2'] = 1
+        final_data['low']= 1-final_data['Discount_mean']- 2*final_data['Discount_std']
+        final_data['min_level'] = (final_data[['key2','low']]).min(axis=1)
+        final_data['max_min_level']=final_data[['min_level','key1']].max(axis=1)
+        final_data['low_bound'] = final_data['max_min_level']*final_data['LISTPRICE']
+            
+        final_data['up']= 1-final_data['Discount_mean']+2*final_data['Discount_std']
+        final_data['min_level_up'] = (final_data[['key2','up']]).min(axis=1)
+        final_data['max_min_level_up']=final_data[['min_level_up','key1']].max(axis=1)
+        final_data['up_bound'] = final_data['max_min_level_up']*final_data['LISTPRICE']
+        final_data['low_bound'] =np.where(final_data['low_bound']<final_data['TMC'],final_data['TMC'],final_data['low_bound'])
+        final_data['up_bound'] =np.where(final_data['up_bound']<final_data['OPT_PRICE'],final_data['LISTPRICE'],final_data['up_bound'])
+        fin_infer_opt_price = pd.DataFrame({ 'QUOTE_ID': final_data['QUOTE_ID'] ,'CUSTOMER_NAME':  final_data['CUSTOMER_NAME'],
+                              'INDUSTRY': final_data['INDUSTRY'], 'CREATION_DATE': final_data['CREATION_DATE'],
+                              'COUNTRY': final_data['COUNTRY'], 'QUANTITY': final_data['COM_QUANTITY'],
+                              'LISTPRICE': final_data['LISTPRICE'],'MANUFACTURING_COST': final_data['MANUFACTURING_COST'],
+                              'QUOTED_PRICE': final_data['QUOTED_PRICE'],'OPTIMUM_PRICE': final_data['OPT_PRICE'],
+                              'PROB_WIN_OPTIMAL':final_data['WIN_OPT'],'PROB_WIN_ACTUAL': final_data['WIN_ACT'],
+                              'OPTIMAL_LOWER':final_data['low_bound'],'OPTIMAL_HIGHER':final_data['up_bound'],})
+                              
+        fin_infer_opt_price.fillna(0, inplace=True)
+        fin_infer_opt_price = fin_infer_opt_price.round(6)
+    
+        data =  fin_infer_opt_price.values.tolist()
+        api.send("output1",data)
+    api.send("output1",'after model')
+    api.set_port_callback("model", on_model)
+        
+
+        
+        
+        
+        
+        
+        
+        
+       
+    
+    
+    
+  
+  
+        
+        
+        
+        
+
+    # This is the output segments ,should come from HANA table
+
+        
+        
+        
+
+
+    
+        
+    
+    #data2 = [fin_Output_Seg.columns.values.tolist()] + Output_Seg.values.tolist()
+        #f = '{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}'  # format final_data
+    #f2 = '{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}' # format Output_Seg
+    #for i in data:
+        #api.send("output1",f.format(*i)+'\n')
+  
+    
+#fin_infer_opt_price write-back to Hana Output Table "TA_IMC_CPQ_INFER_OPTIMAL_PRICE"
+
+
+
+api.set_port_callback(["input1","input2"], on_input)

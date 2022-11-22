@@ -1,0 +1,177 @@
+{
+	"properties": {},
+	"iconsrc": "javascript_logo.svg",
+	"description": "Copy of File-to-File Javascript",
+	"processes": {
+		"blankjsoperator1": {
+			"component": "com.sap.system.jsoperator",
+			"metadata": {
+				"label": "Process Data",
+				"x": 201.99999904632568,
+				"y": 12,
+				"height": 80,
+				"width": 120,
+				"extensible": true,
+				"config": {
+					"script": "file://script.js"
+				},
+				"additionalinports": [
+					{
+						"name": "inData",
+						"type": "message"
+					}
+				],
+				"additionaloutports": [
+					{
+						"name": "outData",
+						"type": "message"
+					}
+				]
+			}
+		},
+		"readfile1": {
+			"component": "com.sap.storage.read",
+			"metadata": {
+				"label": "Read Input File",
+				"x": 17,
+				"y": 12,
+				"height": 80,
+				"width": 120,
+				"config": {
+					"service": "GCS",
+					"gcsConnection": {
+						"configurationType": "Configuration Manager",
+						"connectionID": "GCS_CLOUD"
+					},
+					"gcsBucket": "bucket-1989",
+					"path": "sample.json"
+				}
+			}
+		},
+		"writefile1": {
+			"component": "com.sap.storage.write",
+			"metadata": {
+				"label": "Write Results File",
+				"x": 523.9999990463257,
+				"y": 47,
+				"height": 80,
+				"width": 120,
+				"config": {
+					"service": "GCS",
+					"gcsConnection": {
+						"configurationType": "Configuration Manager",
+						"connectionID": "GCS_CLOUD"
+					},
+					"gcsBucket": "bucket-1989",
+					"path": "json.csv",
+					"mode": "create"
+				}
+			}
+		},
+		"12multiplexer1": {
+			"component": "com.sap.system.multiplexer.1-2",
+			"metadata": {
+				"label": "1:2 Multiplexer",
+				"x": 374,
+				"y": -60,
+				"height": 80,
+				"width": 120,
+				"extensible": true,
+				"config": {}
+			}
+		},
+		"wiretap1": {
+			"component": "com.sap.util.wiretap",
+			"metadata": {
+				"label": "Wiretap",
+				"x": 627,
+				"y": -96,
+				"height": 80,
+				"width": 120,
+				"ui": "dynpath",
+				"config": {}
+			}
+		},
+		"graphterminator1": {
+			"component": "com.sap.util.graphTerminator",
+			"metadata": {
+				"label": "Graph Terminator",
+				"x": 704,
+				"y": 70,
+				"height": 80,
+				"width": 120,
+				"config": {}
+			}
+		}
+	},
+	"groups": [],
+	"connections": [
+		{
+			"metadata": {
+				"points": "141,61 168.99999952316284,61 168.99999952316284,52 196.99999904632568,52"
+			},
+			"src": {
+				"port": "outFile",
+				"process": "readfile1"
+			},
+			"tgt": {
+				"port": "inData",
+				"process": "blankjsoperator1"
+			}
+		},
+		{
+			"metadata": {
+				"points": "325.9999990463257,52 347.5,52 347.5,-20 369,-20"
+			},
+			"src": {
+				"port": "outData",
+				"process": "blankjsoperator1"
+			},
+			"tgt": {
+				"port": "in1",
+				"process": "12multiplexer1"
+			}
+		},
+		{
+			"metadata": {
+				"points": "498,-11 508.5,-11 508.5,87 518.9999990463257,87"
+			},
+			"src": {
+				"port": "out2",
+				"process": "12multiplexer1"
+			},
+			"tgt": {
+				"port": "inFile",
+				"process": "writefile1"
+			}
+		},
+		{
+			"metadata": {
+				"points": "498,-29 560,-29 560,-56 622,-56"
+			},
+			"src": {
+				"port": "out1",
+				"process": "12multiplexer1"
+			},
+			"tgt": {
+				"port": "in",
+				"process": "wiretap1"
+			}
+		},
+		{
+			"metadata": {
+				"points": "647.9999990463257,87 673.5,87 673.5,110 699,110"
+			},
+			"src": {
+				"port": "outFilename",
+				"process": "writefile1"
+			},
+			"tgt": {
+				"port": "stop",
+				"process": "graphterminator1"
+			}
+		}
+	],
+	"inports": {},
+	"outports": {}
+}

@@ -1,0 +1,18 @@
+06:24 to 07.48 (record-149118)-62040-output
+10:54 to 12:17( record-176376)-16565 -outptu
+07:48 to 09:24 ( record-163552)-74742 -output
+09:33 to 10:46 ( record-168092)-3808-output
+
+SELECT  "week_ending_date", "retailer", "state", "business", "category", "brand", "ppg", "week_of_year", "pos_qty_ty", "pos_dollar_ty", "FillMean"  FROM      "SEP_COVIDEXT"."Z_SEP.AnalyticalModels.SCM.DemandForecasting.CovidExternal::TA_SCM_COVID_FULL_SAMPLE_TRAIN"  
+ where  "state" in ('SC','SD','TN','TX','UT','VA','VT','WA','WV','WY','AL')
+
+SELECT  "week_ending_date", "retailer", "state", "business", "category", "brand", "ppg", "week_of_year", "pos_qty_ty", "pos_dollar_ty", "FillMean"  FROM      "SEP_COVIDEXT"."Z_SEP.AnalyticalModels.SCM.DemandForecasting.CovidExternal::TA_SCM_COVID_FULL_SAMPLE_TRAIN"   
+where  "state" in ('AK','AR','AZ','CA','CO','CT','DC','DE','FL','GA','HI','IA','ID')
+
+ SELECT  "week_ending_date", "retailer", "state", "business", "category", "brand", "ppg", "week_of_year", "pos_qty_ty", "pos_dollar_ty", "FillMean"  FROM      "SEP_COVIDEXT"."Z_SEP.AnalyticalModels.SCM.DemandForecasting.CovidExternal::TA_SCM_COVID_FULL_SAMPLE_TRAIN"  
+ where  "state" in ('NC','ND','NE','NH','NJ','NM','NV','NY','OH','OK','OR','PA','RI')
+
+06:24 to 07.48 (record-149118)--output
+15:05 to 20:26( record-176376)-87629 -outptu
+18:15 to 20:36 ( record-163552)- -output
+15:05 to 20:26 ( record-168092)-84564-output

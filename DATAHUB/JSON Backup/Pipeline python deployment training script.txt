@@ -1,0 +1,7 @@
+# Example Python script to perform training on input data & generate Metrics & Model Blob
+def on_input(data):
+    
+    # Obtain data
+    import pandas as pd
+    import io
+    df_data = pd.read_csv(io.StringIO(data), sep=";")

@@ -1,0 +1,17 @@
+import io
+import csv
+
+def on_input(msg):
+    with open('/vrep/vflow/Tweet_Sentiments_D1.csv','rt')as f:
+        
+         data = csv.reader(f)
+         
+         for row in data:
+             
+             api.send("outData", api.Message(attributes=msg.attributes, body=row))
+             
+
+             
+
+api.set_port_callback("inData", on_input)
+/vrep/vflow/Tweet_Sentiments_D1.csv

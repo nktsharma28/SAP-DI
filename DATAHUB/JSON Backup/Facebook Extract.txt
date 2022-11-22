@@ -1,0 +1,74 @@
+{
+	"properties": {},
+	"description": "",
+	"processes": {
+		"terminal1": {
+			"component": "com.sap.util.terminal",
+			"metadata": {
+				"label": "Terminal",
+				"x": 496,
+				"y": 102,
+				"height": 80,
+				"width": 120,
+				"ui": "dynpath",
+				"config": {}
+			}
+		},
+		"tostringconverter1": {
+			"component": "com.sap.util.toStringConverter",
+			"metadata": {
+				"label": "ToString Converter",
+				"x": 345.5,
+				"y": 102,
+				"height": 50,
+				"width": 50,
+				"config": {}
+			}
+		},
+		"pythonrequest1": {
+			"component": "Python Request",
+			"metadata": {
+				"label": "Python request",
+				"x": 109,
+				"y": 57,
+				"height": 80,
+				"width": 120,
+				"extensible": true,
+				"config": {
+					"script": "token='EAAp0xi3f7z4BAAG03gMJtTZCYQpWnE9DZCgkOBZCizDXqm4Di9DvHiGomysB5VRi3VXwXp63K2R6F8bm4mAY3einAn9hA1NxxEcjhVD994T4dlI99DABqEZBzFIOOAPt3ZCzOjFtv7zvYfqGrMZAZCRv1nwgZCEmrL0ZD'\n\n\n\nme='https://graph.facebook.com/v2.9/me?access_token='+token\nfriends='https://graph.facebook.com/v2.9/me/friends?access_token='+token\nposts= 'https://graph.facebook.com/v2.9/me/feed?access_token='+token\n\nimport requests\nme1=requests.get(me)\nf1=requests.get(friends)\ns1=requests.get(posts)\n\n\n#me1=me\napi.send(\"Output\", me1.text)\napi.send(\"Output\",\"Friends Count\")\napi.send(\"Output\", f1.text)\napi.send(\"Output\",\"Ankit Sharma Feed\") \napi.send(\"Output\", s1.text)\n\n"
+				}
+			}
+		}
+	},
+	"groups": [],
+	"connections": [
+		{
+			"metadata": {
+				"points": "380.5,127 445.25,127 445.25,142 510,142"
+			},
+			"src": {
+				"port": "outstring",
+				"process": "tostringconverter1"
+			},
+			"tgt": {
+				"port": "in1",
+				"process": "terminal1"
+			}
+		},
+		{
+			"metadata": {
+				"points": "233,97 286.75,97 286.75,136 340.5,136"
+			},
+			"src": {
+				"port": "Output",
+				"process": "pythonrequest1"
+			},
+			"tgt": {
+				"port": "inmessage",
+				"process": "tostringconverter1"
+			}
+		}
+	],
+	"inports": {},
+	"outports": {}
+}
