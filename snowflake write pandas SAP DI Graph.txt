@@ -1,0 +1,122 @@
+{
+	"properties": {},
+	"description": "DI_ANZ_PIPELINE",
+	"processes": {
+		"snowflake1": {
+			"component": "Snowflake",
+			"metadata": {
+				"label": "Snowflake",
+				"x": 216.99999904632568,
+				"y": 40,
+				"height": 80,
+				"width": 120,
+				"extensible": true,
+				"filesRequired": [
+					"script.py"
+				],
+				"generation": 1,
+				"config": {
+					"Snowflake_Table_Name": "${Snowflake_Table}",
+					"script": "#---------- Project - ANZ GOLDILOCKS----------#\n# Source System - S4 Hana\n# Target Systen - Snowflake Database\n# Prequisite - Install snowflake-connector-python[pandas]\n# Python Code Version = 0.1\n# Developer - Ankit Sharma\n# Modifiy Date - 02-Jun-2022\n# Enviornment - SAP DI Sandbox\n#---------------------------------------------#\n\nimport pandas as pd\nimport snowflake.connector\nfrom snowflake.connector.pandas_tools import write_pandas\nfrom io import StringIO\nimport csv\nimport json\n\napi.send('output','connection started')\n    # Establishing connection with Snowflake\nconn_sf = snowflake.connector.connect(\naccount = api.config.Account,\nuser = api.config.Username,\nwarehouse = api.config.Warehouse,\npassword = api.config.Password,\ndatabase = api.config.Database,\nschema = api.config.Schema\n    \n  \n    )\n\ndef on_input(inData):\n\n\n    # read body\n    data = StringIO(inData.body)\n\n    # read attributes\n    var = json.dumps(inData.attributes)\n    result = json.loads(var)\n\n    # from here we start json parsing\n    ABAP = result['ABAP']\n    Fields = ABAP['Fields']\n\n    # creating an empty list for headers\n    columns = []\n    for item in Fields:\n        columns.append(item['Name'])  \n\n    # data mapping using headers & saving into pandas dataframe\n    df = pd.read_csv(data, index_col = False, names = columns)\n    #df = pd.read_json(data)\n    #api.send('output',df.to_csv)\n    df=df.drop(['/1DH/CDS_VIEW', '/1DH/OPERATION'], axis=1)\n\n    # here you can prepare your data,\n    # e.g. columns selection or records filtering\n\n    df_csv = df.to_csv(index = False, header = True)\n    api.send('output',df_csv)\n    table=api.config.Snowflake_Table_Name\n    \n    #Loading data into snowflake table\n    api.send('output','Load started')\n\n    #To load data into Snowflake DB using write_pandas function\n\n    \n    with conn_sf as db_conn_sf, db_conn_sf.cursor() as db_cursor_sf:\n        inserted_rows = write_pandas(conn = db_conn_sf, df = df,table_name = table, quote_identifiers = False)\n        \n    \n                                 \n    api.send('output',str(inserted_rows))\n    \n\napi.set_port_callback(['input1'], on_input)",
+					"Account": "Kraft.east-us-2.privatelink",
+					"Username": "khc_sapdi_conn_user_dev",
+					"Password": "9xXC=lS_3/_^4}v6",
+					"Database": "DBS_GENERIC_NONSECURE_SBX",
+					"Schema": "INGESTION",
+					"Warehouse": "dev_cloud_analytics_platform",
+					"Role": "dev_khc_sapdi"
+				}
+			}
+		},
+		"abapcdsreader111": {
+			"component": "com.sap.abap.cds.reader",
+			"metadata": {
+				"label": "ABAP CDS Reader V2",
+				"x": -1,
+				"y": 40,
+				"height": 80,
+				"width": 120,
+				"extensible": true,
+				"generation": 1,
+				"config": {
+					"connectionID": "S4H_ANZ",
+					"operatorID": "com.sap.abap.cds.reader.v2",
+					"subscriptionType": "New",
+					"action": "Initial Load",
+					"wireformat": "Enhanced Format Conversions",
+					"cdsname": "ZI_MATERIAL",
+					"Chunk size": 50000,
+					"subscriptionName": "test21",
+					"chunkSize": 1000
+				},
+				"additionaloutports": [
+					{
+						"name": "outMessageData",
+						"type": "message"
+					}
+				]
+			},
+			"name": "abapcdsreader11"
+		},
+		"wiretap1": {
+			"component": "com.sap.util.wiretap",
+			"metadata": {
+				"label": "Wiretap",
+				"x": 496.99999809265137,
+				"y": -28,
+				"height": 80,
+				"width": 120,
+				"generation": 1,
+				"ui": "dynpath",
+				"config": {}
+			}
+		}
+	},
+	"groups": [
+		{
+			"name": "group1",
+			"nodes": [
+				"snowflake1"
+			],
+			"metadata": {
+				"description": "Group"
+			},
+			"tags": {
+				"snwflk": ""
+			}
+		}
+	],
+	"connections": [
+		{
+			"metadata": {
+				"points": "123,80 211.99999904632568,80"
+			},
+			"src": {
+				"port": "outMessageData",
+				"process": "abapcdsreader111"
+			},
+			"tgt": {
+				"port": "input1",
+				"process": "snowflake1"
+			}
+		},
+		{
+			"metadata": {
+				"points": "340.9999990463257,80 416.5,80 416.5,12 491.99999809265137,12"
+			},
+			"src": {
+				"port": "output",
+				"process": "snowflake1"
+			},
+			"tgt": {
+				"port": "in",
+				"process": "wiretap1"
+			}
+		}
+	],
+	"inports": {},
+	"outports": {},
+	"metadata": {
+		"generation": 1
+	}
+}

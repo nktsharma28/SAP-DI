@@ -1,0 +1,2 @@
+cd /vhome
+git reset --hard SAP-DI-KHC/REMOTE

@@ -1,0 +1,161 @@
+{
+	"properties": {},
+	"icon": "database",
+	"iconsrc": "Database",
+	"description": "",
+	"processes": {
+		"python3operator1": {
+			"component": "com.sap.system.python3Operator",
+			"metadata": {
+				"label": "Snowflake Operator",
+				"x": 277.99999809265137,
+				"y": 80,
+				"height": 80,
+				"width": 120,
+				"extensible": true,
+				"filesRequired": [
+					"script.py"
+				],
+				"generation": 1,
+				"config": {
+					"script": "import pandas as pd\nimport snowflake.connector\nfrom snowflake.sqlalchemy import URL\nfrom sqlalchemy import create_engine\nfrom io import StringIO\nimport csv\nimport pandas as pd\nimport json\n\n\n\ndef on_input(inData,msg2):\n    \n    # Establishing connection with Snowflake\n    engine = create_engine(URL(\n    account = 'Kraft.east-us-2.privatelink',\n    user = 'khc_sapdi_conn_user_dev',\n    password = '9xXC=lS_3/_^4}v6',\n    warehouse = 'dev_cloud_analytics_platform',\n    database = 'DBS_GENERIC_NONSECURE_SBX',\n    schema = 'ingestion',\n    role='dev_khc_sapdi',\n    ))\n    connection = engine.connect()\n    # read body\n    data = StringIO(inData.body)\n\n    # read attributes\n    var = json.dumps(inData.attributes)\n    result = json.loads(var)\n\n    # from here we start json parsing\n    ABAP = result['ABAP']\n    Fields = ABAP['Fields']\n\n    # creating an empty list for headers\n    columns = []\n    for item in Fields:\n        columns.append(item['Name'])  \n\n    # data mapping using headers & saving into pandas dataframe\n    df = pd.read_csv(data, index_col = False, names = columns)\n    df=df.drop(['/1DH/CDS_VIEW', '/1DH/OPERATION'], axis=1)\n\n    # here you can prepare your data,\n    # e.g. columns selection or records filtering\n\n    df_csv = df.to_csv(index = False, header = True)\n    api.send('output', df_csv)\n    table=msg2\n    api.send('output',table)\n    #Loading data into snowflake table\n    df.to_sql(table, con=engine, if_exists = 'append',index=False)\n    \n    api.send('output','Load completed')\n    \n\napi.set_port_callback(['Input1','Input2'], on_input)"
+				},
+				"additionalinports": [
+					{
+						"name": "Input1",
+						"type": "message"
+					},
+					{
+						"name": "Input2",
+						"type": "string"
+					}
+				],
+				"additionaloutports": [
+					{
+						"name": "output",
+						"type": "message"
+					}
+				]
+			}
+		},
+		"wiretap1": {
+			"component": "com.sap.util.wiretap",
+			"metadata": {
+				"label": "Wiretap",
+				"x": 492.99999713897705,
+				"y": 80,
+				"height": 80,
+				"width": 120,
+				"generation": 1,
+				"ui": "dynpath",
+				"config": {}
+			}
+		},
+		"abapcdsreader11": {
+			"component": "com.sap.abap.cds.reader",
+			"metadata": {
+				"label": "ABAP CDS Reader V2",
+				"x": 17,
+				"y": 12,
+				"height": 80,
+				"width": 120,
+				"extensible": true,
+				"generation": 1,
+				"config": {
+					"connectionID": "S4H_ANZ",
+					"operatorID": "com.sap.abap.cds.reader.v2",
+					"subscriptionType": "New",
+					"action": "Initial Load",
+					"wireformat": "Enhanced Format Conversions",
+					"cdsname": "I_CUSTOMER",
+					"Chunk size": 50000,
+					"subscriptionName": "CUS1",
+					"chunkSize": 1001
+				},
+				"additionaloutports": [
+					{
+						"name": "outMessageData",
+						"type": "message"
+					}
+				]
+			},
+			"name": "abapcdsreader1"
+		},
+		"constantgenerator11": {
+			"component": "com.sap.util.constantGenerator",
+			"metadata": {
+				"label": "Constant Generator",
+				"x": 17,
+				"y": 132,
+				"height": 80,
+				"width": 120,
+				"extensible": true,
+				"generation": 1,
+				"config": {
+					"content": "${Snowflake table name}"
+				}
+			},
+			"name": "constantgenerator1"
+		}
+	},
+	"groups": [
+		{
+			"name": "group1",
+			"nodes": [
+				"python3operator1"
+			],
+			"metadata": {
+				"description": "Group"
+			},
+			"tags": {
+				"sqlalchemy": ""
+			}
+		}
+	],
+	"connections": [
+		{
+			"metadata": {
+				"points": "401.99999809265137,120 487.99999713897705,120"
+			},
+			"src": {
+				"port": "output",
+				"process": "python3operator1"
+			},
+			"tgt": {
+				"port": "in",
+				"process": "wiretap1"
+			}
+		},
+		{
+			"metadata": {
+				"points": "141,52 168.99999952316284,52 168.99999952316284,114.5 244.99999856948853,114.5 244.99999856948853,111 272.99999809265137,111"
+			},
+			"src": {
+				"port": "outMessageData",
+				"process": "abapcdsreader11"
+			},
+			"tgt": {
+				"port": "Input1",
+				"process": "python3operator1"
+			}
+		},
+		{
+			"metadata": {
+				"points": "141,172 168.99999952316284,172 168.99999952316284,125.5 244.99999856948853,125.5 244.99999856948853,129 272.99999809265137,129"
+			},
+			"src": {
+				"port": "out",
+				"process": "constantgenerator11"
+			},
+			"tgt": {
+				"port": "Input2",
+				"process": "python3operator1"
+			}
+		}
+	],
+	"inports": {},
+	"outports": {},
+	"metadata": {
+		"generation": 1
+	}
+}

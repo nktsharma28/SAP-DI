@@ -1,0 +1,8 @@
+# Optional - register the credentials with a server (overrides ClientConfig for that server)
+smbclient.register_session("vf05-khc-tul.mykft.net", username="gwr0459",password="*****")
+#smbclient.mkdir(r"\\vf05-khc-tul.mykft.net\HNAData\SAPDI", username="gwr0459",password="****")
+with smbclient.open_file(r"\\vf05-khc-tul.mykft.net\HNAData\SAP_DS\NON_PROD\Development\ANZ_DI\file2.txt", mode="w",newline='') as fd:
+    fd.write(df.to_csv(index=False))
+
+with smbclient.open_file(r"\\vf05-khc-tul.mykft.net\HNAData\SAP_DS\NON_PROD\Development\ANZ_DI\file.txt", mode="rb") as f:
+    print(f.read())

@@ -1,0 +1,6 @@
+scenario 1
+
+Delta load - Ask shailesh to change the existing record and create new record. for I_SUPPLIER/CUSTOMER.
+Before execution take snapshot from S4H and DI.
+
+Replication mode - repeat above steps.

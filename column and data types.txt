@@ -1,0 +1,97 @@
+import json
+
+*************
+
+Schema=jsn["schema"]
+Schema["tableBasedRepresentation"]
+attr=Schema["tableBasedRepresentation"]
+i=attr["attributes"]
+i
+
+****************
+
+import pandas as pd
+data=[]
+data1=[]
+data2=[]
+for j in i:
+    tbl=j["name"]
+    try:
+        tbl3=j["length"]
+    except:
+        print('no length')
+    tbl2=j["datatype"]
+    
+    data.append(tbl)
+    data1.append(tbl2)
+    data2.append(tbl3)
+**************************
+
+def merge(lst1, lst2):
+    return [[a +' ('+ str(b)+')'] for (a, b) in zip(lst1, lst2)]
+    
+x=merge((data1), (data2))
+flat_list = []
+for xs in x:
+    for xss in xs:
+        flat_list.append(xss)
+
+data3=[flat_list]
+df=pd.DataFrame(data3,columns=data)
+
+df.rename(columns = {'/1DH/OPERATION':'OPERATION'}, inplace = True)
+df.insert(0, 'TIMESTAMP', pd.to_datetime('now').replace(microsecond=0))
+df['TIMESTAMP'] = df['TIMESTAMP'].dt.tz_localize('UTC')
+temp_cols=df.columns.tolist()
+new_cols=temp_cols[1:] + temp_cols[0:1]
+      
+df=df[new_cols]
+df
+****************************************
+dic=df.to_dict('r')
+dic
+*************************************
+dic=df.to_dict('r')
+dic_str=''
+dic_str=(dic)
+
+dic_rep = str(dic_str).replace("STRING", "VARCHAR")
+dic_rep = str(dic_rep).replace("Timestamp", "DateTime")
+dic_rep =dic_rep.strip("[")
+dic_rep =dic_rep.strip("]")
+
+dic_rep
+***************************************8
+df2 = df[df.Customer == 'US'].copy()
+df2
+***************************************
+from snowflake.sqlalchemy import URL
+from sqlalchemy import create_engine
+from sqlalchemy.types import VARCHAR,DateTime
+
+engine = create_engine(URL(
+account = 'Kraft.east-us-2.privatelink',
+user = 'khc_sapdi_conn_user_dev',
+password = '9xXC=lS_3/_^4}v6',
+warehouse = 'dev_cloud_analytics_platform',
+database = 'DBS_GENERIC_NONSECURE_SBX',
+schema = 'ingestion',
+role='dev_khc_sapdi',
+))
+*****************************************
+table='I_CUSTSALESPARTNERFUNC'
+df2.to_sql(table, con=engine, if_exists = 'append',index=False,dtype={'Customer': VARCHAR (length=10),
+  'SalesOrganization': VARCHAR (length=4),
+  'DistributionChannel': VARCHAR (length=2),
+  'Division': VARCHAR (length=2),
+  'PartnerCounter': VARCHAR (length=3),
+  'PartnerFunction': VARCHAR (length=2),
+  'BPCustomerNumber': VARCHAR (length=10),
+  'CustomerPartnerDescription': VARCHAR (length=30),
+  'DefaultPartner': VARCHAR (length=1),
+  'Supplier': VARCHAR (length=10),
+  'PersonnelNumber': VARCHAR (length=8),
+  'ContactPerson': VARCHAR (length=10),
+  'AddressID': VARCHAR (length=10),
+  'OPERATION': VARCHAR (length=1),
+  'TIMESTAMP': DateTime })

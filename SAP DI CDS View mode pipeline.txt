@@ -1,0 +1,152 @@
+{
+	"properties": {},
+	"description": "DI_ANZ_PIPELINE_TESTING",
+	"processes": {
+		"snowflake1": {
+			"component": "Snowflake",
+			"metadata": {
+				"label": "Snowflake",
+				"x": 216.99999904632568,
+				"y": 40,
+				"height": 80,
+				"width": 120,
+				"extensible": true,
+				"filesRequired": [
+					"script.py"
+				],
+				"generation": 1,
+				"config": {
+					"Snowflake_Table_Name": "${Snowflake_Table}",
+					"script": "#---------- Project - ANZ GOLDILOCKS----------#\n# Source System - S4 Hana\n# Target Systen - Snowflake Database\n# Prequisite - Install snowflake-connector-python[pandas]\n# Python Code Version = 0.1\n# Developer - Ankit Sharma\n# Modifiy Date - 02-Jun-2022\n# Enviornment - SAP DI Sandbox\n#---------------------------------------------#\n\nimport pandas as pd\nimport snowflake.connector\nfrom snowflake.connector.pandas_tools import write_pandas\nfrom io import StringIO\nimport csv\nimport json\n\napi.send('output','connection started')\n    \n\n\ndef on_input(inData):\n        # Establishing connection with Snowflake\n    conn_sf = snowflake.connector.connect(\n    account = api.config.Account,\n    user = api.config.Username,\n    warehouse = api.config.Warehouse,\n    password = api.config.Password,\n    database = api.config.Database,\n    schema = api.config.Schema)\n\n    # read body\n    data = StringIO(inData.body)\n\n    # read attributes\n    var = json.dumps(inData.attributes)\n    result = json.loads(var)\n    api.send('output','Parsing started')\n    # from here we start json parsing\n    if result['message.lastBatch']==False:\n        \n        ABAP = result['ABAP']\n        Fields = ABAP['Fields']\n    \n        # creating an empty list for headers\n        columns = []\n        for item in Fields:\n            columns.append(item['Name'])  \n    \n        # data mapping using headers & saving into pandas dataframe\n        df = pd.read_csv(data, index_col = False, names = columns)\n        #df = pd.read_csv(data, index_col = False)\n        #df = pd.read_json(data)\n        #api.send('output',df.to_csv)\n        #df=df.drop(['/1DH/CDS_VIEW', '/1DH/OPERATION'], axis=1)\n        df.rename(columns = {'/1DH/CDS_VIEW':'CDS_VIEW','/1DH/OPERATION':'OPERATION'}, inplace = True)\n        df.insert(0, 'TIMESTAMP', pd.to_datetime('now').replace(microsecond=0))\n        #df['Date']= pd.to_datetime(df['Date'])\n        df['TIMESTAMP'] = df['TIMESTAMP'].dt.tz_localize('UTC')\n        temp_cols=df.columns.tolist()\n        new_cols=temp_cols[1:] + temp_cols[0:1]\n      \n        df=df[new_cols]\n        # here you can prepare your data,\n        # e.g. columns selection or records filtering\n        #api.send('output',str(df['CREATIONDATE']))\n        #api.send('output',str(df['CREATIONDATE'].dtypes))\n        df_csv = df.to_csv(index = False, header = True)\n        api.send('output',df_csv)\n        table=api.config.Snowflake_Table_Name\n        \n        #Loading data into snowflake table\n        api.send('output','Load started')\n    \n        #To load data into Snowflake DB using write_pandas function\n    \n        \n        #with conn_sf as db_conn_sf, db_conn_sf.cursor() as db_cursor_sf:\n            #inserted_rows = write_pandas(conn = db_conn_sf, df = df,table_name = table, quote_identifiers = False)\n            \n        \n                                     \n        #api.send('output',str(inserted_rows))\n        \n    else:\n        api.send('output','No incoming data')\n            \n    if result['message.lastBatch']==True :\n        api.send('stop','Stop graph')\n    else:\n        api.send('output','Load completed')\n        \n    \n\napi.set_port_callback('input1', on_input)",
+					"Account": "Kraft.east-us-2.privatelink",
+					"Username": "khc_sapdi_conn_user_dev",
+					"Password": "9xXC=lS_3/_^4}v6",
+					"Database": "DBS_GENERIC_NONSECURE_SBX",
+					"Schema": "INGESTION",
+					"Warehouse": "dev_cloud_analytics_platform",
+					"Role": "dev_khc_sapdi"
+				},
+				"additionaloutports": [
+					{
+						"name": "stop",
+						"type": "message"
+					}
+				]
+			}
+		},
+		"abapcdsreader111": {
+			"component": "com.sap.abap.cds.reader",
+			"metadata": {
+				"label": "ABAP CDS Reader V2",
+				"x": 21,
+				"y": 32,
+				"height": 80,
+				"width": 120,
+				"extensible": true,
+				"generation": 1,
+				"config": {
+					"connectionID": "S4H_ANZ",
+					"operatorID": "com.sap.abap.cds.reader.v2",
+					"subscriptionType": "New",
+					"action": "Initial Load",
+					"wireformat": "Enhanced Format Conversions",
+					"cdsname": "ZI_SUPPLIER",
+					"Chunk size": 50000,
+					"subscriptionName": "ZI_SUPPLIER_5"
+				},
+				"additionaloutports": [
+					{
+						"name": "outMessageData",
+						"type": "message"
+					}
+				]
+			},
+			"name": "abapcdsreader11"
+		},
+		"terminal2": {
+			"component": "com.sap.util.terminal",
+			"metadata": {
+				"label": "Terminal",
+				"x": 576.999997138977,
+				"y": 32,
+				"height": 80,
+				"width": 120,
+				"generation": 1,
+				"ui": "dynpath",
+				"config": {}
+			}
+		},
+		"tostringconverter2": {
+			"component": "com.sap.util.toStringConverter",
+			"metadata": {
+				"label": "ToString Converter",
+				"x": 477.99999713897705,
+				"y": 47,
+				"height": 50,
+				"width": 50,
+				"generation": 1,
+				"config": {}
+			}
+		}
+	},
+	"groups": [
+		{
+			"name": "group1",
+			"nodes": [
+				"snowflake1"
+			],
+			"metadata": {
+				"description": "Group"
+			},
+			"tags": {
+				"snwflk": ""
+			}
+		}
+	],
+	"connections": [
+		{
+			"metadata": {
+				"points": "145,72 172.99999952316284,72 172.99999952316284,80 220.99999904632568,80"
+			},
+			"src": {
+				"port": "outMessageData",
+				"process": "abapcdsreader111"
+			},
+			"tgt": {
+				"port": "input1",
+				"process": "snowflake1"
+			}
+		},
+		{
+			"metadata": {
+				"points": "340.9999990463257,71 368.9999985694885,71 368.9999985694885,80 444.9999976158142,80 444.9999976158142,81 472.99999713897705,81"
+			},
+			"src": {
+				"port": "output",
+				"process": "snowflake1"
+			},
+			"tgt": {
+				"port": "inmessage",
+				"process": "tostringconverter2"
+			}
+		},
+		{
+			"metadata": {
+				"points": "531.999997138977,72 571.999997138977,72"
+			},
+			"src": {
+				"port": "outstring",
+				"process": "tostringconverter2"
+			},
+			"tgt": {
+				"port": "in1",
+				"process": "terminal2"
+			}
+		}
+	],
+	"inports": {},
+	"outports": {},
+	"metadata": {
+		"generation": 1
+	}
+}

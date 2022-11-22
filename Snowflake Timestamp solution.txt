@@ -1,0 +1,9 @@
+For others struggling with this issue - the simplest workaround is to add a timezone to your datetime column in pandas:
+df["date_column"] = df["date_column"].dt.tz_localize('UTC')
+
+untested way to apply this to all offending columns:
+
+def fix_date_cols(df, tz = 'UTC'):
+    cols = df.select_dtypes(include=['datetime64[ns]']).columns
+    for col in cols:
+        df[col] = df[col].dt.tz_localize(tz)
