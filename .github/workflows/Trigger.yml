@@ -1,0 +1,24 @@
+name: Trigger Push 
+run-name: ${{ github.actor }} is learning GitHub Actions
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        ssh-key: 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
+        persist-credentials: true
+    - name: Create local changes
+      run: |
+        ...
+    - name: Commit files
+      run: |
+        git config --local user.email "nktsharma28@gmail.com"
+        git config --local user.name "nktsharma28"
+        git commit -a -m "Add changes"
+    - name: Push changes
+      uses: ad-m/github-push-action@local
+      with:
+        ssh: true
+        branch: ${{ github.ref }}
