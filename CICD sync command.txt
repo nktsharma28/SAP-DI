@@ -1,2 +1,9 @@
 cd /vhome
 git reset --hard SAP-DI-KHC/REMOTE
+
+Repositories are not in sync
+
+git checkout master   
+git branch main master -f    
+git checkout main  
+git push origin main -f 
