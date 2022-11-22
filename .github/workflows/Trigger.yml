@@ -1,15 +1,10 @@
-name: Push commit
+name: example
+
 on: push
+
 jobs:
-  report:
+  job_1:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - name: Create report file
-        run: date +%s > report.txt
-      - name: Commit report
-        run: |
-          git config --global user.name 'nktsharma28'
-          git config --global user.email 'nktsharma28@gmail.com'
-          git commit -am "Automated report"
-          git push
+      - name: My first step
+        run: echo This is the first step of my first job.
