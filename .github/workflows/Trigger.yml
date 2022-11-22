@@ -7,5 +7,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: My first step
+        run: git init
+      - name: second step
         run: git fetch SAP-DI main
-    
+
