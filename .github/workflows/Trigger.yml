@@ -7,4 +7,4 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: My first step
-        run: echo This is the first step of my first job.
+        run: git push SAP-DI main
