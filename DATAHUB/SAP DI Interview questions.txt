@@ -1,0 +1,27 @@
+1. Different components in SAP DI 
+2. How to build a training pipeline to generate trained model? Components used in graph like artifacts, python operator.
+3. How to build a inference pipeline and component used in graphs?
+4. How to call a trained model in pipeline.
+5. can we import pretrained model in SAP DI? if yes how.
+6. How to read a file from Cloud storage(Google,amazon,IBM) and load it into a database table?
+7. How to install python libraries in SAP DI modeler ? answer using docker files
+8. Steps to create a simpe graph to read data from a file and load it into a Hana table.
+9. How to connect to open source API like postman from SAP DI,Pass inputs from Third party API to DI Pipeline.
+10.DI repository to store and read file .
+11 . How to read and write data using python operator in SAP DI?
+12. How to assign tags/Modules to python operator?
+13. How to terminate a graph?
+14. Different data transform operations available in SAP DI? - Aggregation,join,union,case,projection
+15. How to read the data from source table using customized SQL?
+16. What are Table consumer and producer operator in SAP DI?
+17. Build a graph to read json file and load the data into target database table.
+18. Can we drop,truncate and create tables in database like HANA from SAP DI. if yes how?
+19. How to call a graph from another graph in SAP DI? USING Vpipeline operator
+20 .How to schedule a pipeline on weekly,monthy or daily basis?
+21. what are the pre requisite to execute a code from Jupyter notebook in SAP DI modeler?.
+22. How to join two source tables in SAP DI?.
+23. What is python consumer and producer pipeline in SAP DI?
+24. Create a pipeline to read input from open API(Like postman) and send the output back to it?
+25. Can we send output from one operator with Data type as message to the input of another opertor with data type 
+    as string?. if yes how 
+

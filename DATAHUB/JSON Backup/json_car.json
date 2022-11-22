@@ -1,0 +1,26 @@
+[
+  {
+    "Engine_Size": 800,
+    "Price": 350000
+  },
+  {
+    "Engine_Size": 1000,
+    "Price": 500000
+  },
+  {
+    "Engine_Size": 1199,
+    "Price": 600000
+  },
+  {
+    "Engine_Size": 1300,
+    "Price": 700000
+  },
+  {
+    "Engine_Size": 1400,
+    "Price": 750000
+  },
+  {
+    "Engine_Size": 1500,
+    "Price": 900000
+  }
+]

@@ -1,0 +1,8 @@
+Country,Polarity,Sentiments,Dimension
+India,0.136,very good,covid-corona 
+India,-0.167,very bad,covid-corona 
+India,0.000,neutral,covid-corona 
+India,0.000,neutral,covid-corona 
+India,0.000,neutral,covid-corona 
+India,-0.036,bad,covid-corona 
+India,0.000,neutral,covid-corona 

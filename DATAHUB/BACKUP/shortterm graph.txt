@@ -1,0 +1,580 @@
+{
+	"properties": {},
+	"groupResources": {},
+	"description": "ML_PIPELINE_DEMAND_SENSING_SHORT_TERM_FORECAST",
+	"processes": {
+		"python3operator1": {
+			"component": "com.sap.system.python3Operator",
+			"metadata": {
+				"label": "Python3 Operator",
+				"x": 593.9999961853027,
+				"y": 199,
+				"height": 82,
+				"width": 120,
+				"extensible": true,
+				"config": {
+					"script": "def on_input(msg1, msg2, msg3, msg4):\r\n\r\n\t#import Libraries\r\n\timport io\r\n\timport importlib\r\n\timport pandas as pd\r\n\timport os\r\n\timport us\r\n\tfrom datetime import datetime\r\n\timport datetime\r\n\timport pandas as pd\r\n\timport numpy as np\r\n\timport ast\r\n\timport time\r\n\tfrom pathlib import Path\r\n\tfrom fbprophet import Prophet\r\n\tfrom datetime import date\r\n\tfrom pathlib import Path\r\n\tfrom itertools import repeat\r\n\timport matplotlib.pyplot as plt\r\n\timport hana_ml.dataframe as dataframe\r\n\t#from notebook_hana_connector.notebook_hana_connector import NotebookConnectionContext\t\r\n\t\r\n\tapi.send(\"output2\", 'Line 24 After Libraries')\r\n\t#variables and constant\r\n\t# Set forecast target and choose date column name\r\n\tTARGET = 'FillMean'\r\n\tDATE_COLUMN = 'week_ending_date'\r\n\r\n\t# Establish training/test windows\r\n\tTRAIN_START = pd.to_datetime('2020-01-01').date()\r\n\tTRAIN_END = pd.to_datetime('2020-06-30').date()\r\n\r\n\t#Test Window is not applicable for Short Term Forecasting\r\n\tTEST_START = pd.to_datetime('2020-07-01').date()\r\n\tTEST_END = pd.to_datetime('2020-09-30').date() \r\n\r\n\t# Choose model features and forecast groupby level\r\n\t#INTERNAL_DATA_FILE = \"sample_packsizes_v1.csv\"\r\n\t#INTERNAL_DATA_FILE = \"scm_demand_sensing_masked_data_scenario_2.csv\"\r\n\t#EXTERNAL_DATA_FILE = \"usa_risk_index.csv\"\r\n\tADDITIONAL_REGRESSORS = ['mobility_index','yearly_scaled','risk_index']\r\n\tREGRESSOR_LAG = {'mobility_index':4}\r\n\tGROUPBY_LEVEL = ['retailer','state','brand','ppg']\r\n\r\n\t# To speed up running, set to true and designate what number of samples to run on\r\n\tSAMPLE = 10\r\n\t#SAMPLE_SIZE = 10\r\n\t# Set logistic growth function cap\r\n\tCAP_PERCENTILE = 95\r\n\t# Future Period\r\n\tFUTURE_PERIOD = 25\r\n\t#MAX_MODEL_ITER = 50\r\n\t# model parameters\r\n\tOPTIM_PARAM = {\"growth\": \"logistic\", \"seasonality_prior_scale\": 0.1}\r\n\tdata = []\r\n\texcluded = []\r\n\tdf_final_out = pd.DataFrame()\r\n\tapi.send(\"output2\", 'Line 58 Before Functions definition')\r\n\t#functions\r\n\tdef get_end_date_from_week(year,week,day):\r\n\t\t\r\n\t\t\"\"\"Calculates first day and last day of week, given a year and week.\"\"\"\r\n\t\tfirst_day = datetime.datetime.strptime(f'{year}-W{int(week )- 1}-1', '%Y-W%W-%w').date()\r\n\t\tlast_day = first_day + datetime.timedelta(days=day)\r\n\t\treturn last_day\r\n\r\n\tdef get_week_number_from_end_date(date_obj):\r\n\t\t\"\"\"Calculates week number in year given a date.\"\"\"\r\n\t\tweek_number = date_obj.isocalendar()[1]\r\n\t\treturn week_number\r\n\r\n\r\n\tdef data_imputation(df):\r\n\t\t# Fill in missing week numbers\r\n\t\tdf['week_of_year'] = df[DATE_COLUMN].apply(lambda x: get_week_number_from_end_date(x))\r\n\t\tdf[DATE_COLUMN] = pd.to_datetime(df[DATE_COLUMN]).dt.date\r\n\t\tgrouped = df.groupby(GROUPBY_LEVEL)\r\n\t\tsubset_list = []\r\n\t\tfor name, group in grouped:\r\n\t\t\tsubset_df = group.copy()\r\n\t\t\tsubset_df = subset_df.set_index(DATE_COLUMN)\r\n\t\t\t# Imputation approach using mean value\r\n\t\t\tsubset_df = subset_df.assign(imputed_qty=subset_df[TARGET].fillna(subset_df[TARGET].mean()))\r\n\t\t\tsubset_df = subset_df.reset_index()\r\n\t\t\tsubset_list.append(subset_df)\r\n\t\timputed_df = pd.concat(subset_list)\r\n\t\timputed_df.to_csv(DATA_PATH+'processed/imputed_data.csv', index=False)\r\n\t\treturn imputed_df\r\n\r\n\r\n\tdef add_external_data(df, df_add):\r\n\t\t\"\"\" Takes client data and adds external data\r\n\t\t\"\"\"\r\n\r\n\t\t# # Load additional external data\r\n\t\t#df_add = pd.read_csv(DATA_PATH + EXTERNAL_DATA_FILE)\r\n\t\tdf_add = df_add[['date', 'state_initial'] + ADDITIONAL_REGRESSORS]\r\n\t\tdf_add.rename(columns={'date': 'week_ending_date', 'state_initial': 'state'}, inplace=True)\r\n\t\tif REGRESSOR_LAG != {}:\r\n\t\t\tfor k, v in REGRESSOR_LAG.items():\r\n\t\t\t\tdf_add[k] = df_add.groupby('state')[k].shift(v)\r\n\t\t\t\t\t\r\n\t\t#print(df.dtypes)\r\n\t\t#print(df_add.dtypes)\r\n\t\tdf_add['week_ending_date'] =  df_add['week_ending_date'].astype(str)\r\n\t\tdf = pd.merge(df, df_add, on=['week_ending_date', 'state'], how='left')\r\n\t\tdf['week_ending_date'] =  df['week_ending_date'].astype(str)\r\n\t\tdf_add[DATE_COLUMN] = pd.to_datetime(df_add[DATE_COLUMN]).dt.date\r\n\t\tdf_add.rename(columns={DATE_COLUMN: 'ds'}, inplace=True)\r\n\t\treturn df, df_add\r\n\r\n\r\n\tdef select_data(df):\r\n\t\tif ADDITIONAL_REGRESSORS:\r\n\t\t\tdf = df[[DATE_COLUMN] + GROUPBY_LEVEL + ADDITIONAL_REGRESSORS + [TARGET]]\r\n\t\telse:\r\n\t\t\tdf = df[[DATE_COLUMN] + GROUPBY_LEVEL + [TARGET]]\r\n\t\tprint('Selected data columns.')\r\n\t\t\r\n\t\treturn df\r\n\r\n\tdef select_sample(df):\r\n\t\tdf_sum = df.groupby(GROUPBY_LEVEL)[[TARGET]].sum().reset_index().rename(columns={TARGET: 'total_qty'})\r\n\t\ttop_100 = df_sum.nlargest(columns='total_qty', n=SAMPLE)\r\n\t\ttop_100 = top_100.drop(['total_qty'], axis=1)\r\n\t\tdf = pd.merge(top_100, df, how='inner', on=GROUPBY_LEVEL)\r\n\t\tprint('Chose top {} samples.'.format(SAMPLE))\r\n\t\treturn df\r\n\r\n\tdef load_holiday_calendar():\r\n\t\t\"\"\" Builds a holiday calendar.\"\"\"\r\n\t\t# New year's day\r\n\t\tnewyear = pd.DataFrame({\r\n\t\t'holiday': 'newyear',\r\n\t\t'ds': pd.to_datetime(['2019-01-01','2020-01-01']),\r\n\t\t})\r\n\t\t# Martin Luther King Jr. Day\r\n\t\tMLK_day = pd.DataFrame({\r\n\t\t'holiday': 'MLK_day',\r\n\t\t'ds': pd.to_datetime(['2019-01-21','2020-01-20']),\r\n\t\t})\r\n\t\t# March Madness\r\n\t\tmarch_madness = pd.DataFrame({\r\n\t\t'holiday': 'march_madness',\r\n\t\t'ds': pd.to_datetime(['2018-03-24','2018-03-31','2019-03-30','2019-04-06','2020-03-28','2020-04-04', '2021-03-27','2021-04-03']),\r\n\t\t})\r\n\t\t# Superbowl\r\n\t\tsuperbowls = pd.DataFrame({\r\n\t\t'holiday': 'superbowl',\r\n\t\t'ds': pd.to_datetime(['2018-01-27','2018-02-03', '2019-01-26','2019-02-02', '2020-01-25','2020-02-01','2021-01-30','2021-02-06']),\r\n\t\t})\r\n\t\t# Lent\r\n\t\tlent = pd.DataFrame({\r\n\t\t'holiday': 'lent',\r\n\t\t'ds': pd.to_datetime(['2018-02-17', '2018-02-24','2018-03-03','2018-03-10','2018-03-17','2018-03-24',\r\n\t\t\t\t\t\t\t'2019-03-09', '2019-03-16','2019-03-23','2019-03-30','2019-04-06','2019-04-13',\r\n\t\t\t\t\t\t\t'2020-02-29', '2020-03-07', '2020-03-14','2020-03-21','2020-03-28','2020-04-04',\r\n\t\t\t\t\t\t\t'2021-02-20', '2021-02-27', '2021-03-06','2021-03-13','2021-03-20','2021-03-27']),\r\n\t\t})\r\n\t\t# Easter (Wednesday – Easter Friday)\r\n\t\teaster = pd.DataFrame({\r\n\t\t'holiday': 'easter',\r\n\t\t'ds': pd.to_datetime(['2018-03-31', '2019-04-20', '2020-04-11','2021-04-03']),\r\n\t\t})\r\n\t\t# Memorial day\r\n\t\tmemorial_day = pd.DataFrame({\r\n\t\t'holiday': 'memorial_day',\r\n\t\t'ds': pd.to_datetime(['2019-05-27', '2020-05-25']),\r\n\t\t})\r\n\t\t# Independence day\r\n\t\tindep_day = pd.DataFrame({\r\n\t\t'holiday': 'indep_day',\r\n\t\t'ds': pd.to_datetime(['2019-07-04', '2020-07-03']),\r\n\t\t})\r\n\t\t# Labor day\r\n\t\tlabor_day = pd.DataFrame({\r\n\t\t'holiday': 'indep_day',\r\n\t\t'ds': pd.to_datetime(['2019-09-02', '2020-09-07']),\r\n\t\t})\r\n\t\t# Halloween\r\n\t\thalloween = pd.DataFrame({\r\n\t\t'holiday': 'halloween',\r\n\t\t'ds': pd.to_datetime(['2018-10-27', '2019-10-26', '2020-10-31','2021-10-30']),\r\n\t\t})\r\n\t\t# Veteran's day\r\n\t\tveteran_day = pd.DataFrame({\r\n\t\t'holiday': 'veteran_day',\r\n\t\t'ds': pd.to_datetime(['2019-11-11', '2020-11-11']),\r\n\t\t})\r\n\t\t# Thanksgiving\r\n\t\tthanksgiving = pd.DataFrame({\r\n\t\t'holiday': 'thanksgiving',\r\n\t\t'ds': pd.to_datetime(['2019-11-28', '2020-11-26']),\r\n\t\t})\r\n\t\t# Christmas\r\n\t\tChristmas = pd.DataFrame({\r\n\t\t'holiday': 'thanksgiving',\r\n\t\t'ds': pd.to_datetime(['2019-12-25', '2020-12-25']),\r\n\t\t})\r\n\r\n\t\tholidays_df = pd.concat((newyear, MLK_day, march_madness, superbowls, lent, easter, memorial_day, indep_day, labor_day, halloween, veteran_day, thanksgiving, Christmas))\r\n\t\treturn holidays_df\r\n\r\n\tdef get_week_day(df):\r\n\t\treturn df['ds'].iloc[0].weekday()\r\n\r\n\tdef custom_holidays(week_day):\r\n\t\tcustom_holidays = load_holiday_calendar()\r\n\t\tcustom_holidays['week_no'] = custom_holidays['ds'].apply(lambda x: get_week_number_from_end_date(x))\r\n\t\tcustom_holidays['year'] = custom_holidays['ds'].apply(lambda x: int(x.strftime('%Y')))\r\n\t\tcustom_holidays['week_ending_date'] = custom_holidays.apply(\r\n\t\t\tlambda x: get_end_date_from_week(x['year'], x['week_no'], week_day), 1)\r\n\t\tcustom_holidays.rename(columns={'ds': 'date', 'week_ending_date': 'ds'}, inplace=True)\r\n\t\tcustom_holidays = custom_holidays[['ds', 'holiday']]\r\n\r\n\t\treturn custom_holidays\r\n\r\n\tdef plot_mape(stats_df):\r\n\t\tplt.style.use('ggplot')\r\n\t\tfirst_edge, last_edge = stats_df['mape'].min(), stats_df['mape'].max()\r\n\r\n\t\tn_equal_bins = 60\r\n\t\tbin_edges = np.linspace(start=first_edge, stop=last_edge, num=n_equal_bins + 1, endpoint=True)\r\n\r\n\t\t# Creating histogram\r\n\t\tfig, ax = plt.subplots(figsize =(8, 4))\r\n\t\tax.hist(stats_df['mape'], bins = bin_edges,  color = (0.5,0.1,0.5,0.6))\r\n\r\n\t\tplt.title('MAPE distribution of forecast results.')\r\n\r\n\t\t# Save plot\r\n\t\tplt.savefig(DATA_PATH+'mape_plot.png')\r\n\r\n\tdef mean_absolute_percentage_error(y_true, y_pred):\r\n\t\ty_true, y_pred = np.array(y_true), np.array(y_pred)\r\n\t\treturn np.mean(np.abs((y_true - y_pred)/ y_true)) * 100\r\n\r\n\tdef custom_fillna(series):\r\n\t\tif series.dtype is pd.np.dtype(float):\r\n\t\t\treturn series.fillna(0)\r\n\t\telif series.dtype is pd.np.dtype('int32'):\r\n\t\t\treturn series.fillna(0)\r\n\t\telif series.dtype is pd.np.dtype('int64'):\r\n\t\t\treturn series.fillna(0)\r\n\t\telif series.dtype is pd.np.dtype(str):\r\n\t\t\treturn series.fillna(0)    \r\n\t\telif series.dtype is pd.np.dtype(object):\r\n\t\t\treturn series.fillna('')\r\n\t\telse:\r\n\t\t\treturn series    \r\n\t\t\r\n\tdef check_NaN(df):\r\n\t\ttry:\r\n\t\t\tdf_nan = df.isna()\r\n\t\t\tnan_columns = df_nan.any()\r\n\t\t\tcolumns_with_nan = df_nan.columns[nan_columns].tolist()\r\n\t\texcept Exception as e:\r\n\t\t\tprint(e)\r\n\t\treturn columns_with_nan   \t\r\n\t\r\n\t# Load historical data\r\n\tdf_hist_sample = pd.read_json(io.StringIO(msg1))\r\n\t#df_hist_sample['week_ending_date'] =  df_hist_sample['week_ending_date'].astype(str)\r\n\tdf_hist_sample = df_hist_sample.apply(custom_fillna)\r\n\t\r\n\t# Load Mobility data\r\n\tdf_add = pd.read_json(io.StringIO(msg4))\r\n\t\r\n\t#df_add['week_ending_date'] = pd.to_datetime(df_add['week_ending_date'])\r\n\t#df_add['week_ending_date'] =  df_add['week_ending_date'].astype('datetime64[ns]')\r\n\tdf_add = df_add.apply(custom_fillna)\t\r\n\t#if column name is in CAPS\r\n\tdf_add = df_add.rename(columns={'WEEK_ENDING_DATE':'week_ending_date', 'STATE':'state', 'MOBILITY_INDEX':'mobility_index'})\t\r\n\tdf_add[DATE_COLUMN] = pd.to_datetime(df_add[DATE_COLUMN]).dt.date\r\n\tdf_add[DATE_COLUMN]=df_add[DATE_COLUMN].apply(lambda x: x.strftime('%Y-%m-%d'))\t\r\n\t\r\n\t# Load Seasonality data \t\r\n\tdf_season =  pd.read_json(io.StringIO(msg2))\r\n\tdf_season = df_season.apply(custom_fillna)\r\n\t#df_season['week_ending_date'] =  df_season['week_ending_date'].astype(str)\r\n\tdf_season[DATE_COLUMN] = pd.to_datetime(df_season[DATE_COLUMN]).dt.date\r\n\tdf_season[DATE_COLUMN]=df_season[DATE_COLUMN].apply(lambda x: x.strftime('%Y-%m-%d'))\t\r\n\t\r\n\t\r\n\t\r\n\t#Load Covid Risk Index data \r\n\tdf_external = pd.read_json(io.StringIO(msg3))\r\n\t#df_external['week_ending_date'] =  df_external['week_ending_date'].astype(str)\r\n\tdf_external = df_external.apply(custom_fillna)\r\n\tdf_external = df_external.rename(columns={'STATE':'state','DATE':'date','CASES':'cases','FORECAST':'forecast','LOG_CASES':'log_cases',\r\n\t    'LOG_FORECAST':'log_forecast','RISK_INDEX':'risk_index'})\t\r\n\t\r\n\t#Process Covid Risk Index data Aggreate covid risk index to state level, using formula:\r\n\t#Index_state = log(cases_state) + a*log(VIX), where a = corr(log(cases_state), log(VIX))\r\n\r\n\t# Get sum of all cases within state\r\n\tdf_covid_state = df_external.groupby(['state','date'])['cases'].sum().reset_index()\r\n\r\n\t# Get vix forecast by state, same for each county, so simply take the mean\r\n\tvix = df_external.groupby(['state','date'])['forecast'].mean().reset_index()\r\n\r\n\t# Merge cases and vix together\r\n\tdf_covid_state = df_covid_state.merge(vix, how='left', on=['state', 'date'])\r\n\r\n\t# Add columns for the log transforms, and fill in inf with 0.0\r\n\tdf_covid_state['log_cases'] = df_covid_state['cases'].apply(np.log)\r\n\tdf_covid_state['log_forecast'] = df_covid_state['forecast'].apply(np.log)\r\n\tdf_covid_state = df_covid_state.replace([np.inf, -np.inf], 0.0)\r\n\r\n\t# Calculate 'a' factor by calculating correlation between cases and VIX forecast\r\n\ta_factor = df_covid_state.groupby('state')[['log_cases','log_forecast']].corr().iloc[0::2,-1].reset_index().drop('level_1', axis=1)\r\n\ta_factor.rename({'log_forecast':'a_factor'}, inplace=True, axis=1)\r\n\r\n\t# Add 'a' factor column to covid state dataframe\r\n\tdf_covid_state = df_covid_state.merge(a_factor, how='left', on='state')\r\n\r\n\t# Calculate covid risk index\r\n\tdf_covid_state['risk_index'] = df_covid_state['log_cases'] + df_covid_state['a_factor']*df_covid_state['log_forecast']\r\n\r\n\t# Add state abbreviations to dataframe\r\n\tdf_covid_state['state_abbr'] = df_covid_state['state'].apply(lambda x: us.states.lookup(x).abbr)\r\n\tdf_covid_state.drop(['state'], axis=1, inplace=True)\r\n\r\n\t# Clean up date column and rename columns\r\n\tdf_covid_state['date'] = pd.to_datetime(df_covid_state['date']).dt.date\r\n\tdf_covid_state = df_covid_state.rename(columns={'date':'week_ending_date', 'state_abbr':'state'})\t\r\n\t\r\n\tdf_covid_state = df_covid_state.dropna()\r\n\tdf_covid_state = df_covid_state.apply(custom_fillna)\r\n\t\r\n\tdf_covid_state[DATE_COLUMN] = pd.to_datetime(df_covid_state[DATE_COLUMN]).dt.date\r\n\tdf_covid_state[DATE_COLUMN]=df_covid_state[DATE_COLUMN].apply(lambda x: x.strftime('%Y-%m-%d'))\r\n\t\r\n\tapi.send(\"output2\", 'Line 323 Before Processing section')\r\n\t\r\n\t#Processing Mobility data\r\n\tif REGRESSOR_LAG != {}:\r\n\t\tfor k, v in REGRESSOR_LAG.items():\r\n\t\t\tdf_add[k] = df_add.groupby('state')[k].shift(v)\r\n\t\r\n\t\r\n\t#merge historical data with mobility external data\r\n\tapi.send(\"output2\", 'Line 330 Before Merge')\r\n\tdf1 = pd.merge(df_hist_sample, df_add, on = ['week_ending_date', 'state'], how = 'left').fillna(1)# dfhist changed to df_hist_sample\r\n\t#merge resultant data frame with seasonality data\r\n\tdf2 = pd.merge(df1, df_season, on = ['week_ending_date','retailer','state','brand','ppg'], how = 'left')\\\r\n\t.fillna(df_season['yearly_scaled'].mean(),axis=0)\r\n\t#merge resultant data with covid data\r\n\tdf_final = pd.merge(df2, df_covid_state, on=['week_ending_date', 'state'], how='left').fillna(0)\t\r\n\t\r\n\tdf=df_final.copy()\r\n\t\r\n\t# Make sure week ending date is set to date and rename column to prophet\r\n\tdf[DATE_COLUMN] = pd.to_datetime(df[DATE_COLUMN]).dt.date\r\n\t\r\n\t# Get relevant columns\r\n\tdf = select_data(df)\r\n\t# Get sample, if number provided, else run on full set\r\n\tif SAMPLE:\r\n\t\tdf = select_sample(df)\r\n\t# Rename to prophet's requirements    \r\n\tdf.rename(columns={DATE_COLUMN: 'ds', TARGET: 'y'}, inplace=True)\r\n\t# Get Weekday\r\n\tweek_day = get_week_day(df)\r\n\t# Create custom holiday\r\n\tcust_df_new = custom_holidays(week_day)\t\r\n\r\n\t#groupby with pre-defined list of values\r\n\tgrouped = df.groupby(GROUPBY_LEVEL)\t\r\n\r\n\t#check unique combinations\r\n\tfor g in grouped.groups:\r\n\t\tapi.send(\"output2\",g)\t\r\n\t\t\r\n\t#single thread implementation\r\n\t# Keep track of how long it takes to run for all groups\r\n\r\n\tfor g in grouped.groups:\r\n\t    api.send(\"output2\", 'Line 365 Inside For Loop')\r\n\t    p = OPTIM_PARAM.copy()\r\n\t    for i in range(len(GROUPBY_LEVEL)):\r\n\t        data.append(g[i])\r\n\t    df_group = grouped.get_group(g)\r\n\t    df_group['ds'] = pd.to_datetime(df_group['ds']).dt.date\r\n\t    df_group = df_group.sort_values('ds')\r\n\t    # Set train/predict windows\r\n\t    train_df = df_group.loc[df_group['ds'] <= TRAIN_END]\r\n\t    # Make sure we do not have NaN in additional regressor columns\r\n\t    max_val = abs(np.percentile(train_df[\"y\"], CAP_PERCENTILE))\r\n\t    #min_val = abs(np.percentile(train_df[\"y\"], 5))\r\n\t    train_df[\"cap\"] = max_val\r\n\t    # train_df[\"floor\"] = min_val\r\n\t    # Initialize model\r\n\t    m = Prophet(holidays=cust_df_new, **p)\r\n\t    # Add holiday and additional regressors\r\n\t    m.add_country_holidays(country_name='US')\r\n\t    # Add additional regressors\r\n\t    if ADDITIONAL_REGRESSORS != []:\r\n\t        for regressor in ADDITIONAL_REGRESSORS:\r\n\t            m.add_regressor(regressor)\r\n\t        api.send(\"output2\", 'Line 396 After Processing')\r\n\t        # Fit model\r\n\t    try:\r\n\t        m.fit(train_df)\r\n\t        api.send(\"output2\", 'Line 400 Inside Fit Model')\r\n\t        # Create future dataframe and predict\r\n\t        future = m.make_future_dataframe(periods=FUTURE_PERIOD, include_history=False, freq='7D')\r\n\t        future[\"cap\"] = max_val\r\n\t        future['ds'] = pd.to_datetime(future['ds']).dt.date\r\n\t        if ADDITIONAL_REGRESSORS != []:\r\n\t            future[\"state\"] = g[1]\r\n\t            df[\"ds\"] = pd.to_datetime(df['ds']).dt.date\r\n\t            df['ds']=df['ds'].apply(lambda x: x.strftime('%Y-%m-%d'))\r\n\t            future['ds'] = future['ds'].apply(lambda x: x.strftime('%Y-%m-%d'))\r\n\t            future = pd.merge(future, df, on=['ds', 'state'], how='left')\r\n\t        #process future dataframe NaN values\r\n\t        future['mobility_index'].fillna(1, inplace=True)\r\n\t        future['yearly_scaled'].fillna(future['yearly_scaled'].mean(),axis=0, inplace=True) \r\n\t        future['risk_index'].fillna(future['yearly_scaled'].mean(),axis=0, inplace=True)\r\n\t        #process future dropduplicate records based on 'ds', if anything entered due to erroneous merge operation \r\n\t        future = future.drop_duplicates(subset='ds', keep=\"first\").reset_index(drop=True)\r\n\t        forecast = m.predict(future)\r\n\t        forecast['ds'] = pd.to_datetime(forecast['ds']).dt.date\r\n\t        df_final = forecast.loc[(forecast['ds'] >= TEST_START) & (forecast['ds'] <= TEST_END)]\r\n\t        df_final = df_final[['ds', 'yhat'] + ADDITIONAL_REGRESSORS]\r\n\t        df_final.rename(columns={'ds': DATE_COLUMN, 'yhat': TARGET}, inplace=True)\r\n\t        for i in range(len(GROUPBY_LEVEL)):\r\n\t            api.send(\"output2\", 'Line 429 Inside For Loop')\r\n\t            df_final[GROUPBY_LEVEL[i]] = g[i]\r\n\t        df_final = df_final[GROUPBY_LEVEL + ADDITIONAL_REGRESSORS + [DATE_COLUMN, TARGET]]\r\n\t        df_final_out = df_final_out.append(df_final).reset_index(drop=True)\r\n\t        del forecast, df_final, future, m, df_group, train_df\r\n\t    except Exception as e:\r\n\t        #print(e)\r\n\t        excluded.append(g[:len(GROUPBY_LEVEL)])\r\n\t        df_final = pd.DataFrame()\r\n\t        del df_final, m, df_group, train_df\r\n\t#df_final_out will be captured into Hana Table\t\r\n\t#df_final['week_ending_date'] =  df_final['week_ending_date'].astype(str)\r\n\tdata = df_final.values.tolist()\r\n\tapi.send(\"output2\", data)\r\n\t\r\napi.set_port_callback([\"input1\",\"input2\", \"input3\", \"input4\"], on_input)"
+				},
+				"additionalinports": [
+					{
+						"name": "input1",
+						"type": "string"
+					},
+					{
+						"name": "input2",
+						"type": "string"
+					},
+					{
+						"name": "input3",
+						"type": "string"
+					},
+					{
+						"name": "input4",
+						"type": "string"
+					}
+				],
+				"additionaloutports": [
+					{
+						"name": "output2",
+						"type": "message"
+					}
+				]
+			}
+		},
+		"constantgenerator111": {
+			"component": "com.sap.util.constantGenerator",
+			"metadata": {
+				"label": "Constant Generator",
+				"x": 17,
+				"y": 372,
+				"height": 80,
+				"width": 120,
+				"extensible": true,
+				"config": {
+					"content": "select WEEK_ENDING_DATE,STATE,MOBILITY_INDEX from  \"SEP_COVIDEXT\".\"Z_SEP.AnalyticalModels.SCM.DemandForecasting.CovidExternal::TA_SCM_COVID_MOBILITY_STATIC_DATA\""
+				}
+			},
+			"name": "constantgenerator11"
+		},
+		"constantgenerator11": {
+			"component": "com.sap.util.constantGenerator",
+			"metadata": {
+				"label": "Constant Generator",
+				"x": 17,
+				"y": 12,
+				"height": 80,
+				"width": 120,
+				"extensible": true,
+				"config": {
+					"content": "SELECT top 100  \"week_ending_date\", \"retailer\", \"state\", \"business\", \"category\", \"brand\", \"ppg\", \"week_of_year\", \"pos_qty_ty\", \"pos_dollar_ty\", \"FillMean\"  FROM     \"SEP_COVIDEXT\".\"Z_SEP.AnalyticalModels.SCM.DemandForecasting.CovidExternal::TA_SCM_COVID_FULL_SAMPLE_TRAIN\"",
+					"counter": 0
+				}
+			},
+			"name": "constantgenerator1"
+		},
+		"saphanaclient111": {
+			"component": "com.sap.hana.client2",
+			"metadata": {
+				"label": "MOBILITY_STATIC_DATA",
+				"x": 201.99999904632568,
+				"y": 372,
+				"height": 80,
+				"width": 120,
+				"config": {
+					"connection": {
+						"configurationType": "Configuration Manager",
+						"connectionID": "HANADB"
+					},
+					"tableName": "\"SEP_COVIDEXT\".\"Z_SEP.AnalyticalModels.SCM.DemandForecasting.CovidExternal::TA_SCM_COVID_MOBILITY_STATIC_DATA\"",
+					"tableColumns": [
+						{
+							"name": "\"WEEK_ENDING_DATE\"",
+							"type": "DATE"
+						},
+						{
+							"name": "\"STATE\"",
+							"type": "NVARCHAR",
+							"size": 100
+						},
+						{
+							"name": "\"MOBILITY_INDEX\"",
+							"type": "TINYINT"
+						}
+					],
+					"networkBatchSize": 5000,
+					"inputFormat": "JSON"
+				}
+			},
+			"name": "saphanaclient11"
+		},
+		"saphanaclient11": {
+			"component": "com.sap.hana.client2",
+			"metadata": {
+				"label": "FULL_SAMPLE",
+				"x": 201.99999904632568,
+				"y": 12,
+				"height": 80,
+				"width": 120,
+				"config": {
+					"connection": {
+						"configurationType": "Configuration Manager",
+						"connectionID": "HANADB"
+					},
+					"tableName": "\"SEP_COVIDEXT\".\"Z_SEP.AnalyticalModels.SCM.DemandForecasting.CovidExternal::TA_SCM_COVID_FULL_SAMPLE_TRAIN\"",
+					"tableColumns": [
+						{
+							"name": "\"week_ending_date\"",
+							"type": "DATE"
+						},
+						{
+							"name": "\"retailer\"",
+							"type": "NVARCHAR",
+							"size": 100
+						},
+						{
+							"name": "\"state\"",
+							"type": "NVARCHAR",
+							"size": 50
+						},
+						{
+							"name": "\"business\"",
+							"type": "NVARCHAR",
+							"size": 100
+						},
+						{
+							"name": "\"category\"",
+							"type": "NVARCHAR",
+							"size": 50
+						},
+						{
+							"name": "\"brand\"",
+							"type": "NVARCHAR",
+							"size": 100
+						},
+						{
+							"name": "\"ppg\"",
+							"type": "NVARCHAR",
+							"size": 100
+						},
+						{
+							"name": "\"week_of_year\"",
+							"type": "INTEGER"
+						},
+						{
+							"name": "\"pos_qty_ty\"",
+							"type": "DOUBLE"
+						},
+						{
+							"name": "\"pos_dollar_ty\"",
+							"type": "DOUBLE"
+						},
+						{
+							"name": "\"FillMean\"",
+							"type": "DOUBLE"
+						}
+					],
+					"networkBatchSize": 5000,
+					"connectionTimeoutInMs": 50000,
+					"inputFormat": "JSON"
+				}
+			},
+			"name": "saphanaclient1"
+		},
+		"tostringconverter1": {
+			"component": "com.sap.util.toStringConverter",
+			"metadata": {
+				"label": "ToString Converter",
+				"x": 386.99999809265137,
+				"y": 72,
+				"height": 50,
+				"width": 50,
+				"config": {}
+			}
+		},
+		"tostringconverter11": {
+			"component": "com.sap.util.toStringConverter",
+			"metadata": {
+				"label": "ToString Converter",
+				"x": 386.99999809265137,
+				"y": 342,
+				"height": 50,
+				"width": 50,
+				"config": {}
+			},
+			"name": "tostringconverter1"
+		},
+		"constantgenerator1111": {
+			"component": "com.sap.util.constantGenerator",
+			"metadata": {
+				"label": "Constant Generator",
+				"x": 17,
+				"y": 132,
+				"height": 80,
+				"width": 120,
+				"extensible": true,
+				"config": {
+					"content": " select * from \"SEP_COVIDEXT\".\"Z_SEP.AnalyticalModels.SCM.DemandForecasting.CovidExternal::TA_SCM_SEASONALITY_STATIC_DATA\""
+				}
+			},
+			"name": "constantgenerator111"
+		},
+		"saphanaclient1111": {
+			"component": "com.sap.hana.client2",
+			"metadata": {
+				"label": "SEASONALITY_STATIC_DATA",
+				"x": 201.99999904632568,
+				"y": 132,
+				"height": 80,
+				"width": 120,
+				"config": {
+					"connection": {
+						"configurationType": "Configuration Manager",
+						"connectionID": "HANADB"
+					},
+					"tableName": "\"SEP_COVIDEXT\".\"Z_SEP.AnalyticalModels.SCM.DemandForecasting.CovidExternal::TA_SCM_SEASONALITY_STATIC_DATA\"",
+					"tableColumns": [
+						{
+							"name": "\"week_ending_date\"",
+							"type": "DATE"
+						},
+						{
+							"name": "\"retailer\"",
+							"type": "NVARCHAR",
+							"size": 100
+						},
+						{
+							"name": "\"state\"",
+							"type": "NVARCHAR",
+							"size": 50
+						},
+						{
+							"name": "\"brand\"",
+							"type": "NVARCHAR",
+							"size": 100
+						},
+						{
+							"name": "\"ppg\"",
+							"type": "NVARCHAR",
+							"size": 100
+						},
+						{
+							"name": "\"yearly_scaled\"",
+							"type": "DOUBLE"
+						}
+					],
+					"networkBatchSize": 5000,
+					"inputFormat": "JSON"
+				}
+			},
+			"name": "saphanaclient111"
+		},
+		"tostringconverter111": {
+			"component": "com.sap.util.toStringConverter",
+			"metadata": {
+				"label": "ToString Converter",
+				"x": 386.99999809265137,
+				"y": 162,
+				"height": 50,
+				"width": 50,
+				"config": {}
+			},
+			"name": "tostringconverter11"
+		},
+		"constantgenerator1112": {
+			"component": "com.sap.util.constantGenerator",
+			"metadata": {
+				"label": "Constant Generator",
+				"x": 17,
+				"y": 252,
+				"height": 80,
+				"width": 120,
+				"extensible": true,
+				"config": {
+					"content": " select top 100 \"STATE\", \"COUNTY\", \"COUNTY_ID\", \"DATE\", \"CASES\", \"LOG_CASES\", \"FORECAST\", \"LOG_FORECAST\", \"RISK_INDEX\", \"ID\" from \"SEP_COVIDEXT\".\"Z_SEP.AnalyticalModels.SCM.DemandForecasting.CovidExternal::TA_SCM_COVID_USA_RISK_INDEX\""
+				}
+			},
+			"name": "constantgenerator111"
+		},
+		"saphanaclient1112": {
+			"component": "com.sap.hana.client2",
+			"metadata": {
+				"label": "USA_RISK_INDEX",
+				"x": 201.99999904632568,
+				"y": 252,
+				"height": 80,
+				"width": 120,
+				"config": {
+					"connection": {
+						"configurationType": "Configuration Manager",
+						"connectionID": "HANADB"
+					},
+					"tableName": "\"SEP_COVIDEXT\".\"Z_SEP.AnalyticalModels.SCM.DemandForecasting.CovidExternal::TA_SCM_COVID_USA_RISK_INDEX\"",
+					"tableColumns": [
+						{
+							"name": "\"STATE\"",
+							"type": "NVARCHAR",
+							"size": 50
+						},
+						{
+							"name": "\"COUNTY\"",
+							"type": "NVARCHAR",
+							"size": 100
+						},
+						{
+							"name": "\"COUNTY_ID\"",
+							"type": "NVARCHAR",
+							"size": 50
+						},
+						{
+							"name": "\"DATE\"",
+							"type": "NVARCHAR",
+							"size": 50
+						},
+						{
+							"name": "\"CASES\"",
+							"type": "NVARCHAR",
+							"size": 50
+						},
+						{
+							"name": "\"LOG_CASES\"",
+							"type": "NVARCHAR",
+							"size": 50
+						},
+						{
+							"name": "\"FORECAST\"",
+							"type": "NVARCHAR",
+							"size": 50
+						},
+						{
+							"name": "\"LOG_FORECAST\"",
+							"type": "NVARCHAR",
+							"size": 50
+						},
+						{
+							"name": "\"RISK_INDEX\"",
+							"type": "NVARCHAR",
+							"size": 50
+						},
+						{
+							"name": "\"ID\"",
+							"type": "BIGINT"
+						}
+					],
+					"inputFormat": "JSON"
+				}
+			},
+			"name": "saphanaclient111"
+		},
+		"tostringconverter112": {
+			"component": "com.sap.util.toStringConverter",
+			"metadata": {
+				"label": "ToString Converter",
+				"x": 386.99999809265137,
+				"y": 252,
+				"height": 50,
+				"width": 50,
+				"config": {}
+			},
+			"name": "tostringconverter11"
+		},
+		"wiretap1": {
+			"component": "com.sap.util.wiretap",
+			"metadata": {
+				"label": "Wiretap",
+				"x": 798.9999952316284,
+				"y": 192,
+				"height": 80,
+				"width": 120,
+				"ui": "dynpath",
+				"config": {}
+			}
+		}
+	},
+	"groups": [
+		{
+			"name": "group1",
+			"nodes": [
+				"python3operator1"
+			],
+			"metadata": {
+				"description": "Group"
+			},
+			"tags": {
+				"CP": ""
+			}
+		}
+	],
+	"connections": [
+		{
+			"metadata": {
+				"points": "141,52 168.99999952316284,52 168.99999952316284,43 196.99999904632568,43"
+			},
+			"src": {
+				"port": "out",
+				"process": "constantgenerator11"
+			},
+			"tgt": {
+				"port": "sql",
+				"process": "saphanaclient11"
+			}
+		},
+		{
+			"metadata": {
+				"points": "141,412 168.99999952316284,412 168.99999952316284,403 196.99999904632568,403"
+			},
+			"src": {
+				"port": "out",
+				"process": "constantgenerator111"
+			},
+			"tgt": {
+				"port": "sql",
+				"process": "saphanaclient111"
+			}
+		},
+		{
+			"metadata": {
+				"points": "141,172 168.99999952316284,172 168.99999952316284,163 196.99999904632568,163"
+			},
+			"src": {
+				"port": "out",
+				"process": "constantgenerator1111"
+			},
+			"tgt": {
+				"port": "sql",
+				"process": "saphanaclient1111"
+			}
+		},
+		{
+			"metadata": {
+				"points": "141,292 168.99999952316284,292 168.99999952316284,283 196.99999904632568,283"
+			},
+			"src": {
+				"port": "out",
+				"process": "constantgenerator1112"
+			},
+			"tgt": {
+				"port": "sql",
+				"process": "saphanaclient1112"
+			}
+		},
+		{
+			"metadata": {
+				"points": "440.99999809265137,97 484.9999976158142,97 484.9999976158142,223.5 560.9999966621399,223.5 560.9999966621399,213 588.9999961853027,213"
+			},
+			"src": {
+				"port": "outstring",
+				"process": "tostringconverter1"
+			},
+			"tgt": {
+				"port": "input1",
+				"process": "python3operator1"
+			}
+		},
+		{
+			"metadata": {
+				"points": "717.9999961853027,240 765.9999957084656,240 765.9999957084656,232 793.9999952316284,232"
+			},
+			"src": {
+				"port": "output2",
+				"process": "python3operator1"
+			},
+			"tgt": {
+				"port": "in",
+				"process": "wiretap1"
+			}
+		},
+		{
+			"metadata": {
+				"points": "440.99999809265137,187 468.9999976158142,187 468.9999976158142,234.5 560.9999966621399,234.5 560.9999966621399,231 588.9999961853027,231"
+			},
+			"src": {
+				"port": "outstring",
+				"process": "tostringconverter111"
+			},
+			"tgt": {
+				"port": "input2",
+				"process": "python3operator1"
+			}
+		},
+		{
+			"metadata": {
+				"points": "440.99999809265137,277 468.9999976158142,277 468.9999976158142,245.5 560.9999966621399,245.5 560.9999966621399,249 588.9999961853027,249"
+			},
+			"src": {
+				"port": "outstring",
+				"process": "tostringconverter112"
+			},
+			"tgt": {
+				"port": "input3",
+				"process": "python3operator1"
+			}
+		},
+		{
+			"metadata": {
+				"points": "440.99999809265137,367 484.9999976158142,367 484.9999976158142,256.5 560.9999966621399,256.5 560.9999966621399,267 588.9999961853027,267"
+			},
+			"src": {
+				"port": "outstring",
+				"process": "tostringconverter11"
+			},
+			"tgt": {
+				"port": "input4",
+				"process": "python3operator1"
+			}
+		},
+		{
+			"metadata": {
+				"points": "325.9999990463257,52 353.9999985694885,52 353.9999985694885,88 381.99999809265137,88"
+			},
+			"src": {
+				"port": "result",
+				"process": "saphanaclient11"
+			},
+			"tgt": {
+				"port": "ininterface",
+				"process": "tostringconverter1"
+			}
+		},
+		{
+			"metadata": {
+				"points": "325.9999990463257,172 353.9999985694885,172 353.9999985694885,178 381.99999809265137,178"
+			},
+			"src": {
+				"port": "result",
+				"process": "saphanaclient1111"
+			},
+			"tgt": {
+				"port": "ininterface",
+				"process": "tostringconverter111"
+			}
+		},
+		{
+			"metadata": {
+				"points": "325.9999990463257,292 353.9999985694885,292 353.9999985694885,268 381.99999809265137,268"
+			},
+			"src": {
+				"port": "result",
+				"process": "saphanaclient1112"
+			},
+			"tgt": {
+				"port": "ininterface",
+				"process": "tostringconverter112"
+			}
+		},
+		{
+			"metadata": {
+				"points": "325.9999990463257,412 353.9999985694885,412 353.9999985694885,358 381.99999809265137,358"
+			},
+			"src": {
+				"port": "result",
+				"process": "saphanaclient111"
+			},
+			"tgt": {
+				"port": "ininterface",
+				"process": "tostringconverter11"
+			}
+		}
+	],
+	"inports": {},
+	"outports": {}
+}

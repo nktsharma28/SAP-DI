@@ -1,0 +1,17 @@
+import pandas as pd
+import sapdi
+import io
+import csv
+ws = sapdi.get_workspace(name='Demand_Forecasting')
+dc = ws.get_datacollection(name='Test')
+with dc.open('RunningTimes.csv').get_reader() as reader:
+    df = pd.read_csv(reader,sep=';')
+
+
+
+data = [df.columns.values.tolist()] + df.values.tolist()
+#f = io.StringIO(data)
+f = '{},{},{}' # format
+for i in data:
+    api.send("output",f.format(*i))
+    

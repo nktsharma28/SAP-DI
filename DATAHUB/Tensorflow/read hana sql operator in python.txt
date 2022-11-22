@@ -1,0 +1,6 @@
+if(message.body and message.attributes['table']):
+        #Column names are hardcoded because of column tables don't match exactly names used on the script below
+        df = pd.DataFrame(message.body, columns=["week_ending_date","retailer","state","business","category","brand","ppg","week_of_year","pos_qty_ty","pos_dollar_ty","FillMean"])
+        api.send("output", str(len(df.index)))
+    else:
+        return

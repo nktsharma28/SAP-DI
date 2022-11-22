@@ -1,0 +1,15 @@
+import requests
+
+url = "https://my348548.crm.ondemand.com/sap/c4c/odata/cust/v1/lifestyleandengagementdata/CustomerCollection('00163E792A521EDA9289CB1702D2A8A7')"
+
+payload="{\r\n\"EngagementSegment_SDK\": \"CLUSTER_4\",\r\n\"GreenAdvocacy_SDK\": \"CLUSTER_3\",\r\n\"Offering_SDK\": \"OFFER_2\"\r\n}"
+headers = {
+  'X-CSRF-Token': 'YRhSJguPdoVn6liNS9bOKg==',
+  'Authorization': 'Basic Q09ORklHSU1QQUNUMjpJbXBhY3QxMjM=',
+  'Content-Type': 'application/json',
+  'Cookie': 'MYSAPSSO2=AjQxMDMBABhLADkAUQBOAEoARQBUAFEAWABWAE4AIAACAAYwADQANAADABBMAFQAUQAgACAAIAAgACAABAAYMgAwADIAMQAwADMAMAA0ADEANwAzADIABQAEAAAACAYAAlgACQACRQD%2fAPswgfgGCSqGSIb3DQEHAqCB6jCB5wIBATELMAkGBSsOAwIaBQAwCwYJKoZIhvcNAQcBMYHHMIHEAgEBMBowDjEMMAoGA1UEAxMDTFRRAggKIBgEJhUwNDAJBgUrDgMCGgUAoF0wGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAcBgkqhkiG9w0BCQUxDxcNMjEwMzA0MTczMjMxWjAjBgkqhkiG9w0BCQQxFgQUfi55gPmtykyDRAZOPHE3pRntMpEwCQYHKoZIzjgEAwQuMCwCFCFwFeJ8yWE9FusSFPtY1defkjvEAhQ6YvPKqr390N2iiWw3%2fTJWAntDhg%3d%3d; SAP_SESSIONID_LTQ_044=WdmgEB6CF0qR-BWYOpB5t5lhlKN9DxHroVcAFj6wP38%3d; sap-usercontext=sap-client=044'
+}
+
+response = requests.request("PATCH", url, headers=headers, data=payload)
+
+print(response.text)

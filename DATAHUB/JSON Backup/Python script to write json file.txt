@@ -1,0 +1,46 @@
+
+import json 
+import csv 
+  
+  
+# Opening JSON file and loading the data 
+# into the variable data 
+with open('/vrep/vflow/Weather.json') as file:
+    data = file.read()
+    #p=data["Sheet1"]
+    
+with open('/vrep/vflow/Weather1.json','w') as file1:   
+    
+    #api.send("Output", data)
+    #api.send("Output", data["EMPID"])
+  
+    
+    
+    for i in data:
+        file1.write(i)
+        #print(p["type"])
+        #api.send("Output", i)
+       
+        
+        
+    
+        
+    
+ 
+
+    
+   
+       
+            
+    
+       
+   
+       
+         
+       
+      
+    
+
+   
+  
+  

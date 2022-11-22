@@ -1,0 +1,30 @@
+#import tweepy
+import csv
+#import pandas as pd
+####input your credentials here
+
+
+
+
+def on_input(msg):
+    c=""
+    b="covid"
+    d="corona"
+    a=msg.body
+    
+    if b in a or d in a:
+         api.send("Output", msg.attributes["polarity"] +", "+ msg.body)
+    
+    else:
+         #api.send("Output", msg.attributes["polarity"] +", "+ msg.body)
+         api.send("Output", " ")
+        
+        
+        
+    #api.send("Output", msg.attributes["polarity"] +"-"+ msg.body)
+   
+    
+    
+    
+    
+api.set_port_callback("Input", on_input)

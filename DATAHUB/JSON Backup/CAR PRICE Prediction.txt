@@ -1,0 +1,93 @@
+import json
+import pandas as pd
+import numpy as np
+from sklearn.linear_model import LinearRegression
+
+
+with open('/vrep/vflow/automobileEDA.csv','rt')as f:
+    df = pd.read_csv(f)
+    
+    
+df.head()
+dummy_variable_1 = pd.get_dummies(df[["Car_Type","Company","Engine_Size","Price"]])
+dummy_variable_1.head()
+dummy_variable_1.rename(columns={'Car_Type':'Sedan', 'Car_Type':'SUV','Car_Type':'Hatchback','Company':'Maruti','Company':'Hyundai','Company':'BMW'}, inplace=True)
+dummy_variable_1.head()
+X = dummy_variable_1[['Engine_Size','Car_Type_Hatchback','Car_Type_SUV','Car_Type_Sedan','Company_BMW','Company_Hyundai','Company_Maruti']]
+Y = df['Price']
+lm = LinearRegression()
+lm.fit(X,Y)
+y_pred = lm.predict(X)
+y_pred[10]
+
+----------------------------------------------------------------------------------------------------------
+import pickle
+pickle.dump(lm, open("lm.pickle.dat", "wb"))
+import pickle
+lm_loaded = pickle.load(open("lm.pickle.dat", "rb"))
+#x_new = dummy_variable_1[[1200,1,0,0,0,1,0]]
+#x_new = [1200,1,0,0,0,1,0]
+#x_new
+#print(lm_loaded.predict([[1200,1,0,0,0,0,0]]))
+Predictions=lm_loaded.predict([[1400,1,0,0,0,1,0]])
+print(Predictions)
+---------------------------------------------------------------------------------------------------------------
+import pickle
+pickle.dump(lm, open("lm.pickle.dat", "wb"))
+import pickle
+lm_loaded = pickle.load(open("lm.pickle.dat", "rb"))
+#x_new = dummy_variable_1[[1200,1,0,0,0,1,0]]
+#x_new = [1200,1,0,0,0,1,0]
+#x_new
+b=0 #hatchback
+c=0  #SUV
+d=0  #Sedan
+e=0  #BMW
+f=0  #Hyundai
+g=0  #Maruti
+h=0  #Base
+i=0  #Second
+j=0  #First
+a=input('Enter Engine cc')
+k=int(a)
+b1=input('Enter Hatchback/SUV/Sedan ')
+c1=input('Enter Company-Maruti/Hyundai/BMW')
+d1=input('Enter Model- Base/Second Top/Top')
+if b1=='Hatchback':
+    b=1
+else:
+    b=0
+if b1=='SUV':
+    c=1
+else:
+    c=0
+if b1=='Sedan':
+    d=1
+else:
+    d=0
+if c1=='Maruti':
+    g=1
+else:
+    g=0
+if c1=='Hyundai':   
+    f=1
+else:
+    f=0
+if c1=='BMW':  
+    e=1
+else:
+    e=0
+if d1=='Base': 
+    h=1
+else:
+    h=0
+if d1=='Second Top': 
+    i=1
+else:
+    i=0
+if d1=='Top': 
+    j=1
+else:
+    j=0
+Predictions=lm_loaded.predict([[k,b,c,d,e,f,g,h,i,j]])
+print('Estimated Price of',c1,d1,'Model','Engine',k,'cc is', int(Predictions))

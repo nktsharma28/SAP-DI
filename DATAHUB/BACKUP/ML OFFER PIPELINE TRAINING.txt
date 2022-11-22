@@ -1,0 +1,236 @@
+{
+	"properties": {},
+	"description": "ml_demand - Offer Utility Training Pipeline",
+	"processes": {
+		"python3operator111": {
+			"component": "com.sap.system.python3Operator",
+			"metadata": {
+				"label": "Python36 - Inference",
+				"x": 449.9999942779541,
+				"y": -75,
+				"height": 80,
+				"width": 120,
+				"extensible": true,
+				"config": {
+					"metadata": {},
+					"script": "\r\n\r\n\r\nimport pandas as pd\r\nimport numpy as np\r\nfrom sklearn.pipeline import Pipeline\r\nfrom sklearn.compose import ColumnTransformer\r\nfrom sklearn.pipeline import Pipeline\r\nfrom sklearn.impute import SimpleImputer\r\nfrom sklearn.preprocessing import MinMaxScaler, OneHotEncoder\r\nfrom sklearn.cluster import AgglomerativeClustering\r\nimport pickle\r\nimport io\r\n\r\ndef on_input(message):\r\n    \r\n     # Input data\r\n    #df= pd.read_csv(\"OFFER_PROPENSITY_INPUT.csv\")\r\n    #df= pd.read_csv(io.StringIO(msg.body), sep=\",\")\r\n    if(message.body and message.attributes['table']):\r\n        #Column names are hardcoded because of column tables don't match exactly names used on the script below\r\n        df = pd.DataFrame(message.body, columns=['CUSTOMER_ID','PROD_ECOLOGICAL', 'PROD_MEAT_SUBST', 'PROD_FAIRTRADE','PROD_REFORM', 'GREEN_ENERGY', 'FREQUENTING_NATURE', 'ENVIR_CHARITY','NATURE_CHARITY'\r\n                                                 ,'AGE_GROUP','EDUCATION','INCOME_LEVEL','TOTAL_USAGE_YEAR1', 'TOTAL_USAGE_YEAR2','ENERGY_SAVING','COST_TO_SERVE','HAS_EV','HAS_PV','RATE_ID',\r\n                                                  'RATE_DESCRIPTION'])\r\n        #api.send(\"output\", str(len(df.index)))\r\n    else:\r\n        return\r\n    # Generic Columns Name\r\n    customer_id_col='CUSTOMER_ID'\r\n    survey_cols_to_summarize=['PROD_ECOLOGICAL', 'PROD_MEAT_SUBST', 'PROD_FAIRTRADE','PROD_REFORM', 'GREEN_ENERGY', 'FREQUENTING_NATURE', 'ENVIR_CHARITY','NATURE_CHARITY']\r\n    lifestyle_categorical_cols=['EDUCATION','INCOME_LEVEL']\r\n    lifestyle_numerical_cols=[]\r\n    energy_usage_cols=['TOTAL_USAGE_YEAR1', 'TOTAL_USAGE_YEAR2']\r\n    customer_engagement_numerical_cols=['ENERGY_SAVING','COST_TO_SERVE']\r\n    customer_engagement_categorical_cols=[]\r\n    df['NUMBER_OF_QUESTIONS_ANSWERED_YES']=df[survey_cols_to_summarize].sum(axis=1)\r\n    df['NUMBER_OF_QUESTIONS_ANSWERED_CAT'] = 'TWO OR THREE'\r\n    df.loc[df['NUMBER_OF_QUESTIONS_ANSWERED_YES']<=1, 'NUMBER_OF_QUESTIONS_ANSWERED_CAT'] = 'ONE OR LESS'\r\n    df.loc[df['NUMBER_OF_QUESTIONS_ANSWERED_YES']>=4, 'NUMBER_OF_QUESTIONS_ANSWERED_CAT'] = 'FOUR OR MORE'\r\n    # add the variable to list of categorical variables\r\n    lifestyle_categorical_cols.append('NUMBER_OF_QUESTIONS_ANSWERED_CAT')\r\n    df['ENERGY_SAVING']=df[energy_usage_cols].apply(lambda row: (row.iloc[1]-row.iloc[0])/row.iloc[0]*100, axis=1)\r\n    user_inputs_dict = {'customer_id' : customer_id_col, 'survey_cols_to_summarize' : survey_cols_to_summarize, 'energy_usage_cols' : energy_usage_cols}\r\n    #Score the new data\r\n    X = df[['CUSTOMER_ID', 'PROD_ECOLOGICAL', 'PROD_MEAT_SUBST', 'PROD_FAIRTRADE',\r\n           'PROD_REFORM', 'GREEN_ENERGY', 'FREQUENTING_NATURE', 'ENVIR_CHARITY',\r\n           'NATURE_CHARITY', 'AGE_GROUP', 'INCOME_LEVEL', 'EDUCATION',\r\n           'TOTAL_USAGE_YEAR1', 'TOTAL_USAGE_YEAR2', 'ENERGY_SAVING',\r\n           'COST_TO_SERVE', 'NUMBER_OF_QUESTIONS_ANSWERED_YES',\r\n           'NUMBER_OF_QUESTIONS_ANSWERED_CAT']]\r\n    lifestyle_cluster = AgglomerativeClustering(n_clusters = 3, affinity = 'manhattan', linkage ='complete')\r\n    filename = 'lifestyle_cluster.dat'\r\n    api.send(\"output2\",pickle.dumps(lifestyle_cluster))\r\n    y_clusters = lifestyle_cluster.fit_predict(X)\r\n    df['LIFESTYLE_CLUSTER'] = y_clusters\r\n    df['LIFESTYLE_CLUSTER'] = df['LIFESTYLE_CLUSTER'] + 1\r\n    #loaded_model = pickle.load(open(\"lifestyle_clf.pickle.dat\", \"rb\"))\r\n    #df['LIFESTYLE_CLUSTER'] = loaded_model.predict(X)\r\n    Q1_ENERGY_SAVING = df['ENERGY_SAVING'].quantile(0.25)\r\n    Q3_ENERGY_SAVING = df['ENERGY_SAVING'].quantile(0.75)\r\n    Q1_COST_TO_SERVE = df['COST_TO_SERVE'].quantile(0.25)\r\n    Q3_COST_TO_SERVE = df['COST_TO_SERVE'].quantile(0.75)\r\n    quartile_val = pd.DataFrame({'Q1_ENERGY_SAVING': Q1_ENERGY_SAVING,'Q3_ENERGY_SAVING':Q3_ENERGY_SAVING,'Q1_COST_TO_SERVE':Q1_COST_TO_SERVE,'Q3_COST_TO_SERVE':Q3_COST_TO_SERVE})\r\n    quartile_val.to_csv('quartile_val.csv')\r\n    df['ENERGY_SAVING_CAT'] = np.where(df['ENERGY_SAVING']<=Q1_ENERGY_SAVING,'LOW','MEDIUM')\r\n    df['ENERGY_SAVING_CAT'] = np.where(df['ENERGY_SAVING']>=Q3_ENERGY_SAVING,'HIGH',df['ENERGY_SAVING_CAT'])\r\n    df['COST_TO_SERVE_CAT'] = np.where(df['COST_TO_SERVE']<=Q1_COST_TO_SERVE,'LOW','MEDIUM')\r\n    df['COST_TO_SERVE_CAT'] = np.where(df['COST_TO_SERVE']>=Q3_COST_TO_SERVE,'HIGH',df['ENERGY_SAVING_CAT'])\r\n\r\n    #Clusters\r\n    df['ENGAGEMENT_CLUSTER'] = np.where(((df['ENERGY_SAVING_CAT']=='MEDIUM')&(df['COST_TO_SERVE_CAT']=='HIGH')),'CLUSTER1','OTHER')\r\n    df['ENGAGEMENT_CLUSTER'] = np.where(((df['ENERGY_SAVING_CAT']=='MEDIUM')&(df['COST_TO_SERVE_CAT']=='LOW')),'CLUSTER2',df['ENGAGEMENT_CLUSTER'])\r\n    df['ENGAGEMENT_CLUSTER'] = np.where(((df['ENERGY_SAVING_CAT']=='HIGH')&((df['COST_TO_SERVE_CAT']=='MEDIUM')|(df['COST_TO_SERVE_CAT']=='HIGH'))),'CLUSTER3',df['ENGAGEMENT_CLUSTER'])\r\n    df['ENGAGEMENT_CLUSTER'] = np.where(((df['ENERGY_SAVING_CAT']=='LOW')&((df['COST_TO_SERVE_CAT']=='MEDIUM')|(df['COST_TO_SERVE_CAT']=='LOW'))),'CLUSTER4',df['ENGAGEMENT_CLUSTER'])\r\n    df['ENGAGEMENT_CLUSTER'] = np.where(((df['ENERGY_SAVING_CAT']=='HIGH')&(df['COST_TO_SERVE_CAT']=='LOW')),'CLUSTER5',df['ENGAGEMENT_CLUSTER'])\r\n    df['ENGAGEMENT_CLUSTER'] = np.where(((df['ENERGY_SAVING_CAT']=='LOW')&(df['COST_TO_SERVE_CAT']=='HIGH')),'CLUSTER6',df['ENGAGEMENT_CLUSTER'])\r\n    #Offer\r\n    df['OFFER'] = np.where((((df['ENGAGEMENT_CLUSTER']=='CLUSTER3')|(df['ENGAGEMENT_CLUSTER']=='CLUSTER5'))&(df['HAS_EV']==1)&(df['LIFESTYLE_CLUSTER']==2)),'OFFER1','NONE')\r\n    df['OFFER'] = np.where((((df['ENGAGEMENT_CLUSTER']=='CLUSTER3')|(df['ENGAGEMENT_CLUSTER']=='CLUSTER4'))&(df['LIFESTYLE_CLUSTER']==2)),'OFFER2',df['OFFER'])\r\n    df['OFFER'] = np.where(((df['ENGAGEMENT_CLUSTER']=='CLUSTER1')&((df['LIFESTYLE_CLUSTER']==2)|(df['LIFESTYLE_CLUSTER']==3))&((df['RATE_ID']==2)\r\n                                                                                                                               |(df['RATE_ID']==3)|(df['RATE_ID']==6)\r\n                                                                                                                               |(df['RATE_ID']==9)|(df['RATE_ID']==10)\r\n                                                                                                                               |(df['RATE_ID']==12)|(df['RATE_ID']==13)\r\n                                                                                                                               |(df['RATE_ID']==16))),'OFFER3',df['OFFER'])\r\n    df['OFFER'] = np.where(((df['ENGAGEMENT_CLUSTER']=='CLUSTER6')&((df['LIFESTYLE_CLUSTER']==2)|(df['LIFESTYLE_CLUSTER']==3))&((df['RATE_ID']==2)\r\n                                                                                                                               |(df['RATE_ID']==3)|(df['RATE_ID']==6)\r\n                                                                                                                               |(df['RATE_ID']==9)|(df['RATE_ID']==10)\r\n                                                                                                                               |(df['RATE_ID']==12)|(df['RATE_ID']==13)\r\n                                                                                                                               |(df['RATE_ID']==16))),'OFFER4',df['OFFER'])\r\n    df['OFFER'] = np.where((((df['ENGAGEMENT_CLUSTER']=='CLUSTER2')|(df['ENGAGEMENT_CLUSTER']=='CLUSTER5'))&(df['HAS_PV']==1)&(df['LIFESTYLE_CLUSTER']==2)),'OFFER5',df['OFFER'])\r\n\r\n\r\n\r\n    api.send(\"output\",df.to_csv())\r\napi.set_port_callback(\"input1\", on_input)\r\n\r\n\r\n\r\n\r\n\r\n\r\n"
+				},
+				"additionalinports": [
+					{
+						"name": "model",
+						"type": "blob"
+					},
+					{
+						"name": "input",
+						"type": "string"
+					},
+					{
+						"name": "input1",
+						"type": "message.table"
+					}
+				],
+				"additionaloutports": [
+					{
+						"name": "output",
+						"type": "message"
+					},
+					{
+						"name": "output2",
+						"type": "blob"
+					}
+				]
+			},
+			"name": "python3operator11"
+		},
+		"tomessageconverter1": {
+			"component": "com.sap.util.toMessageConverter",
+			"metadata": {
+				"label": "ToMessage Converter",
+				"x": 520.4999990463257,
+				"y": 132,
+				"height": 50,
+				"width": 50,
+				"config": {}
+			}
+		},
+		"artifactproducer1": {
+			"component": "com.sap.ml.artifact.producer.v2",
+			"metadata": {
+				"label": "Artifact Producer",
+				"x": 686.9999980926514,
+				"y": 131.49999976158142,
+				"height": 80,
+				"width": 120,
+				"extensible": true,
+				"config": {
+					"artifactKind": "model",
+					"artifactName": "${newArtifactName}"
+				}
+			}
+		},
+		"writefile1": {
+			"component": "com.sap.file.write",
+			"metadata": {
+				"label": "Write File",
+				"x": 485.9999990463257,
+				"y": 222,
+				"height": 80,
+				"width": 120,
+				"config": {}
+			}
+		},
+		"constantgenerator111111": {
+			"component": "com.sap.util.constantGenerator",
+			"metadata": {
+				"label": "Constant Generator",
+				"x": 16.99999713897705,
+				"y": -21,
+				"height": 80,
+				"width": 120,
+				"extensible": true,
+				"config": {
+					"content": "select * FROM       \"SEP_UTILITY\".\"OFFER_PROPENSITY_INPUT\" ",
+					"counter": 0
+				}
+			},
+			"name": "constantgenerator11111"
+		},
+		"runhanasql11": {
+			"component": "com.sap.hana.runSQL",
+			"metadata": {
+				"label": "Run HANA SQL",
+				"x": 203,
+				"y": -21,
+				"height": 80,
+				"width": 120,
+				"config": {
+					"connection": {
+						"configurationType": "Configuration Manager",
+						"connectionID": "HANA"
+					}
+				}
+			},
+			"name": "runhanasql1"
+		},
+		"graphterminator1": {
+			"component": "com.sap.util.graphTerminator",
+			"metadata": {
+				"label": "Graph Terminator",
+				"x": 927,
+				"y": 108,
+				"height": 80,
+				"width": 120,
+				"config": {}
+			}
+		}
+	},
+	"groups": [
+		{
+			"name": "group1",
+			"nodes": [
+				"python3operator111"
+			],
+			"metadata": {
+				"description": "Group"
+			},
+			"tags": {
+				"scikit-learn": "0.22.2"
+			}
+		}
+	],
+	"connections": [
+		{
+			"metadata": {
+				"points": "810.9999980926514,189.49999976158142 838.9999976158142,189.49999976158142 838.9999976158142,239.49999928474426 653.9999985694885,239.49999928474426 653.9999985694885,329.99999952316284 452.99999952316284,329.99999952316284 452.99999952316284,262 480.9999990463257,262"
+			},
+			"src": {
+				"port": "outFileSend",
+				"process": "artifactproducer1"
+			},
+			"tgt": {
+				"port": "file",
+				"process": "writefile1"
+			}
+		},
+		{
+			"metadata": {
+				"points": "609.9999990463257,253 637.9999985694885,253 637.9999985694885,180.49999976158142 681.9999980926514,180.49999976158142"
+			},
+			"src": {
+				"port": "file",
+				"process": "writefile1"
+			},
+			"tgt": {
+				"port": "inFileReturn",
+				"process": "artifactproducer1"
+			}
+		},
+		{
+			"metadata": {
+				"points": "574.4999990463257,157 637.9999985694885,157 637.9999985694885,162.49999976158142 681.9999980926514,162.49999976158142"
+			},
+			"src": {
+				"port": "out",
+				"process": "tomessageconverter1"
+			},
+			"tgt": {
+				"port": "inArtifact",
+				"process": "artifactproducer1"
+			}
+		},
+		{
+			"metadata": {
+				"points": "140.99999713897705,19 198,19"
+			},
+			"src": {
+				"port": "out",
+				"process": "constantgenerator111111"
+			},
+			"tgt": {
+				"port": "input",
+				"process": "runhanasql11"
+			}
+		},
+		{
+			"metadata": {
+				"points": "327,10 386,10 386,-17 444.9999942779541,-17"
+			},
+			"src": {
+				"port": "success",
+				"process": "runhanasql11"
+			},
+			"tgt": {
+				"port": "input1",
+				"process": "python3operator111"
+			}
+		},
+		{
+			"metadata": {
+				"points": "573.9999942779541,-26 624,-26 624,61 465.5,61 465.5,148 515.4999990463257,148"
+			},
+			"src": {
+				"port": "output2",
+				"process": "python3operator111"
+			},
+			"tgt": {
+				"port": "inbody",
+				"process": "tomessageconverter1"
+			}
+		},
+		{
+			"metadata": {
+				"points": "810.9999980926514,153.49999976158142 866.5,153.5 866.5,148 922,148"
+			},
+			"src": {
+				"port": "outArtifact",
+				"process": "artifactproducer1"
+			},
+			"tgt": {
+				"port": "stop",
+				"process": "graphterminator1"
+			}
+		}
+	],
+	"inports": {},
+	"outports": {}
+}

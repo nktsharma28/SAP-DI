@@ -1,0 +1,159 @@
+import pandas as pd
+import numpy as np
+from sklearn.pipeline import Pipeline
+from sklearn import tree
+import pickle
+import io
+import json
+from sklearn.pipeline import Pipeline
+from sklearn.compose import ColumnTransformer
+from sklearn.pipeline import Pipeline
+from sklearn.impute import SimpleImputer
+from sklearn.preprocessing import MinMaxScaler, OneHotEncoder
+from sklearn.cluster import AgglomerativeClustering
+
+def on_input(msg2):
+
+    # Generic Columns Name
+    
+    user_data = msg2.body.decode('utf-8')
+    a = json.loads(user_data)['CUSTOMER_ID']
+    
+    b=  json.loads(user_data)['PROD_ECOLOGICAL']
+    c=  json.loads(user_data)['PROD_MEAT_SUBST']
+    d=  json.loads(user_data)['PROD_FAIRTRADE']
+    e=  json.loads(user_data)['PROD_REFORM']
+    f=  json.loads(user_data)['GREEN_ENERGY']
+    g=  json.loads(user_data)['FREQUENTING_NATURE ']
+    h=  json.loads(user_data)['ENVIR_CHARITY']
+    i=  json.loads(user_data)['AGE_GROUP']
+    j=  json.loads(user_data)['INCOME_LEVEL']
+    k=  json.loads(user_data)['EDUCATION']
+    l=  json.loads(user_data)['TOTAL_USAGE_YEAR1']
+    m=  json.loads(user_data)['TOTAL_USAGE_YEAR2']
+    n=  json.loads(user_data)['ENERGY_SAVING']
+    o=  json.loads(user_data)['COST_TO_SERVE']
+    p=  json.loads(user_data)['HAS_EV']
+    q=  json.loads(user_data)['HAS_PV']
+    r=  json.loads(user_data)['RATE_ID']
+    s=  json.loads(user_data)['RATE_DESCRIPTION']
+    t=  json.loads(user_data)['NATURE_CHARITY']
+    df=pd.DataFrame({'CUSTOMER_ID':[a], 'PROD_ECOLOGICAL':[b], 'PROD_MEAT_SUBST':[c], 'PROD_FAIRTRADE':[d],'PROD_REFORM':[e],'GREEN_ENERGY':[f],'FREQUENTING_NATURE':[g],'ENVIR_CHARITY':[h],'AGE_GROUP':[i],'INCOME_LEVEL':[j],'EDUCATION':[k],'TOTAL_USAGE_YEAR1':[l],'TOTAL_USAGE_YEAR2':[m],'ENERGY_SAVING':[n],'COST_TO_SERVE':[o],'HAS_EV':[p],'HAS_PV':[q],'RATE_ID':[r],'RATE_DESCRIPTION':[s],'NATURE_CHARITY':[t]})
+    api.send("output2",df.to_csv())
+    # Generic Columns Name
+    customer_id_col='CUSTOMER_ID'
+    survey_cols_to_summarize=['PROD_ECOLOGICAL', 'PROD_MEAT_SUBST', 'PROD_FAIRTRADE','PROD_REFORM', 'GREEN_ENERGY', 'FREQUENTING_NATURE', 'ENVIR_CHARITY','NATURE_CHARITY']
+    lifestyle_categorical_cols=['EDUCATION','INCOME_LEVEL']
+    lifestyle_numerical_cols=[]
+    energy_usage_cols=['TOTAL_USAGE_YEAR1', 'TOTAL_USAGE_YEAR2']
+    customer_engagement_numerical_cols=['ENERGY_SAVING','COST_TO_SERVE']
+    customer_engagement_categorical_cols=[]
+    df['NUMBER_OF_QUESTIONS_ANSWERED_YES']=df[survey_cols_to_summarize].sum(axis=1)
+    df['NUMBER_OF_QUESTIONS_ANSWERED_CAT'] = 'TWO OR THREE'
+    df.loc[df['NUMBER_OF_QUESTIONS_ANSWERED_YES']<=1, 'NUMBER_OF_QUESTIONS_ANSWERED_CAT'] = 'ONE OR LESS'
+    df.loc[df['NUMBER_OF_QUESTIONS_ANSWERED_YES']>=4, 'NUMBER_OF_QUESTIONS_ANSWERED_CAT'] = 'FOUR OR MORE'
+    # add the variable to list of categorical variables
+    lifestyle_categorical_cols.append('NUMBER_OF_QUESTIONS_ANSWERED_CAT')
+    
+    df['ENERGY_SAVING']=df[energy_usage_cols].apply(lambda row: (row.iloc[1]-row.iloc[0])/(row.iloc[0]*100), axis=1)
+    user_inputs_dict = {'customer_id' : customer_id_col, 'survey_cols_to_summarize' : survey_cols_to_summarize, 'energy_usage_cols' : energy_usage_cols}
+    #Score the new data
+    X = df[['CUSTOMER_ID', 'PROD_ECOLOGICAL', 'PROD_MEAT_SUBST', 'PROD_FAIRTRADE',
+           'PROD_REFORM', 'GREEN_ENERGY', 'FREQUENTING_NATURE', 'ENVIR_CHARITY',
+           'NATURE_CHARITY', 'AGE_GROUP', 'INCOME_LEVEL', 'EDUCATION',
+           'TOTAL_USAGE_YEAR1', 'TOTAL_USAGE_YEAR2', 'ENERGY_SAVING',
+           'COST_TO_SERVE', 'NUMBER_OF_QUESTIONS_ANSWERED_YES',
+           'NUMBER_OF_QUESTIONS_ANSWERED_CAT']]
+           
+    #api.send("output",'line48')
+   
+    
+    def on_model(model_blob):
+        global loaded_model
+        global model_ready
+        import pickle
+          
+        #api.send("output",'line75')
+
+        lifestyle_cluster = pickle.loads(model_blob)
+    
+        y_clusters = lifestyle_cluster.predict(X)
+        
+        df['LIFESTYLE_CLUSTER'] = y_clusters
+        df['LIFESTYLE_CLUSTER'] = df['LIFESTYLE_CLUSTER'] + 1
+        df1 = pd.read_csv('/vrep/vflow/quartile_val.csv')
+        #api.send("output",df.to_csv())
+        
+        Q1_ENERGY_SAVING = df1.iloc[0]['Q1_ENERGY_SAVING']
+        
+        Q3_ENERGY_SAVING = df1.iloc[0]['Q3_ENERGY_SAVING']
+        
+        Q1_COST_TO_SERVE = df1.iloc[0]['Q1_COST_TO_SERVE']
+        
+        Q3_COST_TO_SERVE = df1.iloc[0]['Q3_COST_TO_SERVE']
+        #api.send("output",Q1_ENERGY_SAVING.to_csv())
+        #api.send("output",df.to_csv())
+        
+        
+        df['ENERGY_SAVING_CAT'] = np.where(df['ENERGY_SAVING']<=Q1_ENERGY_SAVING,'LOW','MEDIUM')
+        
+        df['ENERGY_SAVING_CAT'] = np.where(df['ENERGY_SAVING']>=Q3_ENERGY_SAVING,'HIGH',df['ENERGY_SAVING_CAT'])
+        df['COST_TO_SERVE_CAT'] = np.where(df['COST_TO_SERVE']<=Q1_COST_TO_SERVE,'LOW','MEDIUM')
+        df['COST_TO_SERVE_CAT'] = np.where(df['COST_TO_SERVE']>=Q3_COST_TO_SERVE,'HIGH',df['ENERGY_SAVING_CAT'])
+    
+        
+        #Clusters
+        df['ENGAGEMENT_CLUSTER'] = np.where(((df['ENERGY_SAVING_CAT']=='MEDIUM')&(df['COST_TO_SERVE_CAT']=='HIGH')),'CLUSTER1','OTHER')
+        df['ENGAGEMENT_CLUSTER'] = np.where(((df['ENERGY_SAVING_CAT']=='MEDIUM')&(df['COST_TO_SERVE_CAT']=='LOW')),'CLUSTER2',df['ENGAGEMENT_CLUSTER'])
+        df['ENGAGEMENT_CLUSTER'] = np.where(((df['ENERGY_SAVING_CAT']=='HIGH')&((df['COST_TO_SERVE_CAT']=='MEDIUM')|(df['COST_TO_SERVE_CAT']=='HIGH'))),'CLUSTER3',df['ENGAGEMENT_CLUSTER'])
+        df['ENGAGEMENT_CLUSTER'] = np.where(((df['ENERGY_SAVING_CAT']=='LOW')&((df['COST_TO_SERVE_CAT']=='MEDIUM')|(df['COST_TO_SERVE_CAT']=='LOW'))),'CLUSTER4',df['ENGAGEMENT_CLUSTER'])
+        df['ENGAGEMENT_CLUSTER'] = np.where(((df['ENERGY_SAVING_CAT']=='HIGH')&(df['COST_TO_SERVE_CAT']=='LOW')),'CLUSTER5',df['ENGAGEMENT_CLUSTER'])
+        df['ENGAGEMENT_CLUSTER'] = np.where(((df['ENERGY_SAVING_CAT']=='LOW')&(df['COST_TO_SERVE_CAT']=='HIGH')),'CLUSTER6',df['ENGAGEMENT_CLUSTER'])
+        
+        #Offer
+        df['OFFER'] = np.where((((df['ENGAGEMENT_CLUSTER']=='CLUSTER3')|(df['ENGAGEMENT_CLUSTER']=='CLUSTER5'))&(df['HAS_EV']==1)&(df['LIFESTYLE_CLUSTER']==2)),'OFFER1','NONE')
+        df['OFFER'] = np.where((((df['ENGAGEMENT_CLUSTER']=='CLUSTER3')|(df['ENGAGEMENT_CLUSTER']=='CLUSTER4'))&(df['LIFESTYLE_CLUSTER']==2)),'OFFER2',df['OFFER'])
+        df['OFFER'] = np.where(((df['ENGAGEMENT_CLUSTER']=='CLUSTER1')&((df['LIFESTYLE_CLUSTER']==2)|(df['LIFESTYLE_CLUSTER']==3))&((df['RATE_ID']==2)
+                                                                                                                                   |(df['RATE_ID']==3)|(df['RATE_ID']==6)
+                                                                                                                                   |(df['RATE_ID']==9)|(df['RATE_ID']==10)
+                                                                                                                                   |(df['RATE_ID']==12)|(df['RATE_ID']==13)
+                                                                                                                                   |(df['RATE_ID']==16))),'OFFER3',df['OFFER'])
+        df['OFFER'] = np.where(((df['ENGAGEMENT_CLUSTER']=='CLUSTER6')&((df['LIFESTYLE_CLUSTER']==2)|(df['LIFESTYLE_CLUSTER']==3))&((df['RATE_ID']==2)
+                                                                                                                                   |(df['RATE_ID']==3)|(df['RATE_ID']==6)
+                                                                                                                                   |(df['RATE_ID']==9)|(df['RATE_ID']==10)
+                                                                                                                                   |(df['RATE_ID']==12)|(df['RATE_ID']==13)
+                                                                                                                                   |(df['RATE_ID']==16))),'OFFER4',df['OFFER'])
+        df['OFFER'] = np.where((((df['ENGAGEMENT_CLUSTER']=='CLUSTER2')|(df['ENGAGEMENT_CLUSTER']=='CLUSTER5'))&(df['HAS_PV']==1)&(df['LIFESTYLE_CLUSTER']==2)),'OFFER5',df['OFFER'])
+    
+        api.send("output2",df.to_csv())
+ 
+        data_dict = df.to_dict()
+        msg2.body = json.dumps(data_dict)
+    
+        #msg2= json.dumps(data_dict)
+        request_id = msg2.attributes['message.request.id']
+        response = api.Message(attributes={'message.request.id': request_id}, body=msg2.body)
+            #response = api.Message(body=msg2.body)
+        api.send('output', response)
+        msg2.body= json.dumps({'Results': 'Model applied to input data successfully.'})
+        request_id = msg2.attributes['message.request.id']
+        response = api.Message(attributes={'message.request.id': request_id}, body=msg2.body)
+        api.send('output', response)
+    api.set_port_callback("model", on_model)
+
+
+api.set_port_callback("input2", on_input)
+
+
+
+
+
+
+
+
+
+
+
+
+
+

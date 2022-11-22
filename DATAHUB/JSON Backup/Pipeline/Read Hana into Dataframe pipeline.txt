@@ -1,0 +1,412 @@
+{
+	"properties": {},
+	"description": "",
+	"processes": {
+		"python3operator1": {
+			"component": "com.sap.system.python3Operator",
+			"metadata": {
+				"label": "Python3 Operator",
+				"x": 462,
+				"y": 164,
+				"height": 80,
+				"width": 120,
+				"extensible": true,
+				"config": {
+					"script": "import io\r\nimport csv\r\nimport pandas as pd\r\ndef on_input(msg):\r\n    \r\n    # Obtain data\r\n    import pandas as pd\r\n    import io\r\n    df= pd.read_csv(io.StringIO(msg.body), sep=\",\")\r\n    \r\n\r\n    #data = [df.columns.values.tolist()] + df.values.tolist()\r\n    data =  df.values.tolist()\r\n    api.send(\"output\",data)\r\n    \r\n    #api.send(\"output\",data)\r\n    f = '{},{}' # format\r\n    for i in data:\r\n        #api.send(\"output\",f.format(*i)+'\\n')\r\n        print(\"\")\r\n    \r\n\r\n        \r\n    \r\n\r\n\r\n\r\n\r\napi.set_port_callback(\"input2\", on_input)"
+				},
+				"additionalinports": [
+					{
+						"name": "input1",
+						"type": "table"
+					},
+					{
+						"name": "input2",
+						"type": "message"
+					}
+				],
+				"additionaloutports": [
+					{
+						"name": "output",
+						"type": "message"
+					}
+				]
+			}
+		},
+		"hanatableconsumer1": {
+			"component": "com.sap.dh.ds.hanaodbc.table.consumer",
+			"metadata": {
+				"label": "HANA Table Consumer",
+				"x": 69,
+				"y": 164,
+				"height": 80,
+				"width": 120,
+				"extensible": false,
+				"config": {
+					"partitionType": "None",
+					"hanaConnection": {
+						"configurationType": "Configuration Manager",
+						"connectionID": "HANADB"
+					},
+					"adapted_dataset": {
+						"remoteObjectReference": {
+							"connection": {
+								"id": "HANADB",
+								"type": "HANA_DB"
+							},
+							"name": "Z_SEP.AnalyticalModels.LTO.IMC.CongnitivePricing::TA_IMC_CPQ__TRAINING_INPUT",
+							"remoteObjectType": "TABLE",
+							"qualifiedName": "/SEP_CPQ/Z_SEP.AnalyticalModels.LTO.IMC.CongnitivePricing%3A%3ATA_IMC_CPQ__TRAINING_INPUT",
+							"nativeQualifiedName": "\"SEP_CPQ\".\"Z_SEP.AnalyticalModels.LTO.IMC.CongnitivePricing::TA_IMC_CPQ__TRAINING_INPUT\"",
+							"owner": "SEP_CPQ"
+						},
+						"schema": {
+							"genericType": "TABLE",
+							"tableBasedRepresentation": {
+								"attributes": [
+									{
+										"name": "QUOTE_ID",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 8,
+										"nativeDatatype": "NVARCHAR",
+										"descriptions": [
+											{
+												"value": "Quote ID",
+												"locale": "en",
+												"type": "SHORT"
+											}
+										]
+									},
+									{
+										"name": "CUSTOMER_NAME",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 60,
+										"nativeDatatype": "NVARCHAR",
+										"descriptions": [
+											{
+												"value": "Customer Name",
+												"locale": "en",
+												"type": "SHORT"
+											}
+										]
+									},
+									{
+										"name": "INDUSTRY",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 1,
+										"nativeDatatype": "NVARCHAR",
+										"descriptions": [
+											{
+												"value": "Industry",
+												"locale": "en",
+												"type": "SHORT"
+											}
+										]
+									},
+									{
+										"name": "CREATION_DATE",
+										"templateType": "date",
+										"datatype": "DATE",
+										"nativeDatatype": "DATE",
+										"descriptions": [
+											{
+												"value": "Quote Creation date",
+												"locale": "en",
+												"type": "SHORT"
+											}
+										]
+									},
+									{
+										"name": "COUNTRY",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 10,
+										"nativeDatatype": "NVARCHAR",
+										"descriptions": [
+											{
+												"value": "Country",
+												"locale": "en",
+												"type": "SHORT"
+											}
+										]
+									},
+									{
+										"name": "PRODUCT_NAME",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 40,
+										"nativeDatatype": "NVARCHAR",
+										"descriptions": [
+											{
+												"value": "Product Name",
+												"locale": "en",
+												"type": "SHORT"
+											}
+										]
+									},
+									{
+										"name": "MODEL",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 40,
+										"nativeDatatype": "NVARCHAR",
+										"descriptions": [
+											{
+												"value": "Model",
+												"locale": "en",
+												"type": "SHORT"
+											}
+										]
+									},
+									{
+										"name": "SUPPLY_VOLTAGE_A",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 60,
+										"nativeDatatype": "NVARCHAR",
+										"descriptions": [
+											{
+												"value": "Supply Voltage A",
+												"locale": "en",
+												"type": "SHORT"
+											}
+										]
+									},
+									{
+										"name": "COM_QUANTITY",
+										"templateType": "int64",
+										"datatype": "INTEGER",
+										"length": 8,
+										"nativeDatatype": "BIGINT",
+										"descriptions": [
+											{
+												"value": "Quantity",
+												"locale": "en",
+												"type": "SHORT"
+											}
+										]
+									},
+									{
+										"name": "STATUS",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 1,
+										"nativeDatatype": "NVARCHAR",
+										"descriptions": [
+											{
+												"value": "Status",
+												"locale": "en",
+												"type": "SHORT"
+											}
+										]
+									},
+									{
+										"name": "LISTPRICE",
+										"templateType": "decimal",
+										"datatype": "DECIMAL",
+										"precision": 17,
+										"scale": 3,
+										"nativeDatatype": "DECIMAL",
+										"descriptions": [
+											{
+												"value": "List Price",
+												"locale": "en",
+												"type": "SHORT"
+											}
+										]
+									},
+									{
+										"name": "MANUFACTURING_COST",
+										"templateType": "decimal",
+										"datatype": "DECIMAL",
+										"precision": 17,
+										"scale": 3,
+										"nativeDatatype": "DECIMAL",
+										"descriptions": [
+											{
+												"value": "Manufacturing Cost",
+												"locale": "en",
+												"type": "SHORT"
+											}
+										]
+									},
+									{
+										"name": "QUOTED_PRICE",
+										"templateType": "decimal",
+										"datatype": "DECIMAL",
+										"precision": 17,
+										"scale": 3,
+										"nativeDatatype": "DECIMAL",
+										"descriptions": [
+											{
+												"value": "Quoted Price",
+												"locale": "en",
+												"type": "SHORT"
+											}
+										]
+									}
+								],
+								"uniqueKeys": [
+									{
+										"attributeReferences": [
+											"QUOTE_ID"
+										]
+									}
+								]
+							}
+						},
+						"capabilities": {
+							"isProfileable": true
+						},
+						"capabilityProperties": [
+							{
+								"name": "isProfileable",
+								"value": "true"
+							}
+						]
+					}
+				}
+			}
+		},
+		"flowagentcsvproducer1": {
+			"component": "com.sap.dh.ds.csv.producer",
+			"metadata": {
+				"label": "Flowagent CSV Producer",
+				"x": 263,
+				"y": 178,
+				"height": 80,
+				"width": 120,
+				"extensible": false,
+				"config": {
+					"additionalProperties_csv": {
+						"columnDelimiter": ",",
+						"csvHeaderIncluded": true,
+						"textDelimiterStyle": "Minimal",
+						"csvHeaderIncludedBehavior": "First batch"
+					}
+				}
+			}
+		},
+		"tomessageconverter1": {
+			"component": "com.sap.util.toMessageConverter",
+			"metadata": {
+				"label": "ToMessage Converter",
+				"x": 750,
+				"y": 164,
+				"height": 50,
+				"width": 50,
+				"config": {}
+			}
+		},
+		"12multiplexer1": {
+			"component": "com.sap.system.multiplexer.1-2",
+			"metadata": {
+				"label": "1:2 Multiplexer",
+				"x": 740,
+				"y": 271,
+				"height": 80,
+				"width": 120,
+				"extensible": true,
+				"config": {}
+			}
+		},
+		"wiretap1": {
+			"component": "com.sap.util.wiretap",
+			"metadata": {
+				"label": "Wiretap",
+				"x": 982,
+				"y": 318,
+				"height": 80,
+				"width": 120,
+				"ui": "dynpath",
+				"config": {}
+			}
+		}
+	},
+	"groups": [
+		{
+			"name": "group2",
+			"nodes": [
+				"python3operator1"
+			],
+			"metadata": {
+				"description": "Group"
+			},
+			"tags": {
+				"python36": "",
+				"": ""
+			}
+		}
+	],
+	"connections": [
+		{
+			"metadata": {
+				"points": "193,195 225.5,195 225.5,218 258,218"
+			},
+			"src": {
+				"port": "outConfig",
+				"process": "hanatableconsumer1"
+			},
+			"tgt": {
+				"port": "inConfig",
+				"process": "flowagentcsvproducer1"
+			}
+		},
+		{
+			"metadata": {
+				"points": "387,218 422,218 422,213 457,213"
+			},
+			"src": {
+				"port": "outMessage",
+				"process": "flowagentcsvproducer1"
+			},
+			"tgt": {
+				"port": "input2",
+				"process": "python3operator1"
+			}
+		},
+		{
+			"metadata": {
+				"points": "586,204 665.5,204 665.5,180 745,180"
+			},
+			"src": {
+				"port": "output",
+				"process": "python3operator1"
+			},
+			"tgt": {
+				"port": "inbody",
+				"process": "tomessageconverter1"
+			}
+		},
+		{
+			"metadata": {
+				"points": "804,189 854,189 854,250 685,250 685,311 735,311"
+			},
+			"src": {
+				"port": "out",
+				"process": "tomessageconverter1"
+			},
+			"tgt": {
+				"port": "in1",
+				"process": "12multiplexer1"
+			}
+		},
+		{
+			"metadata": {
+				"points": "864,320 920.5,320 920.5,358 977,358"
+			},
+			"src": {
+				"port": "out2",
+				"process": "12multiplexer1"
+			},
+			"tgt": {
+				"port": "in",
+				"process": "wiretap1"
+			}
+		}
+	],
+	"inports": {},
+	"outports": {}
+}

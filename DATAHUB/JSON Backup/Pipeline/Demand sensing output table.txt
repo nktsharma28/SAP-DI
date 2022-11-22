@@ -1,0 +1,8 @@
+retailer            300
+state               300
+brand               300
+ppg                 300
+food_cpi_nat_mth    300
+snap_cost_st_mth    300
+week_ending_date    300
+FillMean            300

@@ -1,0 +1,4 @@
+{"request": {"type": "City", "query": "Pune, India", "language": "en", "unit": "m"}, 
+"location": {"name": "Pune", "country": "India", "region": "Maharashtra", "lat": "18.533", "lon": "73.867", "timezone_id": "Asia/Kolkata", "localtime": "2020-06-09 17:52", "localtime_epoch": 1591725120, "utc_offset": "5.50"}, 
+"current": {"observation_time": "12:22 PM", "temperature": 32, "weather_code": 116, "weather_icons": ["https://assets.weatherstack.com/images/wsymbols01_png_64/wsymbol_0002_sunny_intervals.png"], 
+"weather_descriptions": ["Partly cloudy"], "wind_speed": 22, "wind_degree": 270, "wind_dir": "W", "pressure": 1007, "precip": 0, "humidity": 51, "cloudcover": 44, "feelslike": 34, "uv_index": 11, "visibility": 10, "is_day": "yes"}}

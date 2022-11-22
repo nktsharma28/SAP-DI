@@ -1,0 +1,75 @@
+{
+	"properties": {},
+	"description": "TEST_DOCKER_FILE",
+	"processes": {
+		"python3operator1": {
+			"component": "com.sap.system.python3Operator",
+			"metadata": {
+				"label": "Python3 Operator",
+				"x": 403,
+				"y": 101,
+				"height": 80,
+				"width": 120,
+				"extensible": true,
+				"config": {
+					"script": "from datetime import date\r\nfrom io import StringIO\r\nimport pandas as pd\r\nimport ibm_boto3\r\nfrom ibm_botocore.client import Config, ClientError\r\nfrom hdbcli import dbapi\r\n# Constants for IBM COS values\r\nCOS_ENDPOINT = \"https://s3.us-east.cloud-object-storage.appdomain.cloud\" # Current list avaiable at https://control.cloud-object-storage.cloud.ibm.com/v2/endpoints\r\nCOS_API_KEY_ID = \"2LSOWFwFvJsNv60aLMUxKhY9ourky1_2hvddpN8IIb2v\" # eg \"W00YixxxxxxxxxxMB-odB-2ySfTrFBIQQWanc--P3byk\"\r\nCOS_RESOURCE_CRN = \"crn:v1:bluemix:public:cloud-object-storage:global:a/16dcf0d2ff1a4af484d3d8b7d5489749:e796db70-e0d6-4ed2-a9b1-4ee538352cc9::\" # eg \"crn:v1:bluemix:public:cloud-object-storage:global:a/3bf0d9003xxxxxxxxxx1c3e97696b71c:d6f04d83-6c4f-4a62-a165-696756d63903::\"\r\nCOS_AUTH_ENDPOINT = \"https://iam.cloud.ibm.com/identity/token\"\r\nBUCKET_NAME = \"covid19-cos-master-prod-usa\"\r\nFILES = [\r\n  {\r\n    'filename': 'usa_claims.csv',\r\n    'output_table': 'USA_CLAIMS'\r\n  },\r\n  {\r\n    'filename': 'usa_covid19_statistics.csv',\r\n    'output_table': 'USA_COVID19_STATS'\r\n  },\r\n  {\r\n    'filename': 'usa_risk_index.csv',\r\n    'output_table': 'USA_RISK_INDEX'\r\n  },\r\n  {\r\n    'filename': 'usa_unemployment_statistics_state_level.csv',\r\n    'output_table': 'USA_UNEMPLOYMENT_STATISTICS_STATE_LEVEL'\r\n  }\r\n]\r\n\r\ndef on_input():\r\n    # HANADB connection\r\n    conn = dbapi.connect(\r\n        address='169.38.105.27',\r\n        port='30015',\r\n        user='HDBUSER02',\r\n        password='XXXX',\r\n        # key='USER1UserKey', # address, port, user and password are retreived from the hdbuserstore\r\n        encrypt=True, # must be set to True when connecting to HANA Cloud\r\n        sslValidateCertificate=False # True HC, False for HANA Express.\r\n    )\r\n    cursor = conn.cursor()\r\n    sql = 'INSERT INTO COVID_DATA_REFRESH (timestamp) VALUES (:timestamp)'\r\n    cursor = conn.cursor()\r\n    ts = date.today()\r\n    cursor.execute(sql, {\"timestamp\": ts})\r\n    sql = 'SELECT MAX(*) FROM COVID_DATA_REFRESH'\r\n    cursor.execute(sql)\r\n    data_refresh_id = cursor[0].id\r\n    api.send(\"output\",sql)\r\n    \r\n   \r\n    \r\n    # Create resource\r\n    cos = ibm_boto3.resource(\"s3\",\r\n        ibm_api_key_id=COS_API_KEY_ID,\r\n        ibm_service_instance_id=COS_RESOURCE_CRN,\r\n        ibm_auth_endpoint=COS_AUTH_ENDPOINT,\r\n        config=Config(signature_version=\"oauth\"),\r\n        endpoint_url=COS_ENDPOINT\r\n    )\r\n\r\n    for f in FILES:\r\n        try:\r\n            file = cos.Object(BUCKET_NAME, \"usa_claims.csv\").get()\r\n            content = file['Body'].read().decode('utf-8')\r\n            string_io = StringIO(content)\r\n            df = pd.read_csv(string_io)\r\n            df['DATA_REFRESH'] = data_refresh_id\r\n            sql = 'INSERT INTO {0}  (timestamp) VALUES (:timestamp)'.format(f['output_table'])\r\n            cursor.execute(sql, df)\r\n        except ClientError as be:\r\n            print(\"CLIENT ERROR: {0}\\n\".format(be))\r\n            api.send(\"output\",\"CLIENT ERROR: {0}\\n\")\r\n        except Exception as e:\r\n            print(\"Unable to retrieve file contents: {0}\".format(e))\r\n            api.send(\"Unable to retrieve file contents: {0}\")\r\n\r\n    cursor.close()\r\non_input()"
+				},
+				"additionalinports": [
+					{
+						"name": "input",
+						"type": "message"
+					}
+				],
+				"additionaloutports": [
+					{
+						"name": "output",
+						"type": "message"
+					}
+				]
+			}
+		},
+		"wiretap1": {
+			"component": "com.sap.util.wiretap",
+			"metadata": {
+				"label": "Wiretap",
+				"x": 674,
+				"y": 171,
+				"height": 80,
+				"width": 120,
+				"ui": "dynpath",
+				"config": {}
+			}
+		}
+	},
+	"groups": [
+		{
+			"name": "group3",
+			"nodes": [
+				"python3operator1"
+			],
+			"metadata": {
+				"description": "Group"
+			},
+			"tags": {
+				"ibm-boto3-hdbcli": ""
+			}
+		}
+	],
+	"connections": [
+		{
+			"metadata": {
+				"points": "527,141 598,141 598,211 669,211"
+			},
+			"src": {
+				"port": "output",
+				"process": "python3operator1"
+			},
+			"tgt": {
+				"port": "in",
+				"process": "wiretap1"
+			}
+		}
+	],
+	"inports": {},
+	"outports": {}
+}

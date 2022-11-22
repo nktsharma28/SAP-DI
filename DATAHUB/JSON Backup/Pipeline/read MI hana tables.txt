@@ -1,0 +1,4153 @@
+{
+	"description": "",
+	"processes": {
+		"hanatableconsumer11": {
+			"component": "com.sap.dh.ds.hanaodbc.table.consumer",
+			"metadata": {
+				"label": "ACTIVITY Table Consumer",
+				"x": 114,
+				"y": 67,
+				"height": 80,
+				"width": 120,
+				"extensible": false,
+				"config": {
+					"partitionType": "None",
+					"hanaConnection": {
+						"configurationType": "Configuration Manager",
+						"connectionID": "E1PMIHANA"
+					},
+					"adapted_dataset": {
+						"remoteObjectReference": {
+							"connection": {
+								"id": "E1PMIHANA",
+								"type": "HANA_DB"
+							},
+							"name": "ACTIVITY",
+							"remoteObjectType": "TABLE",
+							"qualifiedName": "/WIPUSR/ACTIVITY",
+							"nativeQualifiedName": "\"WIPUSR\".\"ACTIVITY\"",
+							"owner": "WIPUSR"
+						},
+						"schema": {
+							"genericType": "TABLE",
+							"tableBasedRepresentation": {
+								"attributes": [
+									{
+										"name": "HANDLE",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 412,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "CHANGE_STAMP",
+										"templateType": "decimal",
+										"datatype": "DECIMAL",
+										"precision": 38,
+										"scale": 0,
+										"nativeDatatype": "DECIMAL"
+									},
+									{
+										"name": "ACTIVITY",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 20,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "ENABLED",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 5,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "DESCRIPTION",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 40,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "SHORT_NAME",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 10,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "VISIBLE",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 5,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "EXECUTION_UNIT_BO",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 412,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "EXECUTION_TYPE",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 1,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "EXECUTION_LOCATION",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 1,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "USE_OUTPUT_AS_INPUT",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 5,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "DATA_IN_OUT",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 1,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "CLASS_OR_PROGRAM",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 256,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "CREATED_DATE_TIME",
+										"templateType": "timestamp",
+										"datatype": "DATETIME",
+										"nativeDatatype": "SECONDDATE"
+									},
+									{
+										"name": "MODIFIED_DATE_TIME",
+										"templateType": "timestamp",
+										"datatype": "DATETIME",
+										"nativeDatatype": "SECONDDATE"
+									}
+								],
+								"uniqueKeys": [
+									{
+										"attributeReferences": [
+											"HANDLE"
+										]
+									}
+								]
+							}
+						},
+						"capabilities": {
+							"isProfileable": true
+						},
+						"capabilityProperties": [
+							{
+								"name": "isProfileable",
+								"value": "true"
+							}
+						]
+					}
+				}
+			},
+			"name": "hanatableconsumer1"
+		},
+		"flowagenttableproducer11": {
+			"component": "com.sap.dh.ds.database.producer",
+			"metadata": {
+				"label": "Flowagent Table Producer",
+				"x": 363,
+				"y": 67,
+				"height": 80,
+				"width": 120,
+				"extensible": false,
+				"config": {
+					"service": "HANA",
+					"cdcApplierType": "Track Change History",
+					"hanaConnection": {
+						"configurationType": "Configuration Manager",
+						"connectionID": "HANADB"
+					},
+					"hanaAdaptedDataset": "SEP_ME.ACTIVITY"
+				}
+			},
+			"name": "flowagenttableproducer1"
+		},
+		"graphterminator11": {
+			"component": "com.sap.util.graphTerminator",
+			"metadata": {
+				"label": "Graph Terminator",
+				"x": 643,
+				"y": 67,
+				"height": 80,
+				"width": 120,
+				"config": {}
+			},
+			"name": "graphterminator1"
+		},
+		"hanatableconsumer111": {
+			"component": "com.sap.dh.ds.hanaodbc.table.consumer",
+			"metadata": {
+				"label": "ACTIVITY_DATA_FIELD Table Consumer",
+				"x": 114,
+				"y": 180,
+				"height": 80,
+				"width": 120,
+				"extensible": false,
+				"config": {
+					"partitionType": "None",
+					"hanaConnection": {
+						"configurationType": "Configuration Manager",
+						"connectionID": "E1PMIHANA"
+					},
+					"adapted_dataset": {
+						"remoteObjectReference": {
+							"connection": {
+								"id": "E1PMIHANA",
+								"type": "HANA_DB"
+							},
+							"name": "ACTIVITY_DATA_FIELD",
+							"remoteObjectType": "TABLE",
+							"qualifiedName": "/WIPUSR/ACTIVITY_DATA_FIELD",
+							"nativeQualifiedName": "\"WIPUSR\".\"ACTIVITY_DATA_FIELD\"",
+							"owner": "WIPUSR"
+						},
+						"schema": {
+							"genericType": "TABLE",
+							"tableBasedRepresentation": {
+								"attributes": [
+									{
+										"name": "HANDLE",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 412,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "ACTIVITY_BO",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 412,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "DATA_FIELD_BO",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 412,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "DEFAULT_SETTING",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 1024,
+										"nativeDatatype": "NVARCHAR"
+									}
+								],
+								"uniqueKeys": [
+									{
+										"attributeReferences": [
+											"HANDLE"
+										]
+									}
+								]
+							}
+						},
+						"capabilities": {
+							"isProfileable": true
+						},
+						"capabilityProperties": [
+							{
+								"name": "isProfileable",
+								"value": "true"
+							}
+						]
+					}
+				}
+			},
+			"name": "hanatableconsumer11"
+		},
+		"flowagenttableproducer111": {
+			"component": "com.sap.dh.ds.database.producer",
+			"metadata": {
+				"label": "Flowagent Table Producer",
+				"x": 363,
+				"y": 180,
+				"height": 80,
+				"width": 120,
+				"extensible": false,
+				"config": {
+					"service": "HANA",
+					"cdcApplierType": "Track Change History",
+					"hanaConnection": {
+						"configurationType": "Configuration Manager",
+						"connectionID": "HANADB"
+					},
+					"hanaAdaptedDataset": "SEP_ME.ACTIVITY_DATA_FIELD"
+				}
+			},
+			"name": "flowagenttableproducer11"
+		},
+		"graphterminator111": {
+			"component": "com.sap.util.graphTerminator",
+			"metadata": {
+				"label": "Graph Terminator",
+				"x": 643,
+				"y": 180,
+				"height": 80,
+				"width": 120,
+				"config": {}
+			},
+			"name": "graphterminator11"
+		},
+		"hanatableconsumer1111": {
+			"component": "com.sap.dh.ds.hanaodbc.table.consumer",
+			"metadata": {
+				"label": "ACTIVITY_LOG Table Consumer",
+				"x": 810,
+				"y": 67,
+				"height": 80,
+				"width": 120,
+				"extensible": false,
+				"config": {
+					"partitionType": "None",
+					"hanaConnection": {
+						"configurationType": "Configuration Manager",
+						"connectionID": "E1PMIHANA"
+					},
+					"adapted_dataset": {
+						"remoteObjectReference": {
+							"connection": {
+								"id": "E1PMIHANA",
+								"type": "HANA_DB"
+							},
+							"name": "ACTIVITY_LOG",
+							"remoteObjectType": "TABLE",
+							"qualifiedName": "/WIPUSR/ACTIVITY_LOG",
+							"nativeQualifiedName": "\"WIPUSR\".\"ACTIVITY_LOG\"",
+							"owner": "WIPUSR"
+						},
+						"schema": {
+							"genericType": "TABLE",
+							"tableBasedRepresentation": {
+								"attributes": [
+									{
+										"name": "HANDLE",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 412,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "SITE",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 6,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "CHANGE_STAMP",
+										"templateType": "decimal",
+										"datatype": "DECIMAL",
+										"precision": 38,
+										"scale": 0,
+										"nativeDatatype": "DECIMAL"
+									},
+									{
+										"name": "ACTION_CODE",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 20,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "ACTION_DETAIL",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 412,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "ACTION_DETAIL_HANDLE",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 412,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "ACTIVITY",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 20,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "DATE_TIME",
+										"templateType": "timestamp",
+										"datatype": "DATETIME",
+										"nativeDatatype": "SECONDDATE"
+									},
+									{
+										"name": "CREW",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 26,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "USER_ID",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 36,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "SFC",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 128,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "PROCESS_LOT",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 128,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "OPERATION",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 36,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "OPERATION_REVISION",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 20,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "ITEM",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 128,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "ITEM_REVISION",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 20,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "ROUTER",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 128,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "ROUTER_REVISION",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 20,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "STEP_ID",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 6,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "SUBSTEP",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 36,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "SUBSTEP_ID",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 6,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "RESRCE",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 36,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "WORK_CENTER",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 36,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "QTY",
+										"templateType": "decimal",
+										"datatype": "DECIMAL",
+										"precision": 38,
+										"scale": 6,
+										"nativeDatatype": "DECIMAL"
+									},
+									{
+										"name": "REWORK",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 5,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "REPORTING_CENTER_BO",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 412,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "SHOP_ORDER_BO",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 412,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "PARTITION_DATE",
+										"templateType": "timestamp",
+										"datatype": "DATETIME",
+										"nativeDatatype": "TIMESTAMP"
+									},
+									{
+										"name": "LCC_BO",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 412,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "ACTION_SPAN",
+										"templateType": "decimal",
+										"datatype": "DECIMAL",
+										"precision": 38,
+										"scale": 0,
+										"nativeDatatype": "DECIMAL"
+									},
+									{
+										"name": "PREV_SITE",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 6,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "TXN_ID",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 50,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "CREATED_DATE_TIME",
+										"templateType": "timestamp",
+										"datatype": "DATETIME",
+										"nativeDatatype": "SECONDDATE"
+									},
+									{
+										"name": "MODIFIED_DATE_TIME",
+										"templateType": "timestamp",
+										"datatype": "DATETIME",
+										"nativeDatatype": "SECONDDATE"
+									}
+								]
+							}
+						},
+						"capabilities": {
+							"isProfileable": true
+						},
+						"capabilityProperties": [
+							{
+								"name": "isProfileable",
+								"value": "true"
+							}
+						]
+					}
+				}
+			},
+			"name": "hanatableconsumer111"
+		},
+		"flowagenttableproducer1111": {
+			"component": "com.sap.dh.ds.database.producer",
+			"metadata": {
+				"label": "Flowagent Table Producer",
+				"x": 1059,
+				"y": 67,
+				"height": 80,
+				"width": 120,
+				"extensible": false,
+				"config": {
+					"service": "HANA",
+					"cdcApplierType": "Track Change History",
+					"hanaConnection": {
+						"configurationType": "Configuration Manager",
+						"connectionID": "HANADB"
+					},
+					"hanaAdaptedDataset": "SEP_ME.ACTIVITY_LOG"
+				}
+			},
+			"name": "flowagenttableproducer111"
+		},
+		"graphterminator1111": {
+			"component": "com.sap.util.graphTerminator",
+			"metadata": {
+				"label": "Graph Terminator",
+				"x": 1339,
+				"y": 67,
+				"height": 80,
+				"width": 120,
+				"config": {}
+			},
+			"name": "graphterminator111"
+		},
+		"hanatableconsumer11111": {
+			"component": "com.sap.dh.ds.hanaodbc.table.consumer",
+			"metadata": {
+				"label": "BOM_COMPONENT Table Consumer",
+				"x": 824,
+				"y": 163,
+				"height": 80,
+				"width": 120,
+				"extensible": false,
+				"config": {
+					"partitionType": "None",
+					"hanaConnection": {
+						"configurationType": "Configuration Manager",
+						"connectionID": "E1PMIHANA"
+					},
+					"adapted_dataset": {
+						"remoteObjectReference": {
+							"connection": {
+								"id": "E1PMIHANA",
+								"type": "HANA_DB"
+							},
+							"name": "BOM_COMPONENT",
+							"remoteObjectType": "TABLE",
+							"qualifiedName": "/WIPUSR/BOM_COMPONENT",
+							"nativeQualifiedName": "\"WIPUSR\".\"BOM_COMPONENT\"",
+							"owner": "WIPUSR"
+						},
+						"schema": {
+							"genericType": "TABLE",
+							"tableBasedRepresentation": {
+								"attributes": [
+									{
+										"name": "HANDLE",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 412,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "BOM_BO",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 412,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "COMPONENT_GBO",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 412,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "SEQUENCE",
+										"templateType": "decimal",
+										"datatype": "DECIMAL",
+										"precision": 38,
+										"scale": 0,
+										"nativeDatatype": "DECIMAL"
+									},
+									{
+										"name": "ENABLED",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 5,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "VALID_START",
+										"templateType": "timestamp",
+										"datatype": "DATETIME",
+										"nativeDatatype": "SECONDDATE"
+									},
+									{
+										"name": "VALID_END",
+										"templateType": "timestamp",
+										"datatype": "DATETIME",
+										"nativeDatatype": "SECONDDATE"
+									},
+									{
+										"name": "USE_ITEM_DEFAULTS",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 5,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "PRE_ASSEMBLED",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 5,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "ASSY_DATA_TYPE_BO",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 412,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "QTY",
+										"templateType": "decimal",
+										"datatype": "DECIMAL",
+										"precision": 38,
+										"scale": 6,
+										"nativeDatatype": "DECIMAL"
+									},
+									{
+										"name": "TEST_PART",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 5,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "BOM_TEMPLATE",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 412,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "DISASSEMBLE_OPERATION_BO",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 412,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "CREATE_TRACKABLE_SFC",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 1,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "MAXIMUM_USAGE",
+										"templateType": "decimal",
+										"datatype": "DECIMAL",
+										"precision": 38,
+										"scale": 0,
+										"nativeDatatype": "DECIMAL"
+									},
+									{
+										"name": "MAXIMUM_NC",
+										"templateType": "decimal",
+										"datatype": "DECIMAL",
+										"precision": 38,
+										"scale": 0,
+										"nativeDatatype": "DECIMAL"
+									},
+									{
+										"name": "ASSEMBLE_AS_REQ",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 5,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "AUTO_CONSUME_KIT",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 5,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "CREATED_DATE_TIME",
+										"templateType": "timestamp",
+										"datatype": "DATETIME",
+										"nativeDatatype": "SECONDDATE"
+									},
+									{
+										"name": "MODIFIED_DATE_TIME",
+										"templateType": "timestamp",
+										"datatype": "DATETIME",
+										"nativeDatatype": "SECONDDATE"
+									},
+									{
+										"name": "BOM_COMPONENT_TYPE",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 1,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "PARENT_SEQUENCE",
+										"templateType": "decimal",
+										"datatype": "DECIMAL",
+										"precision": 38,
+										"scale": 0,
+										"nativeDatatype": "DECIMAL"
+									},
+									{
+										"name": "ERP_SEQUENCE",
+										"templateType": "decimal",
+										"datatype": "DECIMAL",
+										"precision": 38,
+										"scale": 0,
+										"nativeDatatype": "DECIMAL"
+									},
+									{
+										"name": "ORDER_ITEM_NUMBER",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 4,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "IDENTIFIER",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 45,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "ERP_CHANGE_NUMBER",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 12,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "STORAGE_LOCATION_BO",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 412,
+										"nativeDatatype": "NVARCHAR"
+									}
+								],
+								"uniqueKeys": [
+									{
+										"attributeReferences": [
+											"HANDLE"
+										]
+									}
+								]
+							}
+						},
+						"capabilities": {
+							"isProfileable": true
+						},
+						"capabilityProperties": [
+							{
+								"name": "isProfileable",
+								"value": "true"
+							}
+						]
+					}
+				}
+			},
+			"name": "hanatableconsumer1111"
+		},
+		"flowagenttableproducer11111": {
+			"component": "com.sap.dh.ds.database.producer",
+			"metadata": {
+				"label": "Flowagent Table Producer",
+				"x": 1073,
+				"y": 163,
+				"height": 80,
+				"width": 120,
+				"extensible": false,
+				"config": {
+					"service": "HANA",
+					"cdcApplierType": "Track Change History",
+					"hanaConnection": {
+						"configurationType": "Configuration Manager",
+						"connectionID": "HANADB"
+					},
+					"hanaAdaptedDataset": "SEP_ME.BOM_COMPONENT"
+				}
+			},
+			"name": "flowagenttableproducer1111"
+		},
+		"graphterminator11111": {
+			"component": "com.sap.util.graphTerminator",
+			"metadata": {
+				"label": "Graph Terminator",
+				"x": 1353,
+				"y": 163,
+				"height": 80,
+				"width": 120,
+				"config": {}
+			},
+			"name": "graphterminator1111"
+		},
+		"hanatableconsumer111111": {
+			"component": "com.sap.dh.ds.hanaodbc.table.consumer",
+			"metadata": {
+				"label": "NC_CODE  Table Consumer",
+				"x": 109,
+				"y": 291,
+				"height": 80,
+				"width": 120,
+				"extensible": false,
+				"config": {
+					"partitionType": "None",
+					"hanaConnection": {
+						"configurationType": "Configuration Manager",
+						"connectionID": "E1PMIHANA"
+					},
+					"adapted_dataset": {
+						"remoteObjectReference": {
+							"connection": {
+								"id": "E1PMIHANA",
+								"type": "HANA_DB"
+							},
+							"name": "NC_CODE",
+							"remoteObjectType": "TABLE",
+							"qualifiedName": "/WIPUSR/NC_CODE",
+							"nativeQualifiedName": "\"WIPUSR\".\"NC_CODE\"",
+							"owner": "WIPUSR"
+						},
+						"schema": {
+							"genericType": "TABLE",
+							"tableBasedRepresentation": {
+								"attributes": [
+									{
+										"name": "HANDLE",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 412,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "CHANGE_STAMP",
+										"templateType": "decimal",
+										"datatype": "DECIMAL",
+										"precision": 38,
+										"scale": 0,
+										"nativeDatatype": "DECIMAL"
+									},
+									{
+										"name": "SITE",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 6,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "NC_CODE",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 16,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "STATUS_BO",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 412,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "CREATED_DATE_TIME",
+										"templateType": "timestamp",
+										"datatype": "DATETIME",
+										"nativeDatatype": "SECONDDATE"
+									},
+									{
+										"name": "MODIFIED_DATE_TIME",
+										"templateType": "timestamp",
+										"datatype": "DATETIME",
+										"nativeDatatype": "SECONDDATE"
+									},
+									{
+										"name": "NC_CATEGORY",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 20,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "DPMO_CATEGORY_BO",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 412,
+										"nativeDatatype": "NVARCHAR"
+									}
+								],
+								"uniqueKeys": [
+									{
+										"attributeReferences": [
+											"HANDLE"
+										]
+									}
+								]
+							}
+						},
+						"capabilities": {
+							"isProfileable": true
+						},
+						"capabilityProperties": [
+							{
+								"name": "isProfileable",
+								"value": "true"
+							}
+						]
+					}
+				}
+			},
+			"name": "hanatableconsumer11111"
+		},
+		"flowagenttableproducer111111": {
+			"component": "com.sap.dh.ds.database.producer",
+			"metadata": {
+				"label": "Flowagent Table Producer",
+				"x": 358,
+				"y": 291,
+				"height": 80,
+				"width": 120,
+				"extensible": false,
+				"config": {
+					"service": "HANA",
+					"cdcApplierType": "Track Change History",
+					"hanaConnection": {
+						"configurationType": "Configuration Manager",
+						"connectionID": "HANADB"
+					},
+					"hanaAdaptedDataset": "SEP_ME.NC_CODE "
+				}
+			},
+			"name": "flowagenttableproducer11111"
+		},
+		"graphterminator111111": {
+			"component": "com.sap.util.graphTerminator",
+			"metadata": {
+				"label": "Graph Terminator",
+				"x": 638,
+				"y": 291,
+				"height": 80,
+				"width": 120,
+				"config": {}
+			},
+			"name": "graphterminator11111"
+		},
+		"hanatableconsumer1111111": {
+			"component": "com.sap.dh.ds.hanaodbc.table.consumer",
+			"metadata": {
+				"label": "NC_DATA  Table Consumer",
+				"x": 819,
+				"y": 300,
+				"height": 80,
+				"width": 120,
+				"extensible": false,
+				"config": {
+					"partitionType": "None",
+					"hanaConnection": {
+						"configurationType": "Configuration Manager",
+						"connectionID": "E1PMIHANA"
+					},
+					"adapted_dataset": {
+						"remoteObjectReference": {
+							"connection": {
+								"id": "E1PMIHANA",
+								"type": "HANA_DB"
+							},
+							"name": "NC_DATA",
+							"remoteObjectType": "TABLE",
+							"qualifiedName": "/WIPUSR/NC_DATA",
+							"nativeQualifiedName": "\"WIPUSR\".\"NC_DATA\"",
+							"owner": "WIPUSR"
+						},
+						"schema": {
+							"genericType": "TABLE",
+							"tableBasedRepresentation": {
+								"attributes": [
+									{
+										"name": "HANDLE",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 412,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "CHANGE_STAMP",
+										"templateType": "decimal",
+										"datatype": "DECIMAL",
+										"precision": 38,
+										"scale": 0,
+										"nativeDatatype": "DECIMAL"
+									},
+									{
+										"name": "NC_CONTEXT_GBO",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 412,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "USER_BO",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 412,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "DATE_TIME",
+										"templateType": "timestamp",
+										"datatype": "DATETIME",
+										"nativeDatatype": "SECONDDATE"
+									},
+									{
+										"name": "SEQUENCE",
+										"templateType": "decimal",
+										"datatype": "DECIMAL",
+										"precision": 38,
+										"scale": 0,
+										"nativeDatatype": "DECIMAL"
+									},
+									{
+										"name": "SITE",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 6,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "PARENT_NC_DATA_BO",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 412,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "NC_STATE",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 1,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "NC_CODE_BO",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 412,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "NC_DATA_TYPE_BO",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 412,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "QTY",
+										"templateType": "decimal",
+										"datatype": "DECIMAL",
+										"precision": 38,
+										"scale": 6,
+										"nativeDatatype": "DECIMAL"
+									},
+									{
+										"name": "DEFECT_COUNT",
+										"templateType": "decimal",
+										"datatype": "DECIMAL",
+										"precision": 38,
+										"scale": 6,
+										"nativeDatatype": "DECIMAL"
+									},
+									{
+										"name": "COMPONENT_BO",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 412,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "COMP_CONTEXT_GBO",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 412,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "REF_DES",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 36,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "COMMENTS",
+										"templateType": "string",
+										"datatype": "LARGE_CHARACTER_OBJECT",
+										"nativeDatatype": "NCLOB"
+									},
+									{
+										"name": "ROUTER_BO",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 412,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "DISPOSITION_ROUTER_BO",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 412,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "STEP_ID",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 6,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "OPERATION_BO",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 412,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "TIMES_PROCESSED",
+										"templateType": "decimal",
+										"datatype": "DECIMAL",
+										"precision": 38,
+										"scale": 0,
+										"nativeDatatype": "DECIMAL"
+									},
+									{
+										"name": "RESOURCE_BO",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 412,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "WORK_CENTER_BO",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 412,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "ITEM_BO",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 412,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "CLOSURE_REQUIRED",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 5,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "CLOSED_USER_BO",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 412,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "CLOSED_DATE_TIME",
+										"templateType": "timestamp",
+										"datatype": "DATETIME",
+										"nativeDatatype": "SECONDDATE"
+									},
+									{
+										"name": "CANCELLED_USER_BO",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 412,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "CANCELLED_DATE_TIME",
+										"templateType": "timestamp",
+										"datatype": "DATETIME",
+										"nativeDatatype": "SECONDDATE"
+									},
+									{
+										"name": "INCIDENT_DATE_TIME",
+										"templateType": "timestamp",
+										"datatype": "DATETIME",
+										"nativeDatatype": "SECONDDATE"
+									},
+									{
+										"name": "IDENTIFIER",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 40,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "FAILURE_ID",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 40,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "VERIFIED_STATE",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 1,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "CREATED_DATE_TIME",
+										"templateType": "timestamp",
+										"datatype": "DATETIME",
+										"nativeDatatype": "SECONDDATE"
+									},
+									{
+										"name": "MODIFIED_DATE_TIME",
+										"templateType": "timestamp",
+										"datatype": "DATETIME",
+										"nativeDatatype": "SECONDDATE"
+									},
+									{
+										"name": "NC_CATEGORY",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 20,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "VERIFIED_DATE_TIME",
+										"templateType": "timestamp",
+										"datatype": "DATETIME",
+										"nativeDatatype": "SECONDDATE"
+									},
+									{
+										"name": "LOCATION",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 20,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "REPORTING_CENTER_BO",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 412,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "INCIDENT_NUMBER_BO",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 412,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "DISPOSITION_DONE",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 5,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "ROOT_CAUSE_OPER_BO",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 412,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "TRANSFERRED_TO_DPMO",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 1,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "COMPONENT_SFC_BO",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 412,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "COMPONENT_SFC_ITEM_BO",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 412,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "DISPOSITION_FUNCTION_BO",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 412,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "ASSEMBLY_INCIDENT_NUM",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 36,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "BATCH_INCIDENT_NUM",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 36,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "PREV_SITE",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 6,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "ORIGINAL_TRANSFER_KEY",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 412,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "ACTION_CODE",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 20,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "PARTITION_DATE",
+										"templateType": "timestamp",
+										"datatype": "DATETIME",
+										"nativeDatatype": "TIMESTAMP"
+									},
+									{
+										"name": "COPIED_FROM_NC_DATA_BO",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 412,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "TXN_ID",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 50,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "SUBSTEP",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 36,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "SUBSTEP_ID",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 6,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "OEE_NC",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 5,
+										"nativeDatatype": "NVARCHAR"
+									}
+								],
+								"uniqueKeys": [
+									{
+										"attributeReferences": [
+											"HANDLE"
+										]
+									}
+								]
+							}
+						},
+						"capabilities": {
+							"isProfileable": true
+						},
+						"capabilityProperties": [
+							{
+								"name": "isProfileable",
+								"value": "true"
+							}
+						]
+					}
+				}
+			},
+			"name": "hanatableconsumer111111"
+		},
+		"flowagenttableproducer1111111": {
+			"component": "com.sap.dh.ds.database.producer",
+			"metadata": {
+				"label": "Flowagent Table Producer",
+				"x": 1068,
+				"y": 300,
+				"height": 80,
+				"width": 120,
+				"extensible": false,
+				"config": {
+					"service": "HANA",
+					"cdcApplierType": "Track Change History",
+					"hanaConnection": {
+						"configurationType": "Configuration Manager",
+						"connectionID": "HANADB"
+					},
+					"hanaAdaptedDataset": "SEP_ME.NC_DATA"
+				}
+			},
+			"name": "flowagenttableproducer111111"
+		},
+		"graphterminator1111111": {
+			"component": "com.sap.util.graphTerminator",
+			"metadata": {
+				"label": "Graph Terminator",
+				"x": 1348,
+				"y": 300,
+				"height": 80,
+				"width": 120,
+				"config": {}
+			},
+			"name": "graphterminator111111"
+		},
+		"hanatableconsumer11111111": {
+			"component": "com.sap.dh.ds.hanaodbc.table.consumer",
+			"metadata": {
+				"label": "OPERATION  Table Consumer",
+				"x": 84,
+				"y": 415,
+				"height": 80,
+				"width": 120,
+				"extensible": false,
+				"config": {
+					"partitionType": "None",
+					"hanaConnection": {
+						"configurationType": "Configuration Manager",
+						"connectionID": "E1PMIHANA"
+					},
+					"adapted_dataset": {
+						"remoteObjectReference": {
+							"connection": {
+								"id": "E1PMIHANA",
+								"type": "HANA_DB"
+							},
+							"name": "OPERATION",
+							"remoteObjectType": "TABLE",
+							"qualifiedName": "/WIPUSR/OPERATION",
+							"nativeQualifiedName": "\"WIPUSR\".\"OPERATION\"",
+							"owner": "WIPUSR"
+						},
+						"schema": {
+							"genericType": "TABLE",
+							"tableBasedRepresentation": {
+								"attributes": [
+									{
+										"name": "HANDLE",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 412,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "CHANGE_STAMP",
+										"templateType": "decimal",
+										"datatype": "DECIMAL",
+										"precision": 38,
+										"scale": 0,
+										"nativeDatatype": "DECIMAL"
+									},
+									{
+										"name": "SITE",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 6,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "OPERATION",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 36,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "TYPE",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 1,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "SPECIAL_ROUTER_BO",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 412,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "STATUS_BO",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 412,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "RESOURCE_TYPE_BO",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 412,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "REVISION",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 20,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "CURRENT_REVISION",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 5,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "EFF_START_DATE",
+										"templateType": "timestamp",
+										"datatype": "DATETIME",
+										"nativeDatatype": "SECONDDATE"
+									},
+									{
+										"name": "EFF_END_DATE",
+										"templateType": "timestamp",
+										"datatype": "DATETIME",
+										"nativeDatatype": "SECONDDATE"
+									},
+									{
+										"name": "CREATED_DATE_TIME",
+										"templateType": "timestamp",
+										"datatype": "DATETIME",
+										"nativeDatatype": "SECONDDATE"
+									},
+									{
+										"name": "MODIFIED_DATE_TIME",
+										"templateType": "timestamp",
+										"datatype": "DATETIME",
+										"nativeDatatype": "SECONDDATE"
+									},
+									{
+										"name": "PCA_DASHBOARD_MODE",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 1,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "DEFAULT_NC_CODE_BO",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 412,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "FAILURE_TRACKING_CONFIG_BO",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 412,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "RESOURCE_BO",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 412,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "MAX_LOOP",
+										"templateType": "decimal",
+										"datatype": "DECIMAL",
+										"precision": 38,
+										"scale": 0,
+										"nativeDatatype": "DECIMAL"
+									},
+									{
+										"name": "REQUIRED_TIME_IN_PROCESS",
+										"templateType": "decimal",
+										"datatype": "DECIMAL",
+										"precision": 38,
+										"scale": 0,
+										"nativeDatatype": "DECIMAL"
+									},
+									{
+										"name": "REPORTING_STEP",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 36,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "PREV_SITE",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 6,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "ORIGINAL_TRANSFER_KEY",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 412,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "SPECIAL_INSTRUCTION",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 128,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "REPORTING_CENTER_BO",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 412,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "ERP_CONTROL_KEY_BO",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 412,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "ERP_WORK_CENTER_BO",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 412,
+										"nativeDatatype": "NVARCHAR"
+									}
+								],
+								"uniqueKeys": [
+									{
+										"attributeReferences": [
+											"HANDLE"
+										]
+									}
+								]
+							}
+						},
+						"capabilities": {
+							"isProfileable": true
+						},
+						"capabilityProperties": [
+							{
+								"name": "isProfileable",
+								"value": "true"
+							}
+						]
+					}
+				}
+			},
+			"name": "hanatableconsumer1111111"
+		},
+		"flowagenttableproducer11111111": {
+			"component": "com.sap.dh.ds.database.producer",
+			"metadata": {
+				"label": "Flowagent Table Producer",
+				"x": 333,
+				"y": 415,
+				"height": 80,
+				"width": 120,
+				"extensible": false,
+				"config": {
+					"service": "HANA",
+					"cdcApplierType": "Track Change History",
+					"hanaConnection": {
+						"configurationType": "Configuration Manager",
+						"connectionID": "HANADB"
+					},
+					"hanaAdaptedDataset": "SEP_ME.OPERATION"
+				}
+			},
+			"name": "flowagenttableproducer1111111"
+		},
+		"graphterminator11111111": {
+			"component": "com.sap.util.graphTerminator",
+			"metadata": {
+				"label": "Graph Terminator",
+				"x": 613,
+				"y": 415,
+				"height": 80,
+				"width": 120,
+				"config": {}
+			},
+			"name": "graphterminator1111111"
+		},
+		"hanatableconsumer111111111": {
+			"component": "com.sap.dh.ds.hanaodbc.table.consumer",
+			"metadata": {
+				"label": "PRODUCTION_LOG  Table Consumer",
+				"x": 833,
+				"y": 428,
+				"height": 80,
+				"width": 120,
+				"extensible": false,
+				"config": {
+					"partitionType": "None",
+					"hanaConnection": {
+						"configurationType": "Configuration Manager",
+						"connectionID": "E1PMIHANA"
+					},
+					"adapted_dataset": {
+						"remoteObjectReference": {
+							"connection": {
+								"id": "E1PMIHANA",
+								"type": "HANA_DB"
+							},
+							"name": "PRODUCTION_LOG",
+							"remoteObjectType": "TABLE",
+							"qualifiedName": "/WIPUSR/PRODUCTION_LOG",
+							"nativeQualifiedName": "\"WIPUSR\".\"PRODUCTION_LOG\"",
+							"owner": "WIPUSR"
+						},
+						"schema": {
+							"genericType": "TABLE",
+							"tableBasedRepresentation": {
+								"attributes": [
+									{
+										"name": "SITE",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 6,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "CHANGE_STAMP",
+										"templateType": "decimal",
+										"datatype": "DECIMAL",
+										"precision": 38,
+										"scale": 0,
+										"nativeDatatype": "DECIMAL"
+									},
+									{
+										"name": "ACTIVITY",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 20,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "DATE_TIME",
+										"templateType": "timestamp",
+										"datatype": "DATETIME",
+										"nativeDatatype": "SECONDDATE"
+									},
+									{
+										"name": "QTY",
+										"templateType": "decimal",
+										"datatype": "DECIMAL",
+										"precision": 38,
+										"scale": 6,
+										"nativeDatatype": "DECIMAL"
+									},
+									{
+										"name": "SFC",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 128,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "PROCESS_LOT",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 128,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "OPERATION",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 36,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "OPERATION_REVISION",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 20,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "ITEM",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 128,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "ITEM_REVISION",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 20,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "ROUTER",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 128,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "ROUTER_REVISION",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 20,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "STEP_ID",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 6,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "RESRCE",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 36,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "WORK_CENTER",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 36,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "REWORK",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 5,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "QTY_STARTED",
+										"templateType": "decimal",
+										"datatype": "DECIMAL",
+										"precision": 38,
+										"scale": 6,
+										"nativeDatatype": "DECIMAL"
+									},
+									{
+										"name": "QTY_COMPLETED",
+										"templateType": "decimal",
+										"datatype": "DECIMAL",
+										"precision": 38,
+										"scale": 6,
+										"nativeDatatype": "DECIMAL"
+									},
+									{
+										"name": "QTY_DONE",
+										"templateType": "decimal",
+										"datatype": "DECIMAL",
+										"precision": 38,
+										"scale": 6,
+										"nativeDatatype": "DECIMAL"
+									},
+									{
+										"name": "QTY_SCRAPPED",
+										"templateType": "decimal",
+										"datatype": "DECIMAL",
+										"precision": 38,
+										"scale": 6,
+										"nativeDatatype": "DECIMAL"
+									},
+									{
+										"name": "QTY_NON_CONFORMED",
+										"templateType": "decimal",
+										"datatype": "DECIMAL",
+										"precision": 38,
+										"scale": 6,
+										"nativeDatatype": "DECIMAL"
+									},
+									{
+										"name": "ELAPSED_TIME",
+										"templateType": "decimal",
+										"datatype": "DECIMAL",
+										"precision": 38,
+										"scale": 0,
+										"nativeDatatype": "DECIMAL"
+									},
+									{
+										"name": "TIMES_PROCESSED",
+										"templateType": "decimal",
+										"datatype": "DECIMAL",
+										"precision": 38,
+										"scale": 0,
+										"nativeDatatype": "DECIMAL"
+									},
+									{
+										"name": "USER_ID",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 30,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "CREW",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 26,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "ELAPSED_QUEUE_TIME",
+										"templateType": "decimal",
+										"datatype": "DECIMAL",
+										"precision": 38,
+										"scale": 0,
+										"nativeDatatype": "DECIMAL"
+									},
+									{
+										"name": "QTY_FAILED",
+										"templateType": "decimal",
+										"datatype": "DECIMAL",
+										"precision": 38,
+										"scale": 6,
+										"nativeDatatype": "DECIMAL"
+									},
+									{
+										"name": "ACTION_DETAIL_BO",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 412,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "REPORTING_CENTER_BO",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 412,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "PREVIOUS_RESOURCE_BO",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 412,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "SFC_DONE",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 5,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "SHOP_ORDER_BO",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 412,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "NC_DEFECT_COUNT",
+										"templateType": "decimal",
+										"datatype": "DECIMAL",
+										"precision": 38,
+										"scale": 6,
+										"nativeDatatype": "DECIMAL"
+									},
+									{
+										"name": "START_DATE_TIME",
+										"templateType": "timestamp",
+										"datatype": "DATETIME",
+										"nativeDatatype": "SECONDDATE"
+									},
+									{
+										"name": "PARTITION_DATE",
+										"templateType": "timestamp",
+										"datatype": "DATETIME",
+										"nativeDatatype": "TIMESTAMP"
+									},
+									{
+										"name": "TXN_ID",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 50,
+										"nativeDatatype": "NVARCHAR"
+									}
+								]
+							}
+						},
+						"capabilities": {
+							"isProfileable": true
+						},
+						"capabilityProperties": [
+							{
+								"name": "isProfileable",
+								"value": "true"
+							}
+						]
+					}
+				}
+			},
+			"name": "hanatableconsumer11111111"
+		},
+		"flowagenttableproducer111111111": {
+			"component": "com.sap.dh.ds.database.producer",
+			"metadata": {
+				"label": "Flowagent Table Producer",
+				"x": 1082,
+				"y": 428,
+				"height": 80,
+				"width": 120,
+				"extensible": false,
+				"config": {
+					"service": "HANA",
+					"cdcApplierType": "Track Change History",
+					"hanaConnection": {
+						"configurationType": "Configuration Manager",
+						"connectionID": "HANADB"
+					},
+					"hanaAdaptedDataset": "SEP_ME.PRODUCTION_LOG"
+				}
+			},
+			"name": "flowagenttableproducer11111111"
+		},
+		"graphterminator111111111": {
+			"component": "com.sap.util.graphTerminator",
+			"metadata": {
+				"label": "Graph Terminator",
+				"x": 1362,
+				"y": 428,
+				"height": 80,
+				"width": 120,
+				"config": {}
+			},
+			"name": "graphterminator11111111"
+		},
+		"hanatableconsumer1111111111": {
+			"component": "com.sap.dh.ds.hanaodbc.table.consumer",
+			"metadata": {
+				"label": "RESOURCE_TIME_LOG  Table Consumer",
+				"x": 98,
+				"y": 537,
+				"height": 80,
+				"width": 120,
+				"extensible": false,
+				"config": {
+					"partitionType": "None",
+					"hanaConnection": {
+						"configurationType": "Configuration Manager",
+						"connectionID": "E1PMIHANA"
+					},
+					"adapted_dataset": {
+						"remoteObjectReference": {
+							"connection": {
+								"id": "E1PMIHANA",
+								"type": "HANA_DB"
+							},
+							"name": "RESOURCE_TIME_LOG",
+							"remoteObjectType": "TABLE",
+							"qualifiedName": "/WIPUSR/RESOURCE_TIME_LOG",
+							"nativeQualifiedName": "\"WIPUSR\".\"RESOURCE_TIME_LOG\"",
+							"owner": "WIPUSR"
+						},
+						"schema": {
+							"genericType": "TABLE",
+							"tableBasedRepresentation": {
+								"attributes": [
+									{
+										"name": "HANDLE",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 412,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "CHANGE_STAMP",
+										"templateType": "decimal",
+										"datatype": "DECIMAL",
+										"precision": 38,
+										"scale": 0,
+										"nativeDatatype": "DECIMAL"
+									},
+									{
+										"name": "SITE",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 6,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "RESOURCE_BO",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 412,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "STRT",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 20,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "START_DATE_TIME",
+										"templateType": "timestamp",
+										"datatype": "DATETIME",
+										"nativeDatatype": "SECONDDATE"
+									},
+									{
+										"name": "END_DATE_TIME",
+										"templateType": "timestamp",
+										"datatype": "DATETIME",
+										"nativeDatatype": "SECONDDATE"
+									},
+									{
+										"name": "ACTIVE",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 5,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "RESOURCE_STATE",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 1,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "RESOURCE_STATUS_BO",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 412,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "ACTIVITY_BO",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 412,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "ELAPSED_TIME",
+										"templateType": "decimal",
+										"datatype": "DECIMAL",
+										"precision": 38,
+										"scale": 0,
+										"nativeDatatype": "DECIMAL"
+									},
+									{
+										"name": "CREATED_DATE_TIME",
+										"templateType": "timestamp",
+										"datatype": "DATETIME",
+										"nativeDatatype": "SECONDDATE"
+									},
+									{
+										"name": "MODIFIED_DATE_TIME",
+										"templateType": "timestamp",
+										"datatype": "DATETIME",
+										"nativeDatatype": "SECONDDATE"
+									},
+									{
+										"name": "REASON_CODE_BO",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 412,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "RESOURCE_REASON_CODE_BO",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 412,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "PARTITION_DATE",
+										"templateType": "timestamp",
+										"datatype": "DATETIME",
+										"nativeDatatype": "TIMESTAMP"
+									}
+								],
+								"uniqueKeys": [
+									{
+										"attributeReferences": [
+											"HANDLE"
+										]
+									}
+								]
+							}
+						},
+						"capabilities": {
+							"isProfileable": true
+						},
+						"capabilityProperties": [
+							{
+								"name": "isProfileable",
+								"value": "true"
+							}
+						]
+					}
+				}
+			},
+			"name": "hanatableconsumer111111111"
+		},
+		"flowagenttableproducer1111111111": {
+			"component": "com.sap.dh.ds.database.producer",
+			"metadata": {
+				"label": "Flowagent Table Producer",
+				"x": 347,
+				"y": 537,
+				"height": 80,
+				"width": 120,
+				"extensible": false,
+				"config": {
+					"service": "HANA",
+					"cdcApplierType": "Track Change History",
+					"hanaConnection": {
+						"configurationType": "Configuration Manager",
+						"connectionID": "HANADB"
+					},
+					"hanaAdaptedDataset": "SEP_ME.RESOURCE_TIME_LOG"
+				}
+			},
+			"name": "flowagenttableproducer111111111"
+		},
+		"graphterminator1111111111": {
+			"component": "com.sap.util.graphTerminator",
+			"metadata": {
+				"label": "Graph Terminator",
+				"x": 627,
+				"y": 537,
+				"height": 80,
+				"width": 120,
+				"config": {}
+			},
+			"name": "graphterminator111111111"
+		},
+		"hanatableconsumer11111111111": {
+			"component": "com.sap.dh.ds.hanaodbc.table.consumer",
+			"metadata": {
+				"label": "RESRCE  Table Consumer",
+				"x": 834,
+				"y": 550,
+				"height": 80,
+				"width": 120,
+				"extensible": false,
+				"config": {
+					"partitionType": "None",
+					"hanaConnection": {
+						"configurationType": "Configuration Manager",
+						"connectionID": "E1PMIHANA"
+					},
+					"adapted_dataset": {
+						"remoteObjectReference": {
+							"connection": {
+								"id": "E1PMIHANA",
+								"type": "HANA_DB"
+							},
+							"name": "RESRCE",
+							"remoteObjectType": "TABLE",
+							"qualifiedName": "/WIPUSR/RESRCE",
+							"nativeQualifiedName": "\"WIPUSR\".\"RESRCE\"",
+							"owner": "WIPUSR"
+						},
+						"schema": {
+							"genericType": "TABLE",
+							"tableBasedRepresentation": {
+								"attributes": [
+									{
+										"name": "HANDLE",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 412,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "CHANGE_STAMP",
+										"templateType": "decimal",
+										"datatype": "DECIMAL",
+										"precision": 38,
+										"scale": 0,
+										"nativeDatatype": "DECIMAL"
+									},
+									{
+										"name": "SITE",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 6,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "RESRCE",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 36,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "DESCRIPTION",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 40,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "STATUS_BO",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 412,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "PROCESS_RESOURCE",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 5,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "OPERATION_BO",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 412,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "VALID_FROM",
+										"templateType": "timestamp",
+										"datatype": "DATETIME",
+										"nativeDatatype": "SECONDDATE"
+									},
+									{
+										"name": "VALID_TO",
+										"templateType": "timestamp",
+										"datatype": "DATETIME",
+										"nativeDatatype": "SECONDDATE"
+									},
+									{
+										"name": "SETUP_STATE",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 1,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "SETUP_DESCRIPTION",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 40,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "CNC_MACHINE",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 412,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "PENDING_STATUS_BO",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 412,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "PENDING_REASON_CODE_BO",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 412,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "PENDING_RESOURCE_RC_BO",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 412,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "PENDING_COMMENTS",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 2048,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "CREATED_DATE_TIME",
+										"templateType": "timestamp",
+										"datatype": "DATETIME",
+										"nativeDatatype": "SECONDDATE"
+									},
+									{
+										"name": "MODIFIED_DATE_TIME",
+										"templateType": "timestamp",
+										"datatype": "DATETIME",
+										"nativeDatatype": "SECONDDATE"
+									},
+									{
+										"name": "ERP_PLANT_MAINT_ORDER",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 12,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "ERP_EQUIPMENT_NUMBER",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 18,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "ERP_INTERNAL_ID",
+										"templateType": "decimal",
+										"datatype": "DECIMAL",
+										"precision": 38,
+										"scale": 0,
+										"nativeDatatype": "DECIMAL"
+									},
+									{
+										"name": "ERP_CAPACITY_CATEGORY",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 3,
+										"nativeDatatype": "NVARCHAR"
+									}
+								],
+								"uniqueKeys": [
+									{
+										"attributeReferences": [
+											"HANDLE"
+										]
+									}
+								]
+							}
+						},
+						"capabilities": {
+							"isProfileable": true
+						},
+						"capabilityProperties": [
+							{
+								"name": "isProfileable",
+								"value": "true"
+							}
+						]
+					}
+				}
+			},
+			"name": "hanatableconsumer1111111111"
+		},
+		"flowagenttableproducer11111111111": {
+			"component": "com.sap.dh.ds.database.producer",
+			"metadata": {
+				"label": "Flowagent Table Producer",
+				"x": 1083,
+				"y": 550,
+				"height": 80,
+				"width": 120,
+				"extensible": false,
+				"config": {
+					"service": "HANA",
+					"cdcApplierType": "Track Change History",
+					"hanaConnection": {
+						"configurationType": "Configuration Manager",
+						"connectionID": "HANADB"
+					},
+					"hanaAdaptedDataset": "SEP_ME.RESRCE"
+				}
+			},
+			"name": "flowagenttableproducer1111111111"
+		},
+		"graphterminator11111111111": {
+			"component": "com.sap.util.graphTerminator",
+			"metadata": {
+				"label": "Graph Terminator",
+				"x": 1363,
+				"y": 550,
+				"height": 80,
+				"width": 120,
+				"config": {}
+			},
+			"name": "graphterminator1111111111"
+		},
+		"hanatableconsumer111111111111": {
+			"component": "com.sap.dh.ds.hanaodbc.table.consumer",
+			"metadata": {
+				"label": "SFC  Table Consumer",
+				"x": 98,
+				"y": 685,
+				"height": 80,
+				"width": 120,
+				"extensible": false,
+				"config": {
+					"partitionType": "None",
+					"hanaConnection": {
+						"configurationType": "Configuration Manager",
+						"connectionID": "E1PMIHANA"
+					},
+					"adapted_dataset": {
+						"remoteObjectReference": {
+							"connection": {
+								"id": "E1PMIHANA",
+								"type": "HANA_DB"
+							},
+							"name": "SFC",
+							"remoteObjectType": "TABLE",
+							"qualifiedName": "/WIPUSR/SFC",
+							"nativeQualifiedName": "\"WIPUSR\".\"SFC\"",
+							"owner": "WIPUSR"
+						},
+						"schema": {
+							"genericType": "TABLE",
+							"tableBasedRepresentation": {
+								"attributes": [
+									{
+										"name": "HANDLE",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 412,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "CHANGE_STAMP",
+										"templateType": "decimal",
+										"datatype": "DECIMAL",
+										"precision": 38,
+										"scale": 0,
+										"nativeDatatype": "DECIMAL"
+									},
+									{
+										"name": "SITE",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 6,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "SFC",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 128,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "STATUS_BO",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 412,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "SHOP_ORDER_BO",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 412,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "QTY",
+										"templateType": "decimal",
+										"datatype": "DECIMAL",
+										"precision": 38,
+										"scale": 6,
+										"nativeDatatype": "DECIMAL"
+									},
+									{
+										"name": "QTY_DONE",
+										"templateType": "decimal",
+										"datatype": "DECIMAL",
+										"precision": 38,
+										"scale": 6,
+										"nativeDatatype": "DECIMAL"
+									},
+									{
+										"name": "QTY_SCRAPPED",
+										"templateType": "decimal",
+										"datatype": "DECIMAL",
+										"precision": 38,
+										"scale": 6,
+										"nativeDatatype": "DECIMAL"
+									},
+									{
+										"name": "QTY_HISTORICAL_MIN",
+										"templateType": "decimal",
+										"datatype": "DECIMAL",
+										"precision": 38,
+										"scale": 6,
+										"nativeDatatype": "DECIMAL"
+									},
+									{
+										"name": "QTY_HISTORICAL_MAX",
+										"templateType": "decimal",
+										"datatype": "DECIMAL",
+										"precision": 38,
+										"scale": 6,
+										"nativeDatatype": "DECIMAL"
+									},
+									{
+										"name": "ITEM_BO",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 412,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "PRIORITY",
+										"templateType": "decimal",
+										"datatype": "DECIMAL",
+										"precision": 38,
+										"scale": 0,
+										"nativeDatatype": "DECIMAL"
+									},
+									{
+										"name": "LOCATION",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 20,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "RMA_MAX_TIMES_PROCESSED",
+										"templateType": "decimal",
+										"datatype": "DECIMAL",
+										"precision": 38,
+										"scale": 0,
+										"nativeDatatype": "DECIMAL"
+									},
+									{
+										"name": "LCC_BO",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 412,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "ORIGINAL_STATUS_BO",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 412,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "QTY_MULT_PERFORMED",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 5,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "ACTUAL_COMP_DATE",
+										"templateType": "timestamp",
+										"datatype": "DATETIME",
+										"nativeDatatype": "SECONDDATE"
+									},
+									{
+										"name": "PREV_SITE",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 6,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "ORIGINAL_TRANSFER_KEY",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 412,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "IMMEDIATE_ARCHIVE",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 5,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "TRANSFER_DATETIME",
+										"templateType": "timestamp",
+										"datatype": "DATETIME",
+										"nativeDatatype": "SECONDDATE"
+									},
+									{
+										"name": "TRANSFER_USER",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 30,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "SN_DONE",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 5,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "AIN_EQUIPMENT_ID",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 32,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "CREATED_DATE_TIME",
+										"templateType": "timestamp",
+										"datatype": "DATETIME",
+										"nativeDatatype": "SECONDDATE"
+									},
+									{
+										"name": "MODIFIED_DATE_TIME",
+										"templateType": "timestamp",
+										"datatype": "DATETIME",
+										"nativeDatatype": "SECONDDATE"
+									},
+									{
+										"name": "PARTITION_DATE",
+										"templateType": "timestamp",
+										"datatype": "DATETIME",
+										"nativeDatatype": "TIMESTAMP"
+									}
+								],
+								"uniqueKeys": [
+									{
+										"attributeReferences": [
+											"HANDLE"
+										]
+									}
+								]
+							}
+						},
+						"capabilities": {
+							"isProfileable": true
+						},
+						"capabilityProperties": [
+							{
+								"name": "isProfileable",
+								"value": "true"
+							}
+						]
+					}
+				}
+			},
+			"name": "hanatableconsumer11111111111"
+		},
+		"flowagenttableproducer111111111111": {
+			"component": "com.sap.dh.ds.database.producer",
+			"metadata": {
+				"label": "Flowagent Table Producer",
+				"x": 347,
+				"y": 685,
+				"height": 80,
+				"width": 120,
+				"extensible": false,
+				"config": {
+					"service": "HANA",
+					"cdcApplierType": "Track Change History",
+					"hanaConnection": {
+						"configurationType": "Configuration Manager",
+						"connectionID": "HANADB"
+					},
+					"hanaAdaptedDataset": "SEP_ME.SFC"
+				}
+			},
+			"name": "flowagenttableproducer11111111111"
+		},
+		"graphterminator111111111111": {
+			"component": "com.sap.util.graphTerminator",
+			"metadata": {
+				"label": "Graph Terminator",
+				"x": 627,
+				"y": 685,
+				"height": 80,
+				"width": 120,
+				"config": {}
+			},
+			"name": "graphterminator11111111111"
+		},
+		"hanatableconsumer1111111111111": {
+			"component": "com.sap.dh.ds.hanaodbc.table.consumer",
+			"metadata": {
+				"label": "USER_WORK_CENTER  Table Consumer",
+				"x": 848,
+				"y": 685,
+				"height": 80,
+				"width": 120,
+				"extensible": false,
+				"config": {
+					"partitionType": "None",
+					"hanaConnection": {
+						"configurationType": "Configuration Manager",
+						"connectionID": "E1PMIHANA"
+					},
+					"adapted_dataset": {
+						"remoteObjectReference": {
+							"connection": {
+								"id": "E1PMIHANA",
+								"type": "HANA_DB"
+							},
+							"name": "USER_WORK_CENTER",
+							"remoteObjectType": "TABLE",
+							"qualifiedName": "/WIPUSR/USER_WORK_CENTER",
+							"nativeQualifiedName": "\"WIPUSR\".\"USER_WORK_CENTER\"",
+							"owner": "WIPUSR"
+						},
+						"schema": {
+							"genericType": "TABLE",
+							"tableBasedRepresentation": {
+								"attributes": [
+									{
+										"name": "HANDLE",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 412,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "USER_BO",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 412,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "WORK_CENTER_BO",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 412,
+										"nativeDatatype": "NVARCHAR"
+									}
+								],
+								"uniqueKeys": [
+									{
+										"attributeReferences": [
+											"HANDLE"
+										]
+									}
+								]
+							}
+						},
+						"capabilities": {
+							"isProfileable": true
+						},
+						"capabilityProperties": [
+							{
+								"name": "isProfileable",
+								"value": "true"
+							}
+						]
+					}
+				}
+			},
+			"name": "hanatableconsumer111111111111"
+		},
+		"flowagenttableproducer1111111111111": {
+			"component": "com.sap.dh.ds.database.producer",
+			"metadata": {
+				"label": "Flowagent Table Producer",
+				"x": 1097,
+				"y": 685,
+				"height": 80,
+				"width": 120,
+				"extensible": false,
+				"config": {
+					"service": "HANA",
+					"cdcApplierType": "Track Change History",
+					"hanaConnection": {
+						"configurationType": "Configuration Manager",
+						"connectionID": "HANADB"
+					},
+					"hanaAdaptedDataset": "SEP_ME.USER_WORK_CENTER"
+				}
+			},
+			"name": "flowagenttableproducer111111111111"
+		},
+		"graphterminator1111111111111": {
+			"component": "com.sap.util.graphTerminator",
+			"metadata": {
+				"label": "Graph Terminator",
+				"x": 1377,
+				"y": 685,
+				"height": 80,
+				"width": 120,
+				"config": {}
+			},
+			"name": "graphterminator111111111111"
+		},
+		"hanatableconsumer11111111111111": {
+			"component": "com.sap.dh.ds.hanaodbc.table.consumer",
+			"metadata": {
+				"label": "USER_WORK_CENTER  Table Consumer",
+				"x": 1599,
+				"y": 67,
+				"height": 80,
+				"width": 120,
+				"extensible": false,
+				"config": {
+					"partitionType": "None",
+					"hanaConnection": {
+						"configurationType": "Configuration Manager",
+						"connectionID": "E1PMIHANA"
+					},
+					"adapted_dataset": {
+						"remoteObjectReference": {
+							"connection": {
+								"id": "E1PMIHANA",
+								"type": "HANA_DB"
+							},
+							"name": "USER_WORK_CENTER",
+							"remoteObjectType": "TABLE",
+							"qualifiedName": "/WIPUSR/USER_WORK_CENTER",
+							"nativeQualifiedName": "\"WIPUSR\".\"USER_WORK_CENTER\"",
+							"owner": "WIPUSR"
+						},
+						"schema": {
+							"genericType": "TABLE",
+							"tableBasedRepresentation": {
+								"attributes": [
+									{
+										"name": "HANDLE",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 412,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "USER_BO",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 412,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "WORK_CENTER_BO",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 412,
+										"nativeDatatype": "NVARCHAR"
+									}
+								],
+								"uniqueKeys": [
+									{
+										"attributeReferences": [
+											"HANDLE"
+										]
+									}
+								]
+							}
+						},
+						"capabilities": {
+							"isProfileable": true
+						},
+						"capabilityProperties": [
+							{
+								"name": "isProfileable",
+								"value": "true"
+							}
+						]
+					}
+				}
+			},
+			"name": "hanatableconsumer1111111111111"
+		},
+		"flowagenttableproducer11111111111111": {
+			"component": "com.sap.dh.ds.database.producer",
+			"metadata": {
+				"label": "Flowagent Table Producer",
+				"x": 1825,
+				"y": 58,
+				"height": 80,
+				"width": 120,
+				"extensible": false,
+				"config": {
+					"service": "HANA",
+					"cdcApplierType": "Track Change History",
+					"hanaConnection": {
+						"configurationType": "Configuration Manager",
+						"connectionID": "HANADB"
+					},
+					"hanaAdaptedDataset": "SEP_ME.USER_WORK_CENTER"
+				}
+			},
+			"name": "flowagenttableproducer1111111111111"
+		},
+		"graphterminator11111111111111": {
+			"component": "com.sap.util.graphTerminator",
+			"metadata": {
+				"label": "Graph Terminator",
+				"x": 2108,
+				"y": 67,
+				"height": 80,
+				"width": 120,
+				"config": {}
+			},
+			"name": "graphterminator1111111111111"
+		},
+		"hanatableconsumer111111111111111": {
+			"component": "com.sap.dh.ds.hanaodbc.table.consumer",
+			"metadata": {
+				"label": "USR  Table Consumer",
+				"x": 1615,
+				"y": 189,
+				"height": 80,
+				"width": 120,
+				"extensible": false,
+				"config": {
+					"partitionType": "None",
+					"hanaConnection": {
+						"configurationType": "Configuration Manager",
+						"connectionID": "E1PMIHANA"
+					},
+					"adapted_dataset": {
+						"remoteObjectReference": {
+							"connection": {
+								"id": "E1PMIHANA",
+								"type": "HANA_DB"
+							},
+							"name": "USR",
+							"remoteObjectType": "TABLE",
+							"qualifiedName": "/WIPUSR/USR",
+							"nativeQualifiedName": "\"WIPUSR\".\"USR\"",
+							"owner": "WIPUSR"
+						},
+						"schema": {
+							"genericType": "TABLE",
+							"tableBasedRepresentation": {
+								"attributes": [
+									{
+										"name": "HANDLE",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 412,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "CHANGE_STAMP",
+										"templateType": "decimal",
+										"datatype": "DECIMAL",
+										"precision": 38,
+										"scale": 0,
+										"nativeDatatype": "DECIMAL"
+									},
+									{
+										"name": "SITE",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 6,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "USER_ID",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 30,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "CURRENT_OPERATION_BO",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 412,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "CURRENT_RESOURCE_BO",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 412,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "CREATED_DATE_TIME",
+										"templateType": "timestamp",
+										"datatype": "DATETIME",
+										"nativeDatatype": "SECONDDATE"
+									},
+									{
+										"name": "MODIFIED_DATE_TIME",
+										"templateType": "timestamp",
+										"datatype": "DATETIME",
+										"nativeDatatype": "SECONDDATE"
+									},
+									{
+										"name": "BADGE_NUMBER",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 40,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "EMPLOYEE_NUMBER",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 40,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "HIRE_DATE",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 8,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "TERMINATION_DATE",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 8,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "ALLOW_CLOCK_IN_NON_PROD",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 5,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "ACTION_CLOCK_OUT_SFC",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 1,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "CLOCK_IN_OUT_RANGE",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 1,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "ALLOW_SUP_TIME_EDIT_APPR",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 5,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "APPR_REQ_FOR_EXPORT",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 5,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "AUTO_CLOCK_OUT",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 5,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "CLOCK_IN_CONTROL",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 1,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "DEFAULT_WORK_CENTER_BO",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 412,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "ERP_PERSONNEL_NUMBER",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 8,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "ERP_USER",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 12,
+										"nativeDatatype": "NVARCHAR"
+									}
+								],
+								"uniqueKeys": [
+									{
+										"attributeReferences": [
+											"HANDLE"
+										]
+									}
+								]
+							}
+						},
+						"capabilities": {
+							"isProfileable": true
+						},
+						"capabilityProperties": [
+							{
+								"name": "isProfileable",
+								"value": "true"
+							}
+						]
+					}
+				}
+			},
+			"name": "hanatableconsumer11111111111111"
+		},
+		"flowagenttableproducer111111111111111": {
+			"component": "com.sap.dh.ds.database.producer",
+			"metadata": {
+				"label": "Flowagent Table Producer",
+				"x": 1841,
+				"y": 180,
+				"height": 80,
+				"width": 120,
+				"extensible": false,
+				"config": {
+					"service": "HANA",
+					"cdcApplierType": "Track Change History",
+					"hanaConnection": {
+						"configurationType": "Configuration Manager",
+						"connectionID": "HANADB"
+					},
+					"hanaAdaptedDataset": "SEP_ME.USR"
+				}
+			},
+			"name": "flowagenttableproducer11111111111111"
+		},
+		"graphterminator111111111111111": {
+			"component": "com.sap.util.graphTerminator",
+			"metadata": {
+				"label": "Graph Terminator",
+				"x": 2124,
+				"y": 189,
+				"height": 80,
+				"width": 120,
+				"config": {}
+			},
+			"name": "graphterminator11111111111111"
+		},
+		"hanatableconsumer1111111111111111": {
+			"component": "com.sap.dh.ds.hanaodbc.table.consumer",
+			"metadata": {
+				"label": "WORK_CENTER  Table Consumer",
+				"x": 1615,
+				"y": 317,
+				"height": 80,
+				"width": 120,
+				"extensible": false,
+				"config": {
+					"partitionType": "None",
+					"hanaConnection": {
+						"configurationType": "Configuration Manager",
+						"connectionID": "E1PMIHANA"
+					},
+					"adapted_dataset": {
+						"remoteObjectReference": {
+							"connection": {
+								"id": "E1PMIHANA",
+								"type": "HANA_DB"
+							},
+							"name": "WORK_CENTER",
+							"remoteObjectType": "TABLE",
+							"qualifiedName": "/WIPUSR/WORK_CENTER",
+							"nativeQualifiedName": "\"WIPUSR\".\"WORK_CENTER\"",
+							"owner": "WIPUSR"
+						},
+						"schema": {
+							"genericType": "TABLE",
+							"tableBasedRepresentation": {
+								"attributes": [
+									{
+										"name": "HANDLE",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 412,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "CHANGE_STAMP",
+										"templateType": "decimal",
+										"datatype": "DECIMAL",
+										"precision": 38,
+										"scale": 0,
+										"nativeDatatype": "DECIMAL"
+									},
+									{
+										"name": "SITE",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 6,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "WORK_CENTER",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 36,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "ROUTER_BO",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 412,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "CAN_BE_RELEASED_TO",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 5,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "WC_CATEGORY",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 20,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "STATUS_BO",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 412,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "WC_TYPE",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 20,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "ASSIGNMENT_ENFORCEMENT",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 20,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "CREATED_DATE_TIME",
+										"templateType": "timestamp",
+										"datatype": "DATETIME",
+										"nativeDatatype": "SECONDDATE"
+									},
+									{
+										"name": "MODIFIED_DATE_TIME",
+										"templateType": "timestamp",
+										"datatype": "DATETIME",
+										"nativeDatatype": "SECONDDATE"
+									},
+									{
+										"name": "ERP_INTERNAL_ID",
+										"templateType": "decimal",
+										"datatype": "DECIMAL",
+										"precision": 38,
+										"scale": 0,
+										"nativeDatatype": "DECIMAL"
+									},
+									{
+										"name": "IS_ERP_WORK_CENTER",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 5,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "ERP_WORK_CENTER",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 8,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "ERP_CAPACITY_CATEGORY",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 3,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "PRODUCTION_SUPPLY_AREA",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 10,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "STANDARD_VALUE_KEY_BO",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 412,
+										"nativeDatatype": "NVARCHAR"
+									}
+								],
+								"uniqueKeys": [
+									{
+										"attributeReferences": [
+											"HANDLE"
+										]
+									}
+								]
+							}
+						},
+						"capabilities": {
+							"isProfileable": true
+						},
+						"capabilityProperties": [
+							{
+								"name": "isProfileable",
+								"value": "true"
+							}
+						]
+					}
+				}
+			},
+			"name": "hanatableconsumer111111111111111"
+		},
+		"flowagenttableproducer1111111111111111": {
+			"component": "com.sap.dh.ds.database.producer",
+			"metadata": {
+				"label": "Flowagent Table Producer",
+				"x": 1841,
+				"y": 308,
+				"height": 80,
+				"width": 120,
+				"extensible": false,
+				"config": {
+					"service": "HANA",
+					"cdcApplierType": "Track Change History",
+					"hanaConnection": {
+						"configurationType": "Configuration Manager",
+						"connectionID": "HANADB"
+					},
+					"hanaAdaptedDataset": "SEP_ME.WORK_CENTER"
+				}
+			},
+			"name": "flowagenttableproducer111111111111111"
+		},
+		"graphterminator1111111111111111": {
+			"component": "com.sap.util.graphTerminator",
+			"metadata": {
+				"label": "Graph Terminator",
+				"x": 2124,
+				"y": 317,
+				"height": 80,
+				"width": 120,
+				"config": {}
+			},
+			"name": "graphterminator111111111111111"
+		},
+		"hanatableconsumer11111111111111111": {
+			"component": "com.sap.dh.ds.hanaodbc.table.consumer",
+			"metadata": {
+				"label": "WORK_CENTER_MEMBER Table Consumer",
+				"x": 1622,
+				"y": 446,
+				"height": 80,
+				"width": 120,
+				"extensible": false,
+				"config": {
+					"partitionType": "None",
+					"hanaConnection": {
+						"configurationType": "Configuration Manager",
+						"connectionID": "E1PMIHANA"
+					},
+					"adapted_dataset": {
+						"remoteObjectReference": {
+							"connection": {
+								"id": "E1PMIHANA",
+								"type": "HANA_DB"
+							},
+							"name": "WORK_CENTER_MEMBER",
+							"remoteObjectType": "TABLE",
+							"qualifiedName": "/WIPUSR/WORK_CENTER_MEMBER",
+							"nativeQualifiedName": "\"WIPUSR\".\"WORK_CENTER_MEMBER\"",
+							"owner": "WIPUSR"
+						},
+						"schema": {
+							"genericType": "TABLE",
+							"tableBasedRepresentation": {
+								"attributes": [
+									{
+										"name": "HANDLE",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 412,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "WORK_CENTER_BO",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 412,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "WORK_CENTER_OR_RESOURCE_GBO",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 412,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "PRIMARY_WORK_CENTER",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 5,
+										"nativeDatatype": "NVARCHAR"
+									},
+									{
+										"name": "SEQUENCE",
+										"templateType": "decimal",
+										"datatype": "DECIMAL",
+										"precision": 38,
+										"scale": 0,
+										"nativeDatatype": "DECIMAL"
+									},
+									{
+										"name": "DEFAULT_MEMBER",
+										"templateType": "string",
+										"datatype": "STRING",
+										"length": 5,
+										"nativeDatatype": "NVARCHAR"
+									}
+								],
+								"uniqueKeys": [
+									{
+										"attributeReferences": [
+											"HANDLE"
+										]
+									}
+								]
+							}
+						},
+						"capabilities": {
+							"isProfileable": true
+						},
+						"capabilityProperties": [
+							{
+								"name": "isProfileable",
+								"value": "true"
+							}
+						]
+					}
+				}
+			},
+			"name": "hanatableconsumer1111111111111111"
+		},
+		"flowagenttableproducer11111111111111111": {
+			"component": "com.sap.dh.ds.database.producer",
+			"metadata": {
+				"label": "Flowagent Table Producer",
+				"x": 1848,
+				"y": 437,
+				"height": 80,
+				"width": 120,
+				"extensible": false,
+				"config": {
+					"service": "HANA",
+					"cdcApplierType": "Track Change History",
+					"hanaConnection": {
+						"configurationType": "Configuration Manager",
+						"connectionID": "HANADB"
+					},
+					"hanaAdaptedDataset": "SEP_ME.WORK_CENTER_MEMBER"
+				}
+			},
+			"name": "flowagenttableproducer1111111111111111"
+		},
+		"graphterminator11111111111111111": {
+			"component": "com.sap.util.graphTerminator",
+			"metadata": {
+				"label": "Graph Terminator",
+				"x": 2131,
+				"y": 446,
+				"height": 80,
+				"width": 120,
+				"config": {}
+			},
+			"name": "graphterminator1111111111111111"
+		}
+	},
+	"groups": [],
+	"connections": [
+		{
+			"metadata": {
+				"points": "238,98 298,98 298,107 358,107"
+			},
+			"src": {
+				"port": "outConfig",
+				"process": "hanatableconsumer11"
+			},
+			"tgt": {
+				"port": "inConfig",
+				"process": "flowagenttableproducer11"
+			}
+		},
+		{
+			"metadata": {
+				"points": "487,107 638,107"
+			},
+			"src": {
+				"port": "outMessage",
+				"process": "flowagenttableproducer11"
+			},
+			"tgt": {
+				"port": "stop",
+				"process": "graphterminator11"
+			}
+		},
+		{
+			"metadata": {
+				"points": "238,211 298,211 298,220 358,220"
+			},
+			"src": {
+				"port": "outConfig",
+				"process": "hanatableconsumer111"
+			},
+			"tgt": {
+				"port": "inConfig",
+				"process": "flowagenttableproducer111"
+			}
+		},
+		{
+			"metadata": {
+				"points": "487,220 638,220"
+			},
+			"src": {
+				"port": "outMessage",
+				"process": "flowagenttableproducer111"
+			},
+			"tgt": {
+				"port": "stop",
+				"process": "graphterminator111"
+			}
+		},
+		{
+			"metadata": {
+				"points": "934,98 994,98 994,107 1054,107"
+			},
+			"src": {
+				"port": "outConfig",
+				"process": "hanatableconsumer1111"
+			},
+			"tgt": {
+				"port": "inConfig",
+				"process": "flowagenttableproducer1111"
+			}
+		},
+		{
+			"metadata": {
+				"points": "1183,107 1334,107"
+			},
+			"src": {
+				"port": "outMessage",
+				"process": "flowagenttableproducer1111"
+			},
+			"tgt": {
+				"port": "stop",
+				"process": "graphterminator1111"
+			}
+		},
+		{
+			"metadata": {
+				"points": "948,194 1008,194 1008,203 1068,203"
+			},
+			"src": {
+				"port": "outConfig",
+				"process": "hanatableconsumer11111"
+			},
+			"tgt": {
+				"port": "inConfig",
+				"process": "flowagenttableproducer11111"
+			}
+		},
+		{
+			"metadata": {
+				"points": "1197,203 1348,203"
+			},
+			"src": {
+				"port": "outMessage",
+				"process": "flowagenttableproducer11111"
+			},
+			"tgt": {
+				"port": "stop",
+				"process": "graphterminator11111"
+			}
+		},
+		{
+			"metadata": {
+				"points": "233,322 293,322 293,331 353,331"
+			},
+			"src": {
+				"port": "outConfig",
+				"process": "hanatableconsumer111111"
+			},
+			"tgt": {
+				"port": "inConfig",
+				"process": "flowagenttableproducer111111"
+			}
+		},
+		{
+			"metadata": {
+				"points": "482,331 633,331"
+			},
+			"src": {
+				"port": "outMessage",
+				"process": "flowagenttableproducer111111"
+			},
+			"tgt": {
+				"port": "stop",
+				"process": "graphterminator111111"
+			}
+		},
+		{
+			"metadata": {
+				"points": "943,331 1003,331 1003,340 1063,340"
+			},
+			"src": {
+				"port": "outConfig",
+				"process": "hanatableconsumer1111111"
+			},
+			"tgt": {
+				"port": "inConfig",
+				"process": "flowagenttableproducer1111111"
+			}
+		},
+		{
+			"metadata": {
+				"points": "1192,340 1343,340"
+			},
+			"src": {
+				"port": "outMessage",
+				"process": "flowagenttableproducer1111111"
+			},
+			"tgt": {
+				"port": "stop",
+				"process": "graphterminator1111111"
+			}
+		},
+		{
+			"metadata": {
+				"points": "208,446 268,446 268,455 328,455"
+			},
+			"src": {
+				"port": "outConfig",
+				"process": "hanatableconsumer11111111"
+			},
+			"tgt": {
+				"port": "inConfig",
+				"process": "flowagenttableproducer11111111"
+			}
+		},
+		{
+			"metadata": {
+				"points": "457,455 608,455"
+			},
+			"src": {
+				"port": "outMessage",
+				"process": "flowagenttableproducer11111111"
+			},
+			"tgt": {
+				"port": "stop",
+				"process": "graphterminator11111111"
+			}
+		},
+		{
+			"metadata": {
+				"points": "957,459 1017,459 1017,468 1077,468"
+			},
+			"src": {
+				"port": "outConfig",
+				"process": "hanatableconsumer111111111"
+			},
+			"tgt": {
+				"port": "inConfig",
+				"process": "flowagenttableproducer111111111"
+			}
+		},
+		{
+			"metadata": {
+				"points": "1206,468 1357,468"
+			},
+			"src": {
+				"port": "outMessage",
+				"process": "flowagenttableproducer111111111"
+			},
+			"tgt": {
+				"port": "stop",
+				"process": "graphterminator111111111"
+			}
+		},
+		{
+			"metadata": {
+				"points": "222,568 282,568 282,577 342,577"
+			},
+			"src": {
+				"port": "outConfig",
+				"process": "hanatableconsumer1111111111"
+			},
+			"tgt": {
+				"port": "inConfig",
+				"process": "flowagenttableproducer1111111111"
+			}
+		},
+		{
+			"metadata": {
+				"points": "471,577 622,577"
+			},
+			"src": {
+				"port": "outMessage",
+				"process": "flowagenttableproducer1111111111"
+			},
+			"tgt": {
+				"port": "stop",
+				"process": "graphterminator1111111111"
+			}
+		},
+		{
+			"metadata": {
+				"points": "958,581 1018,581 1018,590 1078,590"
+			},
+			"src": {
+				"port": "outConfig",
+				"process": "hanatableconsumer11111111111"
+			},
+			"tgt": {
+				"port": "inConfig",
+				"process": "flowagenttableproducer11111111111"
+			}
+		},
+		{
+			"metadata": {
+				"points": "1207,590 1358,590"
+			},
+			"src": {
+				"port": "outMessage",
+				"process": "flowagenttableproducer11111111111"
+			},
+			"tgt": {
+				"port": "stop",
+				"process": "graphterminator11111111111"
+			}
+		},
+		{
+			"metadata": {
+				"points": "222,716 282,716 282,725 342,725"
+			},
+			"src": {
+				"port": "outConfig",
+				"process": "hanatableconsumer111111111111"
+			},
+			"tgt": {
+				"port": "inConfig",
+				"process": "flowagenttableproducer111111111111"
+			}
+		},
+		{
+			"metadata": {
+				"points": "471,725 622,725"
+			},
+			"src": {
+				"port": "outMessage",
+				"process": "flowagenttableproducer111111111111"
+			},
+			"tgt": {
+				"port": "stop",
+				"process": "graphterminator111111111111"
+			}
+		},
+		{
+			"metadata": {
+				"points": "972,716 1032,716 1032,725 1092,725"
+			},
+			"src": {
+				"port": "outConfig",
+				"process": "hanatableconsumer1111111111111"
+			},
+			"tgt": {
+				"port": "inConfig",
+				"process": "flowagenttableproducer1111111111111"
+			}
+		},
+		{
+			"metadata": {
+				"points": "1221,725 1372,725"
+			},
+			"src": {
+				"port": "outMessage",
+				"process": "flowagenttableproducer1111111111111"
+			},
+			"tgt": {
+				"port": "stop",
+				"process": "graphterminator1111111111111"
+			}
+		},
+		{
+			"metadata": {
+				"points": "1723,98 1820,98"
+			},
+			"src": {
+				"port": "outConfig",
+				"process": "hanatableconsumer11111111111111"
+			},
+			"tgt": {
+				"port": "inConfig",
+				"process": "flowagenttableproducer11111111111111"
+			}
+		},
+		{
+			"metadata": {
+				"points": "1949,98 2026,98 2026,107 2103,107"
+			},
+			"src": {
+				"port": "outMessage",
+				"process": "flowagenttableproducer11111111111111"
+			},
+			"tgt": {
+				"port": "stop",
+				"process": "graphterminator11111111111111"
+			}
+		},
+		{
+			"metadata": {
+				"points": "1739,220 1836,220"
+			},
+			"src": {
+				"port": "outConfig",
+				"process": "hanatableconsumer111111111111111"
+			},
+			"tgt": {
+				"port": "inConfig",
+				"process": "flowagenttableproducer111111111111111"
+			}
+		},
+		{
+			"metadata": {
+				"points": "1965,220 2042,220 2042,229 2119,229"
+			},
+			"src": {
+				"port": "outMessage",
+				"process": "flowagenttableproducer111111111111111"
+			},
+			"tgt": {
+				"port": "stop",
+				"process": "graphterminator111111111111111"
+			}
+		},
+		{
+			"metadata": {
+				"points": "1739,348 1836,348"
+			},
+			"src": {
+				"port": "outConfig",
+				"process": "hanatableconsumer1111111111111111"
+			},
+			"tgt": {
+				"port": "inConfig",
+				"process": "flowagenttableproducer1111111111111111"
+			}
+		},
+		{
+			"metadata": {
+				"points": "1965,348 2042,348 2042,357 2119,357"
+			},
+			"src": {
+				"port": "outMessage",
+				"process": "flowagenttableproducer1111111111111111"
+			},
+			"tgt": {
+				"port": "stop",
+				"process": "graphterminator1111111111111111"
+			}
+		},
+		{
+			"metadata": {
+				"points": "1746,477 1843,477"
+			},
+			"src": {
+				"port": "outConfig",
+				"process": "hanatableconsumer11111111111111111"
+			},
+			"tgt": {
+				"port": "inConfig",
+				"process": "flowagenttableproducer11111111111111111"
+			}
+		},
+		{
+			"metadata": {
+				"points": "1972,477 2049,477 2049,486 2126,486"
+			},
+			"src": {
+				"port": "outMessage",
+				"process": "flowagenttableproducer11111111111111111"
+			},
+			"tgt": {
+				"port": "stop",
+				"process": "graphterminator11111111111111111"
+			}
+		}
+	],
+	"inports": {},
+	"outports": {},
+	"properties": {}
+}

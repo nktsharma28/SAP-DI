@@ -1,0 +1,43 @@
+PO
+
+Source Table
+1. Primary key of preload table needs to be populated in Source Table(Preload)--copy relevant and dump into new relevant table
+2. Status column in Source (Loaded Succesfully, Failed in Load , Failed in Preload)--
+
+
+Preload Failure Table
+
+1.Against primary failure reason need to populated in single column(Concatinated).
+2.three new columns-Vendor. Material and Other. X needs to be populated against these columns if it fails.
+3.Above logic needs to replicated in Postload Failure table.
+
+
+ 
+Preload Table: GBL_ALG0..CDD85_LAWSON_SAP_IN
+Postload table: GBL_ALG0..CDD85_PRELOAD_VS_POSTLOAD_TABLE 
+ 
+  
+SOURCE TABLE: GBL_ALG0..STG_PO_LAWSON_SOURCE_DATA
+GBL_ALG0..STG_PO_SOURCE_DATA_PK
+
+
+cREATE new preload table with new status column (Loaded Succesfully, Failed in Load) ,add one more column Error Message(Idoc failure)
+Table name-Postload_All
+
+UPDATE GBL_ALG0..DD_CDD85_SOURCE_DATA SET POSTLOAD_STATUS='Load Failure'
+WHERE PO_NUMBER IN (SELECT DISTINCT LEGACY_PO FROM GBL_ALG0..PO_IDOCS_ERROR)
+
+UPDATE GBL_ALG0..DD_CDD85_SOURCE_DATA SET POSTLOAD_STATUS='Load Success'
+WHERE  PRIMARY_KEY IN ((SELECT DISTINCT PRIMARY_KEY FROM GBL_ALG0..CDD85_PRELOAD_VS_POSTLOAD_TABLE ))
+
+UPDATE GBL_ALG0..DD_CDD85_SOURCE_DATA SET PRELOAD_STATUS='Preload Success'
+WHERE  PRIMARY_KEY IN ((SELECT DISTINCT PRIMARY_KEY FROM GBL_ALG0..CDD85_LAWSON_SAP_IN ))
+
+UPDATE GBL_ALG0..DD_CDD85_SOURCE_DATA SET PRELOAD_STATUS='Preload Success'
+WHERE  PRIMARY_KEY IN ((SELECT DISTINCT PRIMARY_KEY FROM GBL_ALG0..CDD85_HMTC_SAP_IN ))
+
+UPDATE GBL_ALG0..DD_CDD85_SOURCE_DATA SET PRELOAD_STATUS='Preload Failure'
+WHERE PRIMARY_KEY IN (SELECT PRIMARY_KEY FROM GBL_ALG0..CDD85_HMTC_PRELOAD_ERR_REP)
+
+UPDATE GBL_ALG0..DD_CDD85_SOURCE_DATA SET PRELOAD_STATUS='Preload Failure'
+WHERE PRIMARY_KEY IN (SELECT PRIMARY_KEY FROM GBL_ALG0..CDD85_PRELOAD_AND_ERROR_REPORT_LAWSON)

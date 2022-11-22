@@ -1,0 +1,486 @@
+#import Libraries
+import io
+import importlib
+import pandas as pd
+import os
+import datetime
+import pandas as pd
+import numpy as np
+import ast
+import time
+from configparser import ConfigParser
+from pathlib import Path
+#from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures import ThreadPoolExecutor
+from datetime import date
+from fbprophet import Prophet
+from datetime import date
+from configparser import ConfigParser
+from pathlib import Path
+from itertools import repeat
+import matplotlib.pyplot as plt
+
+#function
+
+
+def on_input(msg1, msg2):
+    import pandas as pd
+    import io
+    api.send("output1",'line 29')
+    GROUPBY_LEVEL = ['retailer', 'state', 'brand', 'ppg']
+    TARGET = "FillMean"
+    DATE_COLUMN = "week_ending_date"
+    # Add additional regressors to the forecast
+    ADDITIONAL_REGRESSORS = ['food_cpi_nat_mth', 'snap_cost_st_mth']
+    REGRESSOR_LAG = {'snap_cost_st_mth': 1}
+    
+    # Keep track of data throughout run
+    data = []
+    excluded = []
+    df_final_out = pd.DataFrame()
+    count=0
+    try_count = 0
+
+    # Establish training/test windows
+    TRAIN_START = pd.to_datetime('2019-01-01').date()
+    TRAIN_END = pd.to_datetime('2020-06-30').date()
+    TEST_START = pd.to_datetime('2020-09-30').date()
+    TEST_END = pd.to_datetime('2020-12-31').date()
+    # To speed up running, set to desired sample size if not set to 0
+    #SAMPLE = 50
+    # Set logistic growth function cap
+    CAP_PERCENTILE = 95
+    # Future Period
+    FUTURE_PERIOD = 25
+    # model parameters
+    OPTIM_PARAM = {"growth": "logistic", "seasonality_prior_scale": 0.1}
+    
+
+    def custom_fillna(series):
+        if series.dtype is pd.np.dtype(float):
+            return series.fillna(0)
+        elif series.dtype is pd.np.dtype('int32'):
+            return series.fillna(0)
+        elif series.dtype is pd.np.dtype('int64'):
+            return series.fillna(0)
+        elif series.dtype is pd.np.dtype(str):
+            return series.fillna(0)  
+        elif series.dtype is pd.np.dtype(object):
+            return series.fillna('')  
+        else:
+            return series
+
+    
+    # Obtain data
+    # input table from SEP_COVIDEXT.Z_SEP.AnalyticalModels.SCM.DemandForecasting.CovidExternal::TA_SCM_COVID_FULL_SAMPLE_TRAIN
+    # format data frame as per data type in source table
+    
+    #df_sample_train = pd.read_csv(io.StringIO(msg1.body), sep=",")
+    df =  pd.read_json(io.StringIO(msg2))
+    #checking null values and replace accordingly
+    df = df.apply(custom_fillna)
+    df['week_ending_date'] =  df['week_ending_date'].astype(str)
+    #data = df.values.tolist()
+    #api.send("output1",data)
+    """
+    df = pd.DataFrame()
+    df['week_ending_date'] = df_sample_train.iloc[:,0]
+    df['retailer'] = df_sample_train.iloc[:,1]
+    df['state'] = df_sample_train.iloc[:,2]
+    df['business'] = df_sample_train.iloc[:,3]
+    df['category'] = df_sample_train.iloc[:,4]
+    df['brand'] = df_sample_train.iloc[:,5]
+    df['ppg'] = df_sample_train.iloc[:,6]
+    df['week_of_year'] = df_sample_train.iloc[:,7].astype('int64')
+    df['pos_qty_ty'] = df_sample_train.iloc[:,8].astype(float)
+    df['pos_dollar_ty'] = df_sample_train.iloc[:,9].astype(float)
+    df['FillMean'] = df_sample_train.iloc[:,10].astype(float)
+    """
+    
+    # input table from SEP_COVIDEXT.Z_SEP.AnalyticalModels.SCM.DemandForecasting.CovidExternal::TA_SCM_COVID_EXT_WEEKLY_MODEL_TRAIN
+    # format data frame as per data type in source table
+    
+    
+    #df_external = pd.read_csv(io.StringIO(msg2.body), sep=",")
+    #checking null values and replace accordingly
+    df_add_external =  pd.read_json(io.StringIO(msg1))
+    df_add_external = df_add_external.apply(custom_fillna)
+    df_add_external['date'] =  df_add_external['date'].astype(str)
+    #data1 = df_add_external.values.tolist()
+    #api.send("output2",data1)
+    """
+    df_add_external = pd.DataFrame()
+    df_add_external['date'] = df_external.iloc[:,0]
+    df_add_external['state'] = df_external.iloc[:,1]
+    df_add_external['state_initial'] = df_external.iloc[:,2]
+    df_add_external['AT_adj'] = df_external.iloc[:,3].astype(float)
+    df_add_external['food_cpi_nat_mth'] = df_external.iloc[:,4].astype(float)
+    df_add_external['snap_cost_st_mth'] = df_external.iloc[:,5].astype(float)
+    df_add_external['allbed_mean'] = df_external.iloc[:,6].astype(float)
+    df_add_external['confirmed_infections'] = df_external.iloc[:,7].astype(float)
+    df_add_external['deaths_mean'] = df_external.iloc[:,8].astype(float)
+    df_add_external['est_infections_mean'] = df_external.iloc[:,9].astype(float)
+    df_add_external['mobility_composite_wors'] = df_external.iloc[:,10].astype(float)
+    df_add_external['states_on_stay_home'] = df_external.iloc[:,11].astype('int64')
+    df_add_external['states_on_travel_limit'] = df_external.iloc[:,12].astype('int64')
+    df_add_external['states_on_any_business'] = df_external.iloc[:,13].astype('int64')
+    df_add_external['states_on_all_non-ess_business'] = df_external.iloc[:,14].astype('int64')
+    df_add_external['states_on_any_gathering_restrict'] = df_external.iloc[:,15].astype('int64')
+    df_add_external['states_on_educational_fac'] = df_external.iloc[:,16].astype('int64')
+   
+    api.send("output2", 'Line 101')
+
+    api.send("output2", 'Line 341')
+    """
+    def get_end_date_from_week(year,week,day):
+
+        #Calculates first day and last day of week, given a year and week
+        first_day = datetime.datetime.strptime(f'{year}-W{int(week )- 1}-1', '%Y-W%W-%w').date()
+        last_day = first_day + datetime.timedelta(days=day)
+        return last_day
+    
+    def get_week_number_from_end_date(date_obj):
+        #Calculates week number in year given a date.
+        week_number = date_obj.isocalendar()[1]
+        return week_number   
+    
+    def data_imputation(df):
+        # Fill in missing week numbers
+        df['week_of_year'] = df[DATE_COLUMN].apply(lambda x: get_week_number_from_end_date(x))
+        df[DATE_COLUMN] = pd.to_datetime(df[DATE_COLUMN]).dt.date
+        grouped = df.groupby(GROUPBY_LEVEL)
+        data1 =  grouped.values.tolist()
+        api.send("output2",data1)
+        api.send("output2",'Line 165')
+        subset_list = []
+        for name, group in grouped:
+            subset_df = group.copy()
+            subset_df = subset_df.set_index(DATE_COLUMN)
+            # Imputation approach using mean value
+            subset_df = subset_df.assign(imputed_qty=subset_df[TARGET].fillna(subset_df[TARGET].mean()))
+            subset_df = subset_df.reset_index()
+            subset_list.append(subset_df)
+        imputed_df = pd.concat(subset_list)
+        #imputed_df.to_csv(DATA_PATH+'processed/imputed_data.csv', index=False)
+        return imputed_df
+        api.send("output2", 'Line 130')
+    
+    def forecast(group, df_add, cust_df):
+
+        index, df_group = group
+        
+        group = group[0]
+        
+        p = OPTIM_PARAM.copy()
+        # Keep track of how long it takes to run for 1 group
+        start_time = time.time()
+    
+        # Keep track of data throughout run
+        data = []
+        excluded = []
+        for i in range(len(GROUPBY_LEVEL)):
+            data.append(index[i])
+    
+        # Make sure we do not have NaN in additional regressor columns
+        df_group = df_group.sort_values('ds')
+        train_df = df_group.loc[df_group['ds'] <= TRAIN_END]
+    
+        max_val = abs(np.percentile(train_df["y"], CAP_PERCENTILE))
+        # min_val = abs(np.percentile(train_df["y"], 5))
+        train_df["cap"] = max_val
+        # train_df["floor"] = min_val
+    
+        # Initialize model
+        m = Prophet(holidays=cust_df, **p)
+    
+        # Add holiday and additional regressors
+        m.add_country_holidays(country_name='US')
+    
+        # Add additional regressors
+        if ADDITIONAL_REGRESSORS != []:
+            for regressor in ADDITIONAL_REGRESSORS:
+                m.add_regressor(regressor)
+    
+        # Fit model
+        try:
+            m.fit(train_df)
+            # Create future dataframe and predict
+            future = m.make_future_dataframe(periods=FUTURE_PERIOD, include_history=False, freq='7D')
+            future["cap"] = max_val
+            future['ds'] = pd.to_datetime(future['ds']).dt.date
+            df_add["ds"] = pd.to_datetime(df_add['ds']).dt.date
+            
+            if ADDITIONAL_REGRESSORS != []:
+                future["state"] = group[1]
+                df_add["ds"] = pd.to_datetime(df_add['ds']).dt.date
+                future = pd.merge(future, df_add, on=['ds', 'state'], how='left')
+    
+            future = future.dropna()    
+            forecast = m.predict(future)
+            forecast['ds'] = pd.to_datetime(forecast['ds']).dt.date
+            
+            df_final = forecast.loc[(forecast['ds'] >= TEST_START) & (forecast['ds'] <= TEST_END)]
+            df_final = df_final[['ds', 'yhat'] + ADDITIONAL_REGRESSORS]
+            df_final.rename(columns={'ds': DATE_COLUMN, 'yhat': TARGET}, inplace=True)
+            for i in range(len(GROUPBY_LEVEL)):
+                df_final[GROUPBY_LEVEL[i]] = group[i]
+            df_final = df_final[GROUPBY_LEVEL + ADDITIONAL_REGRESSORS + [DATE_COLUMN, TARGET]]
+    
+            # Save predictions
+            #file_name = DATA_PATH + OUTPUT_FILE
+            #file_exists = os.path.isfile(file_name)
+            #if not file_exists:
+            #    df_final.to_csv(file_name, header=True, index=False)
+            #else:
+            #    df_final.to_csv(file_name, header=False, index=False, mode='a')
+            print('time : ' + str(time.time() - start_time))
+            
+        except Exception as e:
+            excluded.append(group[:len(GROUPBY_LEVEL)])
+            df_final = pd.DataFrame()
+            print(e)
+    
+        return df_final, excluded
+
+
+
+    def add_external_data(df, df_add):
+        #Takes client data and external data
+        
+
+        df_add = df_add[['date', 'state_initial'] + ADDITIONAL_REGRESSORS]
+        df_add.rename(columns={'date': 'week_ending_date', 'state_initial': 'state'}, inplace=True)
+        if REGRESSOR_LAG != {}:
+            for k, v in REGRESSOR_LAG.items():
+                df_add[k] = df_add.groupby('state')[k].shift(v)
+        df = pd.merge(df, df_add, on=['week_ending_date', 'state'], how='left')
+        df_add[DATE_COLUMN] = pd.to_datetime(df_add[DATE_COLUMN]).dt.date
+        df_add.rename(columns={DATE_COLUMN: 'ds'}, inplace=True)
+        return df, df_add
+        api.send("output2", 'Line 146')
+
+    def select_data(df):
+        if ADDITIONAL_REGRESSORS:
+            df = df[[DATE_COLUMN] + GROUPBY_LEVEL + ADDITIONAL_REGRESSORS + [TARGET]]
+        else:
+            df = df[[DATE_COLUMN] + GROUPBY_LEVEL + [TARGET]]
+        print('Selected data columns.')
+
+        return df
+
+    def select_sample(df):
+        df_sum = df.groupby(GROUPBY_LEVEL)[[TARGET]].sum().reset_index().rename(columns={TARGET: 'total_qty'})
+        top_100 = df_sum.nlargest(columns='total_qty', n=SAMPLE)
+        top_100 = top_100.drop(['total_qty'], axis=1)
+        df = pd.merge(top_100, df, how='inner', on=GROUPBY_LEVEL)
+        print('Chose top {} samples.'.format(SAMPLE))
+        return df
+    
+    def load_holiday_calendar():
+        # Builds a holiday calendar.
+        # New year's day
+        newyear = pd.DataFrame({
+        'holiday': 'newyear',
+        'ds': pd.to_datetime(['2019-01-01','2020-01-01']),
+        })
+        # Martin Luther King Jr. Day
+        MLK_day = pd.DataFrame({
+        'holiday': 'MLK_day',
+        'ds': pd.to_datetime(['2019-01-21','2020-01-20']),
+        })
+        # March Madness
+        march_madness = pd.DataFrame({
+        'holiday': 'march_madness',
+        'ds': pd.to_datetime(['2018-03-24','2018-03-31','2019-03-30','2019-04-06','2020-03-28','2020-04-04', '2021-03-27','2021-04-03']),
+        })
+        # Superbowl
+        superbowls = pd.DataFrame({
+        'holiday': 'superbowl',
+        'ds': pd.to_datetime(['2018-01-27','2018-02-03', '2019-01-26','2019-02-02', '2020-01-25','2020-02-01','2021-01-30','2021-02-06']),
+        })
+        # Lent
+        lent = pd.DataFrame({
+        'holiday': 'lent',
+        'ds': pd.to_datetime(['2018-02-17', '2018-02-24','2018-03-03','2018-03-10','2018-03-17','2018-03-24',
+                            '2019-03-09', '2019-03-16','2019-03-23','2019-03-30','2019-04-06','2019-04-13',
+                            '2020-02-29', '2020-03-07', '2020-03-14','2020-03-21','2020-03-28','2020-04-04',
+                            '2021-02-20', '2021-02-27', '2021-03-06','2021-03-13','2021-03-20','2021-03-27']),
+        })
+        # Easter (Wednesday – Easter Friday)
+        easter = pd.DataFrame({
+        'holiday': 'easter',
+        'ds': pd.to_datetime(['2018-03-31', '2019-04-20', '2020-04-11','2021-04-03']),
+        })
+        # Memorial day
+        memorial_day = pd.DataFrame({
+        'holiday': 'memorial_day',
+        'ds': pd.to_datetime(['2019-05-27', '2020-05-25']),
+        })
+        # Independence day
+        indep_day = pd.DataFrame({
+        'holiday': 'indep_day',
+        'ds': pd.to_datetime(['2019-07-04', '2020-07-03']),
+        })
+        # Labor day
+        labor_day = pd.DataFrame({
+        'holiday': 'indep_day',
+        'ds': pd.to_datetime(['2019-09-02', '2020-09-07']),
+        })
+        # Halloween
+        halloween = pd.DataFrame({
+        'holiday': 'halloween',
+        'ds': pd.to_datetime(['2018-10-27', '2019-10-26', '2020-10-31','2021-10-30']),
+        })
+        # Veteran's day
+        veteran_day = pd.DataFrame({
+        'holiday': 'veteran_day',
+        'ds': pd.to_datetime(['2019-11-11', '2020-11-11']),
+        })
+        # Thanksgiving
+        thanksgiving = pd.DataFrame({
+        'holiday': 'thanksgiving',
+        'ds': pd.to_datetime(['2019-11-28', '2020-11-26']),
+        })
+        # Christmas
+        Christmas = pd.DataFrame({
+        'holiday': 'thanksgiving',
+        'ds': pd.to_datetime(['2019-12-25', '2020-12-25']),
+        })
+
+        holidays_df = pd.concat((newyear, MLK_day, march_madness, superbowls, lent, easter, memorial_day, indep_day, labor_day, halloween, veteran_day, thanksgiving, Christmas))
+        return holidays_df
+        api.send("output2", 'Line 238')
+
+    def get_week_day(df):
+        df['ds'] = pd.to_datetime(df['ds']).dt.date
+        return df['ds'].iloc[0].weekday()
+
+    def custom_holidays(week_day):
+        custom_holidays = load_holiday_calendar()
+        custom_holidays['week_no'] = custom_holidays['ds'].apply(lambda x: get_week_number_from_end_date(x))
+        custom_holidays['year'] = custom_holidays['ds'].apply(lambda x: int(x.strftime('%Y')))
+        custom_holidays['week_ending_date'] = custom_holidays.apply(
+            lambda x: get_end_date_from_week(x['year'], x['week_no'], week_day), 1)
+        custom_holidays.rename(columns={'ds': 'date', 'week_ending_date': 'ds'}, inplace=True)
+        custom_holidays = custom_holidays[['ds', 'holiday']]
+
+        return custom_holidays
+
+    def plot_mape(stats_df):
+        plt.style.use('ggplot')
+        first_edge, last_edge = stats_df['mape'].min(), stats_df['mape'].max()
+
+        n_equal_bins = 60
+        bin_edges = np.linspace(start=first_edge, stop=last_edge, num=n_equal_bins + 1, endpoint=True)
+
+        # Creating histogram
+        fig, ax = plt.subplots(figsize =(8, 4))
+        ax.hist(stats_df['mape'], bins = bin_edges,  color = (0.5,0.1,0.5,0.6))
+
+        plt.title('MAPE distribution of forecast results.')
+
+        # Save plot
+        plt.savefig(DATA_PATH+'mape_plot.png')
+
+    def mean_absolute_percentage_error(y_true, y_pred):
+        y_true, y_pred = np.array(y_true), np.array(y_pred)
+        return np.mean(np.abs((y_true - y_pred)/ y_true)) * 100
+    
+
+    #api.send("output2",'Line 390')
+
+#processing
+    
+    df, df_add_new = add_external_data(df, df_add_external)
+    api.send("output2",'Line 395')
+    df_add_new['ds'] =  df_add_new['ds'].astype(str)
+    #data =  df.values.tolist()
+    #api.send("output2",data)
+
+    # Track how long end-to-end modeling takes
+    start_time = time.time()
+    #load data, date should be in first column
+    df[DATE_COLUMN] = pd.to_datetime(df[DATE_COLUMN]).dt.date
+    df[DATE_COLUMN] =  df[DATE_COLUMN].astype(str) #Convert Date to String for DI
+    # Load Additional Data
+    #df_add_new['ds'] = pd.to_datetime(df_add_new['ds']).dt.date
+    #df_add_new['ds'] =  df_add_new['ds'].astype(str) #Convert Date to String for DI
+    # Get relevant columns
+    df = select_data(df)
+    #data =  df.values.tolist()
+    #api.send("output2",data)
+
+    #get sample, if number provided, else run on full set
+    #if SAMPLE:
+        #df = select_sample(df)
+        #api.send("output2",'Line 416')
+    df.rename(columns={DATE_COLUMN: 'ds', TARGET: 'y'}, inplace=True)
+    #data =  df.values.tolist()
+    #api.send("output2",data)
+
+    #get Weekday
+    week_day = get_week_day(df)
+    api.send("output2",'Line 423')
+    #create custom holiday
+    cust_df_new = custom_holidays(week_day)
+    cust_df_new['ds'] =  cust_df_new['ds'].astype(str)
+    #data =  cust_df_new.values.tolist()
+    #api.send("output2",data)
+
+    df_add_new['ds'] =  df_add_new['ds'].astype(str)
+    #data =  df_add_new.values.tolist()
+    api.send("output2",'Line 433')
+    #train, forecast, and get results
+    final_data = []
+    excluded_groups = []
+    # Rename to prophet's requirements
+    df.rename(columns={DATE_COLUMN: 'ds', TARGET: 'y'}, inplace=True)
+    # Group data to build individual models at each level
+    #grouped= pd.DataFrame()#Force grouped to a dataframe
+    #grouped1= pd.DataFrame()
+    grouped = df.groupby(GROUPBY_LEVEL) #To check if groupby() is working
+    grouped_ak = df.groupby(GROUPBY_LEVEL).count() #by AK
+    data = grouped_ak.values.tolist()
+    #api.send("output2",data)
+     
+    api.send("output2",'Line 452')
+    #df_add_new = df_add_new.isna()
+    df_add_new = df_add_new.apply(custom_fillna)
+    #df_add_new = df_add_new.values.tolist()
+    cust_df_new = cust_df_new.apply(custom_fillna)
+    #cust_df_new = cust_df_new.values.tolist()
+    api.send("output2",'452')
+    api.send("output1",'453')
+    
+    
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        
+        results = executor.map(forecast, grouped, repeat(df_add_new), repeat(cust_df_new))
+        
+    for result in results:
+        api.send("output2",'Line 467')
+        data, excluded = result
+        if len(excluded) > 0:
+            excluded_groups.append(excluded)
+        else:
+            final_data.append(data)
+    #api.send("output2",len(final_data))
+    df_output = pd.concat(final_data)        
+    #print('Total time taken: {}'.format(time.time() - start_time)) 
+    #api.send("output2", 'Success!!')
+    api.send("output2",'Line 474')
+  
+    df_output['week_ending_date']= df_output['week_ending_date'].astype(str)
+    data=df_output.values.tolist()
+    f2 = '{},{},{},{},{},{},{},{}'# format Output_Seg
+    
+    for j in data:
+        api.send("output3",f2.format(*j)+'\n')
+        
+        
+            
+            
+    
+   
+   
+api.set_port_callback(["input1","input2"], on_input)

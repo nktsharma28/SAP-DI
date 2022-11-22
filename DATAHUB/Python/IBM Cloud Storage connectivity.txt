@@ -1,0 +1,21 @@
+from ibm_botocore.client import Config
+import ibm_boto3
+
+credentials = {
+    'IBM_API_KEY_ID': 'SQrliBnr6dg1eafekQQHnttxn7pPqhEj4DIlAbPMXw8v',
+   
+    'ENDPOINT': 'https://s3.direct.us.cloud-object-storage.appdomain.cloud',
+    'IBM_AUTH_ENDPOINT': 'https://iam.cloud.ibm.com/oidc/token',
+    'BUCKET': 'cloud-object-storage-74-cos-standard-f10',
+    'FILE': 'automobilEDA.csv'
+}
+cos = ibm_boto3.client(service_name='s3',
+    ibm_api_key_id=credentials['IBM_API_KEY_ID'],
+    
+    ibm_auth_endpoint=credentials['IBM_AUTH_ENDPOINT'],
+    config=Config(signature_version='oauth'),
+    endpoint_url=credentials['ENDPOINT'])
+
+bdoy=cos.get_object(Bucket='cloud-object-storage-74-cos-standard-f10', Key='automobilEDA.csv')['Body']
+
+#cos.download_file(Bucket=credentials['BUCKET'],Key='automobilEDA.csv',Filename='cloud-object-storage-74-cos-standard-f10/automobilEDA.csv')

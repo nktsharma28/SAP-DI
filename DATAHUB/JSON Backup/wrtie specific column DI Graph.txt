@@ -1,0 +1,206 @@
+{
+	"properties": {},
+	"description": "",
+	"processes": {
+		"python3operator2": {
+			"component": "com.sap.system.python3Operator",
+			"metadata": {
+				"label": "Python3 Operator",
+				"x": 754,
+				"y": 154,
+				"height": 80,
+				"width": 120,
+				"extensible": true,
+				"config": {
+					"script": "import csv\nimport io\ndef on_input(msg):\n    f = io.StringIO(msg.body)\n    df=csv.reader(f)\n    firstline = True\n    \n    for i in df:\n        if firstline: \n            firstline = False\n            continue\n        \n        result=i[0]+\",\"+i[2]\n        api.send(\"outData\", result)\n        \n       \n            \n            \n         #api.send(\"outData\",i[0]+\",\"+i[2])\n         \n        \n        \n    \napi.set_port_callback(\"inData\", on_input)"
+				},
+				"additionalinports": [
+					{
+						"name": "inData",
+						"type": "message"
+					}
+				],
+				"additionaloutports": [
+					{
+						"name": "outData",
+						"type": "message"
+					}
+				]
+			}
+		},
+		"odataqueryconsumer1": {
+			"component": "com.sap.dh.sdi.odata.query.consumer",
+			"metadata": {
+				"label": "OData Query Consumer",
+				"x": 59,
+				"y": 127,
+				"height": 80,
+				"width": 120,
+				"extensible": false,
+				"config": {
+					"odataConnection": {
+						"configurationType": "Configuration Manager",
+						"connectionID": "c4c"
+					},
+					"native_sql_statement": "/AccountDuplicateCheckResultCollection"
+				}
+			}
+		},
+		"flowagentcsvproducer1": {
+			"component": "com.sap.dh.ds.csv.producer",
+			"metadata": {
+				"label": "Flowagent CSV Producer",
+				"x": 388,
+				"y": 154,
+				"height": 80,
+				"width": 120,
+				"extensible": false,
+				"config": {
+					"additionalProperties_csv": {
+						"columnDelimiter": ",",
+						"csvHeaderIncluded": true,
+						"textDelimiterStyle": "Minimal",
+						"csvHeaderIncludedBehavior": "First batch"
+					}
+				}
+			}
+		},
+		"wiretap1": {
+			"component": "com.sap.util.wiretap",
+			"metadata": {
+				"label": "Wiretap",
+				"x": 1075,
+				"y": 370,
+				"height": 80,
+				"width": 120,
+				"ui": "dynpath",
+				"config": {}
+			}
+		},
+		"12multiplexer1": {
+			"component": "com.sap.system.multiplexer.1-2",
+			"metadata": {
+				"label": "1:2 Multiplexer",
+				"x": 955,
+				"y": 153,
+				"height": 80,
+				"width": 120,
+				"extensible": true,
+				"config": {}
+			}
+		},
+		"saphanaclient1": {
+			"component": "com.sap.hana.client2",
+			"metadata": {
+				"label": "SAP HANA Client",
+				"x": 1156,
+				"y": 153,
+				"height": 80,
+				"width": 120,
+				"config": {
+					"initTable": "Drop (Cascade)",
+					"connection": {
+						"configurationType": "Configuration Manager",
+						"connectionID": "HA01DB"
+					},
+					"tableName": "\"SAHA\".\"TEST_ODATA\"",
+					"tableColumns": [
+						{
+							"name": "OBJECTID",
+							"type": "VARCHAR",
+							"size": 100
+						},
+						{
+							"name": "ACCOUNTID",
+							"type": "VARCHAR",
+							"size": 100
+						}
+					]
+				}
+			}
+		}
+	},
+	"groups": [
+		{
+			"name": "group2",
+			"nodes": [
+				"python3operator2"
+			],
+			"metadata": {
+				"description": "Group"
+			},
+			"tags": {
+				"Python36car": ""
+			}
+		}
+	],
+	"connections": [
+		{
+			"metadata": {
+				"points": "183,158 283,158 283,194 383,194"
+			},
+			"src": {
+				"port": "outConfig",
+				"process": "odataqueryconsumer1"
+			},
+			"tgt": {
+				"port": "inConfig",
+				"process": "flowagentcsvproducer1"
+			}
+		},
+		{
+			"metadata": {
+				"points": "1079,202 1129,202 1129,306 1020,306 1020,410 1070,410"
+			},
+			"src": {
+				"port": "out2",
+				"process": "12multiplexer1"
+			},
+			"tgt": {
+				"port": "in",
+				"process": "wiretap1"
+			}
+		},
+		{
+			"metadata": {
+				"points": "878,194 914,194 914,193 950,193"
+			},
+			"src": {
+				"port": "outData",
+				"process": "python3operator2"
+			},
+			"tgt": {
+				"port": "in1",
+				"process": "12multiplexer1"
+			}
+		},
+		{
+			"metadata": {
+				"points": "512,194 749,194"
+			},
+			"src": {
+				"port": "outMessage",
+				"process": "flowagentcsvproducer1"
+			},
+			"tgt": {
+				"port": "inData",
+				"process": "python3operator2"
+			}
+		},
+		{
+			"metadata": {
+				"points": "1079,184 1115,184 1115,202 1151,202"
+			},
+			"src": {
+				"port": "out1",
+				"process": "12multiplexer1"
+			},
+			"tgt": {
+				"port": "data",
+				"process": "saphanaclient1"
+			}
+		}
+	],
+	"inports": {},
+	"outports": {}
+}

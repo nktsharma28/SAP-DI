@@ -1,0 +1,32 @@
+$.setPortCallback("inData", onInput);
+var csv="";
+function processData(data) {
+//  implement your data processing logic here:
+   // var result = [];
+   // var dataCols = Object.keys(data[0]).filter(function(c) { return c !== "id"; });
+   {
+    var array = typeof data != 'object' ? JSON.parse(data) : data;
+    var str = '';
+
+    for (var i = 0; i < array.length; i++) {
+        var line = '';
+        for (var index in array[i]) {
+            if (line !== '') line += ',';
+
+            line += array[i][index];
+        }
+
+        str += line + '\r\n';
+    }
+
+    return str;
+}
+}
+  
+function onInput(ctx, msg) {
+    var outMsg = $.copyMessage(msg);
+    var data = JSON.parse(String.fromCharCode.apply(null, msg.Body));
+    var result = processData(data);
+    outMsg.Body = result;
+    $.outData(outMsg);
+}
