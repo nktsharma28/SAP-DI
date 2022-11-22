@@ -18,7 +18,7 @@ jobs:
         git config --local user.name "nktsharma28"
         git commit -a -m "Add changes"
     - name: Push changes
-      uses: ad-m/github-push-action@local
+      uses: ad-m/github-push-action@main
       with:
         ssh: true
         branch: ${{ github.ref }}
