@@ -1,0 +1,96 @@
+{
+	"properties": {},
+	"description": "Test automation data retrieval ",
+	"processes": {
+		"workflowtrigger1": {
+			"component": "com.sap.dh.trigger",
+			"metadata": {
+				"label": "Workflow Trigger",
+				"x": 12,
+				"y": 12,
+				"height": 80,
+				"width": 120,
+				"extensible": true,
+				"generation": 1,
+				"config": {}
+			}
+		},
+		"python3operator1": {
+			"component": "com.sap.system.python3Operator",
+			"metadata": {
+				"label": "Python3 Operator",
+				"x": 181,
+				"y": 12,
+				"height": 80,
+				"width": 120,
+				"extensible": true,
+				"filesRequired": [
+					"script.py"
+				],
+				"generation": 1,
+				"config": {
+					"script": "import requests\r\nimport datetime\r\nimport json\r\nfrom requests.auth import HTTPBasicAuth\r\nfrom datetime import timedelta\r\n\r\ndef on_input(data):\r\n    #Establish connection to DI non prod\r\n    # headers = {'Accept':'application/json', 'Content-Type':'application/json'}\r\n    auth = HTTPBasicAuth('default\\\\System Name', 'Provide Password')\r\n    get_response = requests.get('https://heidiprd1001.awshosting.heiway.net/auth/login', verify=False, auth=auth)\r\n    # api.send(\"output1\",str(get_response.cookies['Authorization']))\r\n    auth_cookie = get_response.cookies['Authorization']\r\n    # api.send(\"output1\", \"before\"+auth_cookie)\r\n    auth_cookie = auth_cookie[1:-1]\r\n    \r\n    # auth_cookie = auth_cookie.replace(\"\\\"\",\"\")\r\n    # api.send(\"output1\",\"after\"+auth_cookie)\r\n    \r\n    \r\n    today = datetime.datetime.now()\r\n    stopTime = int(round(today.timestamp()))\r\n    api.send(\"output1\",str(today))\r\n    api.send(\"output1\",str(stopTime))\r\n    yesterday = today - timedelta(days=1)\r\n    api.send(\"output1\",str(yesterday))\r\n    startTime = int(round(yesterday.timestamp()))\r\n    api.send(\"output1\",str(startTime))\r\n    yest = datetime.datetime.fromtimestamp(startTime)\r\n    api.send(\"output1\",str(yest))\r\n    \r\n    header = {'Authorization' : auth_cookie, 'Accept':'application/json', 'Content-Type':'application/json'}\r\n    json_body = {\"detailLevel\":\"graph\",\"filter\":[\"and\",[\"or\",[\"equal\",\"status\",\"pending\"],[\"equal\",\"status\",\"running\"],[\"equal\",\"status\",\"dead\"],[\"equal\",\"status\",\"completed\"]],[\"or\",[\"contains\",\"src\",\"ECC01\"],[\"contains\",\"src\",\"ECC02\"],[\"contains\",\"src\",\"ECC14\"],[\"contains\",\"src\",\"ECC18\"]]],\"sortSpecs\":[[\"updated\",\"desc\"]],\"limit\":1000}\r\n    json_data = json.dumps(json_body)\r\n    json_dict = json.loads(json_data)\r\n    json_dict['filter'].append([\"and\",[\"greaterThan\",\"started\",startTime],[\"lessThan\",\"stopped\",stopTime]])\r\n    json_data = json.dumps(json_dict)\r\n    api.send(\"output1\",str(json_data))\r\n    json_data = json.loads(json_data)\r\n    api.send(\"output1\",str(json_data))\r\n    \r\n    # test_data = {\"detailLevel\":\"graph\",\"filter\":[\"and\",[\"or\",[\"equal\",\"status\",\"pending\"],[\"equal\",\"status\",\"running\"],[\"equal\",\"status\",\"dead\"],[\"equal\",\"status\",\"completed\"]],[\"or\",[\"contains\",\"src\",\"Area\"],[\"contains\",\"src\",\"Area\"],[\"contains\",\"src\",\"ECC14\"],[\"contains\",\"src\",\"Area\"]],[\"and\",[\"greaterThan\",\"started\",1668516989],[\"lessThan\",\"stopped\",1668689789]]],\"sortSpecs\":[[\"updated\",\"desc\"]],\"limit\":1000}\r\n    \r\n    json_response = requests.post('https://heidiprd1001.awshosting.heiway.net/app/pipeline-modeler/service/v2/runtime/graphsquery', verify = False, headers = header, json=json_data)\r\n    # # api.send(\"output1\",str(json_response.content))\r\n    json_content = json_response.content\r\n    \r\n    generate_csv(json_content)\r\n    \r\n    \r\ndef generate_csv(data):\r\n    encoded_json = data.decode(\"utf-8\")\r\n    api_output = json.loads(encoded_json)\r\n    csvstr = ''\r\n    header = 'src;handle;status;submitted;started;running;updated;stopped\\n'\r\n    csvstr = csvstr + header\r\n    \r\n    for entity in api_output:\r\n        src = entity['src']\r\n        handle = entity['handle']\r\n        status = entity['status']\r\n        submitted = datetime.datetime.fromtimestamp(entity['submitted'])\r\n        started = datetime.datetime.fromtimestamp(entity['started'])\r\n        running = datetime.datetime.fromtimestamp(entity['running'])\r\n        updated = datetime.datetime.fromtimestamp(entity['updated'])\r\n        stopped = datetime.datetime.fromtimestamp(entity['stopped'])\r\n    \r\n        csvrecord = f'{src};{handle};{status};{submitted};{started};{running};{updated};{stopped}\\n'\r\n        csvstr = csvstr+csvrecord\r\n    \r\n    curr_timestp = datetime.datetime.now().strftime('%Y%m%d%H%M%S')\r\n    output_filename = r'/vrep/vflow/general/data/ddt/logs/'+f'/{curr_timestp}_runtimes_graphs.csv'\r\n    with open(output_filename, 'w') as out_file:\r\n        out_file.write(csvstr)\r\n\r\napi.set_port_callback(\"input1\", on_input)"
+				},
+				"additionalinports": [
+					{
+						"name": "input1",
+						"type": "message"
+					}
+				],
+				"additionaloutports": [
+					{
+						"name": "output1",
+						"type": "message"
+					}
+				]
+			}
+		},
+		"wiretap1": {
+			"component": "com.sap.util.wiretap",
+			"metadata": {
+				"label": "Wiretap",
+				"x": 350,
+				"y": 12,
+				"height": 80,
+				"width": 120,
+				"generation": 1,
+				"ui": "dynpath",
+				"config": {}
+			}
+		}
+	},
+	"groups": [],
+	"connections": [
+		{
+			"metadata": {
+				"points": "136,52 176,52"
+			},
+			"src": {
+				"port": "output",
+				"process": "workflowtrigger1"
+			},
+			"tgt": {
+				"port": "input1",
+				"process": "python3operator1"
+			}
+		},
+		{
+			"metadata": {
+				"points": "305,52 345,52"
+			},
+			"src": {
+				"port": "output1",
+				"process": "python3operator1"
+			},
+			"tgt": {
+				"port": "in",
+				"process": "wiretap1"
+			}
+		}
+	],
+	"inports": {},
+	"outports": {},
+	"metadata": {
+		"generation": 1
+	}
+}
