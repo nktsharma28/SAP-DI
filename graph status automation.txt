@@ -1,4 +1,3 @@
-
 import requests
 import datetime
 import json
@@ -7,11 +6,11 @@ from datetime import timedelta
 #Establish connection to DI non prod
 # headers = {'Accept':'application/json', 'Content-Type':'application/json'}
 auth = HTTPBasicAuth('dadapp001\\gwr0459', 'Summer@2023')
-get_response = requests.get('https://apacdidev.mykft.net/login/', verify=False, auth=auth)
+get_response = requests.get('https://apacdidev.mykft.net/auth/login/', verify=False, auth=auth)
 # api.send("output1",str(get_response.cookies['Authorization']))
-#auth_cookie = get_response.cookies['Authorization']
+auth_cookie = get_response.cookies['Authorization']
 # api.send("output1", "before"+auth_cookie)
-#auth_cookie = auth_cookie[1:-1]
+auth_cookie = auth_cookie[1:-1]
 
 # auth_cookie = auth_cookie.replace("\"","")
 # api.send("output1","after"+auth_cookie)
@@ -27,17 +26,12 @@ startTime = int(round(yesterday.timestamp()))
 #api.send("output1",str(startTime))
 yest = datetime.datetime.fromtimestamp(startTime)
 #api.send("output1",str(yest))
-
-header = {
-  'X-Requested-With': 'XMLHttpRequest',
-  'Authorization': 'Basic ZGFkYXBwMDAxXGd3cjA0NTk6U3VtbWVyQDIwMjM=',
-  'Cookie': 'Authorization="Bearer eyJhbGciOiAiUlMyNTYiLCJ0eXAiOiAiSldUIn0.eyJqdGkiOiI0NjA3YmMwYTQ3ZWQ0ZjkzOGVhNDdmYmVjOTUxNGU5ZSIsInN1YiI6IjQxMTNhYzI5LTcyNTUtNGZjNC05ZGQ0LTY3MTlmM2Q3OWU2NiIsInNjb3BlIjpbInBhc3N3b3JkLndyaXRlIl0sImNsaWVudF9pZCI6ImRhZGFwcDAwMSIsImNpZCI6ImRhZGFwcDAwMSIsImF6cCI6ImRhZGFwcDAwMSIsImdyYW50X3R5cGUiOiJwYXNzd29yZCIsInVzZXJfaWQiOiI0MTEzYWMyOS03MjU1LTRmYzQtOWRkNC02NzE5ZjNkNzllNjYiLCJvcmlnaW4iOiJ1YWEiLCJ1c2VyX25hbWUiOiJnd3IwNDU5IiwiZW1haWwiOiJnd3IwNDU5QGRvbWFpbi5vcmciLCJhdXRoX3RpbWUiOjE2NzAzMzIwODgsInJldl9zaWciOiI4MjRmMTZkNCIsImlhdCI6MTY3MDMzMjA4OCwiZXhwIjoxNjcwMzc1Mjg4LCJpc3MiOiJodHRwczovL2RhZGFwcDAwMS51YWE6ODA4MC9vYXV0aC90b2tlbiIsInppZCI6ImRhZGFwcDAwMSIsImF1ZCI6WyJwYXNzd29yZCIsImRhZGFwcDAwMSJdfQ.VOnY5rr8jppFTpa0ZE2_C3RrYD_gr2lKUti6n1pqek5ygOYdG6OYpe9f45Bcw19mi8gIl_KcHKf7cRC4NZWje-JiXqisMv-NLl-zvO8pwSZPh1OCZoMeiCi8FBWSxzDyFNZgl8ubHjXtDph7gl0ihLP93hFnXZOuYBDQWlvGZDzn0tVJagf09jwAcN_h4Sc-Hj1Pc4bChIh2AZo3uhVCmVBa7WsngD14Vt_oWjTVoxA8VEYQT8kVqhFQJYk1TnhhFTmb61PQgM6csN6JC3mQJQp8BVlwFC487C0Z96iED8QBscj4p1Dre86AKxpHE5b60dLouyBFyQAi-s9iemmuLg"; vsystem-session-id=a8672fe0-2058-438f-812a-3f5bb449e7d5'
-}
+header = {'Authorization' : auth_cookie, 'Accept':'application/json', 'Content-Type':'application/json'}
 
 json_body = {"detailLevel":"graph","filter":["and",["or",["equal","status","pending"],["equal","status","running"],["equal","status","dead"],["equal","status","completed"]]],"limit":1000}
 json_data = json.dumps(json_body)
 json_dict = json.loads(json_data)
-#json_dict['filter'].append(["and",["greaterThan","started",startTime],["lessThan","stopped",stopTime]])
+json_dict['filter'].append(["and",["greaterThan","started",startTime],["lessThan","stopped",stopTime]])
 json_data = json.dumps(json_dict)
 #api.send("output1",str(json_data))
 json_data = json.loads(json_data)
