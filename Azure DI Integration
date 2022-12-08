@@ -1,0 +1,195 @@
+{
+	"properties": {},
+	"description": "Azure DI Integration",
+	"processes": {
+		"snowflakeextractor1": {
+			"component": "Snowflake Extractor",
+			"metadata": {
+				"label": "Snowflake Extractor",
+				"x": 24,
+				"y": 100,
+				"height": 80,
+				"width": 120,
+				"extensible": true,
+				"filesRequired": [
+					"script.py"
+				],
+				"generation": 1,
+				"config": {
+					"Account": "Kraft.east-us-2.privatelink",
+					"Username": "khc_sapdi_conn_user_dev",
+					"Password": "9xXC=lS_3/_^4}v6",
+					"Database": "DEV_KHC_INGEST",
+					"Schema": "SAP_MASTER_DATA",
+					"Warehouse": "dev_cloud_analytics_platform",
+					"Snowflake_Table_Name": "RAW_S4H_APAC_I_DELIVERYDOCUMENTITEM",
+					"script": "import pandas as pd\nimport snowflake.connector\nfrom snowflake.connector.pandas_tools import write_pandas\nsnowflake.connector.paramstyle='qmark'\n\nctx = snowflake.connector.connect(\naccount = api.config.Account,\nuser = api.config.Username,\nwarehouse = api.config.Warehouse,\npassword = api.config.Password,\ndatabase = api.config.Database,\nschema = api.config.Schema)\n\ncur = ctx.cursor()\nsql_query = pd.read_sql_query('select * from RAW_S4H_APAC_I_CUSTOMER'\n,ctx)\n\ndf = pd.DataFrame(sql_query)\napi.send('output',df.to_csv(index=False))"
+				},
+				"additionaloutports": [
+					{
+						"name": "output",
+						"type": "string"
+					}
+				]
+			}
+		},
+		"fileserver1": {
+			"component": "File Server",
+			"metadata": {
+				"label": "File Server",
+				"x": 433.99999809265137,
+				"y": 40,
+				"height": 80,
+				"width": 120,
+				"extensible": true,
+				"filesRequired": [
+					"script.py"
+				],
+				"generation": 1,
+				"config": {
+					"User id": "gwr0459",
+					"Password": "Kraftibm@123",
+					"Server": "vf05-khc-tul.mykft.net",
+					"script": "\r\nimport io\r\nimport pandas as pd\r\nfrom azure.storage.filedatalake import DataLakeFileClient\r\n\r\ndef on_input(inData):\r\n    f = io.StringIO(inData)\r\n    api.send('output',inData)\r\n    file = DataLakeFileClient.from_connection_string(\"DefaultEndpointsProtocol=https;AccountName=khcbiedatastoragedev;AccountKey=Xf7WQegIpFShUJSYtTg5hars3UKgxiNgRa5+uY/s9hNj0vuvDbtCMEiAYDwSDmDpAPlpwvdbNgcajugCu3wYiw==;BlobEndpoint=https://khcbiedatastoragedev.blob.core.windows.net/;QueueEndpoint=https://khcbiedatastoragedev.queue.core.windows.net/;TableEndpoint=https://khcbiedatastoragedev.table.core.windows.net/;FileEndpoint=https://khcbiedatastoragedev.file.core.windows.net/\",file_system_name=\"snowflake-stage\",file_path=\"I_DELIVERYDOCUMENTITEM.csv\")\r\n    file.create_file ()\r\n    file.append_data(inData,offset=0,length=len(inData))\r\n    file.flush_data(len(inData))\r\n\r\n\r\n    api.send('output','File generated successfully')\r\n\r\napi.set_port_callback('input1', on_input)",
+					"Username": "gwr0459"
+				},
+				"additionalinports": [
+					{
+						"name": "input1",
+						"type": "string"
+					}
+				],
+				"additionaloutports": [
+					{
+						"name": "output",
+						"type": "string"
+					}
+				]
+			}
+		},
+		"terminal1": {
+			"component": "com.sap.util.terminal",
+			"metadata": {
+				"label": "Terminal",
+				"x": 638.999997138977,
+				"y": 92,
+				"height": 80,
+				"width": 120,
+				"generation": 1,
+				"ui": "dynpath",
+				"config": {}
+			}
+		},
+		"12multiplexer1": {
+			"component": "com.sap.system.multiplexer.1-2",
+			"metadata": {
+				"label": "1:2 Multiplexer",
+				"x": 228.99999904632568,
+				"y": 92,
+				"height": 80,
+				"width": 120,
+				"extensible": true,
+				"generation": 1,
+				"config": {}
+			}
+		},
+		"terminal2": {
+			"component": "com.sap.util.terminal",
+			"metadata": {
+				"label": "Terminal",
+				"x": 416.99999809265137,
+				"y": 172,
+				"height": 80,
+				"width": 120,
+				"generation": 1,
+				"ui": "dynpath",
+				"config": {}
+			}
+		}
+	},
+	"groups": [
+		{
+			"name": "group1",
+			"nodes": [
+				"snowflakeextractor1"
+			],
+			"metadata": {
+				"description": "Group"
+			},
+			"tags": {
+				"Snwflk Gen1": ""
+			}
+		},
+		{
+			"name": "group3",
+			"nodes": [
+				"fileserver1"
+			],
+			"metadata": {
+				"description": "Group"
+			},
+			"tags": {
+				"Azure": ""
+			}
+		}
+	],
+	"connections": [
+		{
+			"metadata": {
+				"points": "557.9999980926514,80 605.9999976158142,80 605.9999976158142,132 633.999997138977,132"
+			},
+			"src": {
+				"port": "output",
+				"process": "fileserver1"
+			},
+			"tgt": {
+				"port": "in1",
+				"process": "terminal1"
+			}
+		},
+		{
+			"metadata": {
+				"points": "148,140 195.99999952316284,140 195.99999952316284,132 223.99999904632568,132"
+			},
+			"src": {
+				"port": "output",
+				"process": "snowflakeextractor1"
+			},
+			"tgt": {
+				"port": "in1",
+				"process": "12multiplexer1"
+			}
+		},
+		{
+			"metadata": {
+				"points": "352.9999990463257,123 380.9999985694885,123 380.9999985694885,80 428.99999809265137,80"
+			},
+			"src": {
+				"port": "out1",
+				"process": "12multiplexer1"
+			},
+			"tgt": {
+				"port": "input1",
+				"process": "fileserver1"
+			}
+		},
+		{
+			"metadata": {
+				"points": "352.9999990463257,141 380.9999985694885,141 380.9999985694885,212 411.99999809265137,212"
+			},
+			"src": {
+				"port": "out2",
+				"process": "12multiplexer1"
+			},
+			"tgt": {
+				"port": "in1",
+				"process": "terminal2"
+			}
+		}
+	],
+	"inports": {},
+	"outports": {},
+	"metadata": {
+		"generation": 1
+	}
+}
